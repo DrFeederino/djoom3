@@ -448,7 +448,7 @@ class snd_world {
             } else if (localSound != null) {
                 localSound!!.StopSound(channel)
             }
-            if (!TempDump.isNotNullOrEmpty(shaderName)) {
+            if (shaderName.isEmpty()) {
 //            if (!shaderName || !shaderName[0]) {
                 return
             }
@@ -1985,9 +1985,15 @@ class snd_world {
                         if (offset < size) {
                             j = 0
                             while (j < AMPLITUDE_SAMPLES) {
-                                sourceBuffer[j] =
-                                    if (j and 1 == 1) amplitudeData[offset / 512 * 2] else amplitudeData[offset / 512 * 2 + 1]
-                                j++
+                                if (amplitudeData.limit() <= (offset / 512) * 2 || amplitudeData.limit() <= (offset / 512) * 2 + 1) {
+                                    sourceBuffer[j] = amplitudeData[amplitudeData.limit() - 1]
+                                    j++
+                                } else {
+                                    sourceBuffer[j] =
+                                        if (j and 1 == 1) amplitudeData[(offset / 512) * 2] else amplitudeData[(offset / 512) * 2 + 1]
+                                    j++
+                                }
+
                             }
                         }
                     } else {

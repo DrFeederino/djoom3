@@ -680,7 +680,7 @@ class Session {
     internal class Session_AVIGame_f : cmdFunction_t() {
         override fun run(args: CmdArgs.idCmdArgs) {
             val Argv = arrayOf(args.Argv(1))
-            val empty = !TempDump.isNotNullOrEmpty(Argv[0])
+            val empty = Argv[0].isEmpty()
             sessLocal.AVIGame(Argv) //TODO:back reference
             if (empty) {
                 args.set(Argv[0])

@@ -7405,7 +7405,7 @@ object Physics_AF {
             var constraint: idAFConstraint?
             val center = idVec3()
             var axis: idMat3
-            if (TempDump.isNotNullOrEmpty(SysCvar.af_highlightConstraint.GetString())) {
+            if (!SysCvar.af_highlightConstraint.GetString().isNullOrEmpty()) {
                 constraint = GetConstraint(SysCvar.af_highlightConstraint.GetString()!!)
                 if (constraint != null) {
                     constraint.GetCenter(center)
@@ -7439,7 +7439,7 @@ object Physics_AF {
                     }
                 }
             }
-            if (TempDump.isNotNullOrEmpty(SysCvar.af_highlightBody.GetString())) {
+            if (!SysCvar.af_highlightBody.GetString().isNullOrEmpty()) {
                 highlightBody = GetBody(SysCvar.af_highlightBody.GetString()!!)
                 if (highlightBody != null) {
                     idLib.cvarSystem.SetCVarString("cm_drawColor", Lib.colorYellow.ToString(0))

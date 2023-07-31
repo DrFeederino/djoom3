@@ -7,7 +7,6 @@ import neo.Game.Player.idPlayer
 import neo.Renderer.Material
 import neo.Renderer.RenderSystem
 import neo.Renderer.RenderWorld.renderView_s
-import neo.TempDump
 import neo.framework.DeclManager
 import neo.idlib.Dict_h.idDict
 import neo.idlib.Lib
@@ -621,7 +620,7 @@ object PlayerView {
             }
 
             // test a single material drawn over everything
-            if (TempDump.isNotNullOrEmpty(SysCvar.g_testPostProcess.GetString())) {
+            if (!SysCvar.g_testPostProcess.GetString().isNullOrEmpty()) {
                 val mtr: Material.idMaterial? =
                     DeclManager.declManager.FindMaterial(SysCvar.g_testPostProcess.GetString()!!, false)
                 if (null == mtr) {

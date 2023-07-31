@@ -2641,7 +2641,7 @@ class Game_local {
             var keyval: idKeyValue?
             var keyval2: idKeyValue?
             var i: Int
-            if (TempDump.isNotNullOrEmpty(SysCvar.g_mapCycle.GetString())) {
+            if (!SysCvar.g_mapCycle.GetString().isNullOrEmpty()) {
                 Printf(Common.common.GetLanguageDict().GetString("#str_04294"))
                 return false
             }

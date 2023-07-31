@@ -2189,7 +2189,7 @@ object Projectile {
             smokeFly = null
             smokeFlyTime = 0
             val smokeName = spawnArgs.GetString("smoke_fly")
-            if (TempDump.isNotNullOrEmpty(smokeName)) { //smokeName != '\0' ) {
+            if (smokeName.isNotEmpty()) { //smokeName != '\0' ) {
                 smokeFly = DeclManager.declManager.FindType(declType_t.DECL_PARTICLE, smokeName) as idDeclParticle
                 smokeFlyTime = Game_local.gameLocal.time
                 Game_local.gameLocal.smokeParticles!!.EmitSmoke(
@@ -2201,7 +2201,7 @@ object Projectile {
                 )
             }
             val sndName = spawnArgs.GetString("snd_bounce")
-            if (TempDump.isNotNullOrEmpty(sndName)) { //sndName != '\0' ) {
+            if (sndName.isNotEmpty()) { //sndName != '\0' ) {
                 sndBounce = DeclManager.declManager.FindSound(sndName)
             }
             UpdateVisuals()
@@ -2247,7 +2247,7 @@ object Projectile {
             smokeFly = null
             smokeFlyTime = 0
             val smokeName = spawnArgs.GetString("smoke_detonate")
-            if (TempDump.isNotNullOrEmpty(smokeName)) { //smokeName != '\0' ) {
+            if (smokeName.isNotEmpty()) { //smokeName != '\0' ) {
                 smokeFly = DeclManager.declManager.FindType(declType_t.DECL_PARTICLE, smokeName) as idDeclParticle
                 smokeFlyTime = Game_local.gameLocal.time
                 Game_local.gameLocal.smokeParticles!!.EmitSmoke(
@@ -2275,7 +2275,7 @@ object Projectile {
 
             // fizzle FX
             val smokeName = spawnArgs.GetString("smoke_fuse")
-            if (TempDump.isNotNullOrEmpty(smokeName)) { //smokeName != '\0' ) {
+            if (smokeName.isNotEmpty()) { //smokeName != '\0' ) {
                 smokeFly = DeclManager.declManager.FindType(declType_t.DECL_PARTICLE, smokeName) as idDeclParticle
                 smokeFlyTime = Game_local.gameLocal.time
                 Game_local.gameLocal.smokeParticles!!.EmitSmoke(

@@ -1668,7 +1668,7 @@ object Str {
             //public	idStr &				operator+=( const int a );
             //public	idStr &				operator+=( const unsigned a );
             fun Cmpn(s1: String, s2: String, n: Int): Int { //TODO:see if we can return booleans
-                if (TempDump.isNotNullOrEmpty(s1) && TempDump.isNotNullOrEmpty(s2)) {
+                if (s1.isNotEmpty() && s2.isNotEmpty()) {
                     if (s1.length >= n && s2.length >= n) {
                         return Cmp(s1.substring(0, n), s2.substring(0, n))
                     }
@@ -1707,7 +1707,7 @@ object Str {
             }
 
             fun Icmpn(s1: String, s2: String, n: Int): Int {
-                if (TempDump.isNotNullOrEmpty(s1) && TempDump.isNotNullOrEmpty(s2)) {
+                if (s1.isNotEmpty() && s2.isNotEmpty()) {
                     if (s1.length >= n && s2.length >= n) {
                         return Icmp(s1.substring(0, n), s2.substring(0, n))
                     }

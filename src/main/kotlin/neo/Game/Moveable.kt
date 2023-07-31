@@ -157,7 +157,7 @@ object Moveable {
 
             // check if a clip model is set
             spawnArgs.GetString("clipmodel", "", clipModelName)
-            if (!TempDump.isNotNullOrEmpty(clipModelName)) {
+            if (clipModelName.IsEmpty()) {
                 clipModelName.set(spawnArgs.GetString("model")) // use the visual model
             }
             if (!CollisionModel_local.collisionModelManager.TrmFromModel(clipModelName, trm)) {

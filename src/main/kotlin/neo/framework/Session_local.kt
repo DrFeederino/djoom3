@@ -1012,7 +1012,7 @@ object Session_local {
             ev.evType = sysEventType_t.SE_NONE
             //            System.out.println(System.nanoTime()+"com_frameTime="+com_frameTime+" "+Common.com_ticNumber);
             cmd = gui!!.HandleEvent(ev, Common.com_frameTime)
-            if (TempDump.isNotNullOrEmpty(cmd)) {
+            if (cmd.isNotEmpty()) {
                 DispatchCommand(guiActive, cmd, false)
             }
         }
@@ -2445,7 +2445,7 @@ object Session_local {
                 StopRecordingRenderDemo()
                 return
             }
-            if (TempDump.isNotNullOrEmpty(demoName)) {
+            if (demoName.isNotEmpty()) {
                 Common.common.Printf("idSessionLocal::StartRecordingRenderDemo: no name specified\n")
                 return
             }
@@ -2481,7 +2481,7 @@ object Session_local {
 
         @Throws(idException::class)
         fun StartPlayingRenderDemo(demoName: idStr) {
-            if (TempDump.isNotNullOrEmpty(demoName)) {
+            if (demoName != null && demoName.toString().isNotEmpty()) {
                 Common.common.Printf("idSessionLocal::StartPlayingRenderDemo: no name specified\n")
                 return
             }
@@ -2646,7 +2646,7 @@ object Session_local {
             if (!mapSpawned) {
                 Common.common.Printf("No map spawned.\n")
             }
-            if (!TempDump.isNotNullOrEmpty(demoName[0])) {
+            if (demoName[0].isEmpty()) {
                 val filename: String = Session.FindUnusedFileName("demos/game%03i.game")
                 demoName[0] = filename
 
@@ -3559,7 +3559,7 @@ object Session_local {
                         if (dict != null && dict.GetBool(gametype)) {
                             /*final*/
                             var mapName = dict.GetString("name")
-                            if (!TempDump.isNotNullOrEmpty(mapName)) {
+                            if (mapName.isEmpty()) {
                                 mapName = dict.GetString("path")
                             }
                             mapName = Common.common.GetLanguageDict().GetString(mapName)
@@ -3637,7 +3637,7 @@ object Session_local {
                                 }
                             }
                             if (n_clients > maxclients) {
-                                if (TempDump.isNotNullOrEmpty(
+                                if (
                                         MessageBox(
                                             msgBoxType_t.MSG_OKCANCEL,
                                             Str.va(
@@ -3647,8 +3647,7 @@ object Session_local {
                                             Common.common.GetLanguageDict().GetString("#str_04316"),
                                             true,
                                             "OK"
-                                        )
-                                    )
+                                        ).isNotEmpty()
                                 ) { //[0] == '\0') {
                                     continue
                                 }

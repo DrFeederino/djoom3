@@ -3142,7 +3142,7 @@ object Anim_Blend {
             FreeData()
 
             // check if we're just clearing the model
-            if (!TempDump.isNotNullOrEmpty(modelname)) {
+            if (modelname.isEmpty()) {
                 return null
             }
             modelDef = DeclManager.declManager.FindType(declType_t.DECL_MODELDEF, modelname, false) as idDeclModelDef

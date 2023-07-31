@@ -189,7 +189,7 @@ object TypeInfo {
 
         fun IsSubclassOf(typeName: idStr, superType: String): Boolean {
             var i: Int
-            while (TempDump.isNotNullOrEmpty(typeName)) {
+            while (!typeName.IsEmpty()) {
                 if (idStr.Cmp(typeName.toString(), superType) == 0) {
                     return true
                 }
@@ -1115,7 +1115,7 @@ object TypeInfo {
         ) {
             var i: Int
             val classInfo = FindClassInfo(classType) ?: return
-            if (TempDump.isNotNullOrEmpty(classInfo.superType)) {
+            if (!classInfo.superType.isNullOrEmpty()) {
                 WriteClass_r(classPtr, className, classInfo.superType!!, scope, prefix, pointerDepth)
             }
             i = 0

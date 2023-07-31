@@ -443,7 +443,7 @@ object EditWindow {
         }
 
         private fun InitCvar() {
-            if (!TempDump.isNotNullOrEmpty(cvarStr.data)) {
+            if (cvarStr.data.IsEmpty()) {
                 if (text.GetName() == null) {
                     idLib.common.Warning(
                         "idEditWindow::InitCvar: gui '%s' window '%s' has an empty cvar string",

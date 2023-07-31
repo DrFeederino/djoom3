@@ -456,7 +456,7 @@ class UserInterfaceLocal {
             var i: Int
             val v = window.GetWinVarByName("bind")
             if (v != null) {
-                SetStateString(v.GetName(), idKeyInput.KeysFromBinding(v.GetName()))
+                SetStateString(v.GetName()!!, idKeyInput.KeysFromBinding(v.GetName()))
             }
             i = 0
             while (i < window.GetChildCount()) {

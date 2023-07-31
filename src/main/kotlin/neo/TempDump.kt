@@ -178,14 +178,6 @@ object TempDump {
         return string.substring(0, index) + character + string.substring(index + 1)
     }
 
-    fun isNotNullOrEmpty(stringy: String?): Boolean {
-        return stringy != null && !stringy.isEmpty() && !stringy.startsWith("\u0000")
-    }
-
-    fun isNotNullOrEmpty(stringy: idStr?): Boolean {
-        return stringy != null && !stringy.IsEmpty() && '\u0000' != stringy.get(0)
-    }
-
     /**
      * Equivalent to **!object**.
      *
@@ -839,7 +831,7 @@ object TempDump {
             //
             var fov_x: CFloat = CFloat()
             var fov_y: CFloat = CFloat()
-            var globalMaterial: idMaterial = idMaterial()
+            var globalMaterial: idMaterial? = null
             var shaderParms = Array(RenderWorld.MAX_GLOBAL_SHADER_PARMS) { CFloat() }
 
             //

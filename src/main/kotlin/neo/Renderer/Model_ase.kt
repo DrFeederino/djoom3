@@ -1,7 +1,6 @@
 package neo.Renderer
 
 import neo.TempDump.bbtocb
-import neo.TempDump.isNotNullOrEmpty
 import neo.framework.Common
 import neo.framework.FileSystem_h
 import neo.framework.FileSystem_h.fileSystem
@@ -273,7 +272,7 @@ object Model_ase {
                 }
 
                 "*GEOMOBJECT" -> ASE_ParseGeomObject()
-                else -> if (isNotNullOrEmpty(ase.token)) {
+                else -> if (ase.token.isNotEmpty()) {
                     Common.common.Printf("Unknown token '%s'\n", ase.token)
                 }
             }

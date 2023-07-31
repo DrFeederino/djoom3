@@ -45,7 +45,6 @@ import neo.Renderer.RenderWorld.renderLight_s
 import neo.Sound.snd_shader.idSoundShader
 import neo.TempDump
 import neo.TempDump.btoi
-import neo.TempDump.isNotNullOrEmpty
 import neo.Tools.Compilers.AAS.AASFile
 import neo.framework.CmdSystem.cmdFunction_t
 import neo.framework.DeclManager
@@ -1928,7 +1927,7 @@ object AI {
             if (head.GetEntity() != null) {
                 val headAnimator = head.GetEntity()!!.GetAnimator()
                 jointName.set(spawnArgs.GetString("bone_focus"))
-                if (TempDump.isNotNullOrEmpty(jointName)) {
+                if (!jointName.IsEmpty()) {
                     focusJoint = headAnimator.GetJointHandle(jointName)
                     if (focusJoint == Model.INVALID_JOINT) {
                         Game_local.gameLocal.Warning("Joint '%s' not found on head on '%s'", jointName, name)
@@ -1936,7 +1935,7 @@ object AI {
                 }
             } else {
                 jointName.set(spawnArgs.GetString("bone_focus"))
-                if (TempDump.isNotNullOrEmpty(jointName)) {
+                if (!jointName.IsEmpty()) {
                     focusJoint = animator.GetJointHandle(jointName)
                     if (focusJoint == Model.INVALID_JOINT) {
                         Game_local.gameLocal.Warning("Joint '%s' not found on '%s'", jointName, name)
@@ -1944,14 +1943,14 @@ object AI {
                 }
             }
             jointName.set(spawnArgs.GetString("bone_orientation"))
-            if (TempDump.isNotNullOrEmpty(jointName)) {
+            if (!jointName.IsEmpty()) {
                 orientationJoint = animator.GetJointHandle(jointName)
                 if (orientationJoint == Model.INVALID_JOINT) {
                     Game_local.gameLocal.Warning("Joint '%s' not found on '%s'", jointName, name)
                 }
             }
             jointName.set(spawnArgs.GetString("bone_flytilt"))
-            if (TempDump.isNotNullOrEmpty(jointName)) {
+            if (!jointName.IsEmpty()) {
                 flyTiltJoint = animator.GetJointHandle(jointName)
                 if (flyTiltJoint == Model.INVALID_JOINT) {
                     Game_local.gameLocal.Warning("Joint '%s' not found on '%s'", jointName, name)
@@ -2412,8 +2411,8 @@ object AI {
             } else {
                 snd = null
             }
-            if (isNotNullOrEmpty(snd)) {
-                chat_snd = DeclManager.declManager.FindSound(snd!!)
+            if (!snd.isNullOrEmpty()) {
+                chat_snd = DeclManager.declManager.FindSound(snd)
 
                 // set the next chat time
                 chat_time =
@@ -4333,7 +4332,7 @@ object AI {
         ): idDeclParticle? {
             val origin = idVec3()
             val axis = idMat3()
-            if (!TempDump.isNotNullOrEmpty(particleName)) {
+            if (!particleName.IsEmpty()) {
 //		memset( &pe, 0, sizeof( pe ) );//TODO:
                 return pe.particle
             }
@@ -4927,7 +4926,7 @@ object AI {
             // do the damage
             //
             p = meleeDef.GetString("snd_hit")
-            if (TempDump.isNotNullOrEmpty(p)) {
+            if (p.isNotEmpty()) {
                 shader = DeclManager.declManager.FindSound(p)
                 StartSoundShader(shader, gameSoundChannel_t.SND_CHANNEL_DAMAGE, 0, false, CInt())
             }
@@ -5009,7 +5008,7 @@ object AI {
             }
             if (null == enemyEnt) {
                 p = meleeDef.GetString("snd_miss")
-                if (TempDump.isNotNullOrEmpty(p)) {
+                if (p.isNotEmpty()) {
                     shader = DeclManager.declManager.FindSound(p)
                     StartSoundShader(shader, gameSoundChannel_t.SND_CHANNEL_DAMAGE, 0, false, CInt())
                 }
@@ -5041,7 +5040,7 @@ object AI {
             if (forceMiss || !TestMelee()) {
                 // missed
                 p = meleeDef.GetString("snd_miss")
-                if (TempDump.isNotNullOrEmpty(p)) {
+                if (p.isNotEmpty()) {
                     shader = DeclManager.declManager.FindSound(p)
                     StartSoundShader(shader, gameSoundChannel_t.SND_CHANNEL_DAMAGE, 0, false, CInt())
                 }
@@ -5052,7 +5051,7 @@ object AI {
             // do the damage
             //
             p = meleeDef.GetString("snd_hit")
-            if (TempDump.isNotNullOrEmpty(p)) {
+            if (p.isNotEmpty()) {
                 shader = DeclManager.declManager.FindSound(p)
                 StartSoundShader(shader, gameSoundChannel_t.SND_CHANNEL_DAMAGE, 0, false, CInt())
             }
@@ -5121,13 +5120,13 @@ object AI {
         // special effects
         protected fun GetMuzzle(jointname: String?, muzzle: idVec3, axis: idMat3) {
             val   /*jointHandle_t*/joint: Int
-            if (!TempDump.isNotNullOrEmpty(jointname)) {
+            if (jointname.isNullOrEmpty()) {
                 muzzle.set(
                     physicsObj.GetOrigin().plus(viewAxis[0].times(physicsObj.GetGravityAxis().times(14f)))
                 )
                 muzzle.minusAssign(physicsObj.GetGravityNormal().times(physicsObj.GetBounds()[1].z * 0.5f))
             } else {
-                joint = animator.GetJointHandle(jointname!!)
+                joint = animator.GetJointHandle(jointname)
                 if (joint == Model.INVALID_JOINT) {
                     idGameLocal.Error("Unknown joint '%s' on %s", jointname, GetEntityDefName())
                 }
@@ -5711,10 +5710,10 @@ object AI {
             GetMuzzle(jointname, muzzle, axis)
             CreateProjectile(muzzle, viewAxis[0].times(physicsObj.GetGravityAxis()))
             if (projectile.GetEntity() != null) {
-                if (!TempDump.isNotNullOrEmpty(jointname)) {
+                if (jointname.isNullOrEmpty()) {
                     projectile.GetEntity()!!.Bind(this, true)
                 } else {
-                    projectile.GetEntity()!!.BindToJoint(this, jointname!!, true)
+                    projectile.GetEntity()!!.BindToJoint(this, jointname, true)
                 }
             }
             idThread.ReturnEntity(projectile.GetEntity())
@@ -5809,7 +5808,7 @@ object AI {
             val   /*jointHandle_t*/joint: Int
             val org = idVec3()
             val axis = idMat3()
-            if (!TempDump.isNotNullOrEmpty(jointname.value)) {
+            if (jointname.value.isEmpty()) {
                 org.set(physicsObj.GetOrigin())
             } else {
                 joint = animator.GetJointHandle(jointname.value)

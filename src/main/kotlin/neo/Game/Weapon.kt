@@ -132,11 +132,11 @@ object Weapon {
 
                 // precache the brass collision model
                 brassDefName = weaponDef.dict.GetString("def_ejectBrass")
-                if (TempDump.isNotNullOrEmpty(brassDefName)) {
+                if (brassDefName.isNotEmpty()) {
                     val brassDef = Game_local.gameLocal.FindEntityDef(brassDefName, false)
                     if (brassDef != null) {
                         brassDef.dict.GetString("clipmodel", "", clipModelName)
-                        if (!TempDump.isNotNullOrEmpty(clipModelName)) {
+                        if (clipModelName.IsEmpty()) {
                             clipModelName.set(brassDef.dict.GetString("model")) // use the visual model
                         }
                         // load the trace model
@@ -144,7 +144,7 @@ object Weapon {
                     }
                 }
                 guiName = weaponDef.dict.GetString("gui")
-                if (TempDump.isNotNullOrEmpty(guiName)) {
+                if (guiName.isNotEmpty()) {
                     UserInterface.uiManager.FindGui(guiName, true, false, true)
                 }
             }
@@ -162,7 +162,7 @@ object Weapon {
                 if (null == ammoDict) {
                     idGameLocal.Error("Could not find entity definition for 'ammo_types'\n")
                 }
-                if (!TempDump.isNotNullOrEmpty(ammoname)) {
+                if (ammoname.isEmpty()) {
                     return 0
                 }
                 if (!ammoDict!!.GetInt(ammoname, "-1", num)) {
@@ -212,7 +212,7 @@ object Weapon {
                     idGameLocal.Error("Could not find entity definition for 'ammo_names'\n")
                 }
                 val name = GetAmmoNameForNum(ammonum)
-                if (TempDump.isNotNullOrEmpty(name)) {
+                if (!name.isNullOrEmpty()) {
                     num = ammoDict!!.GetNumKeyVals()
                     i = 0
                     while (i < num) {
@@ -994,7 +994,7 @@ object Weapon {
 
             // muzzle smoke
             smokeName = weaponDef!!.dict.GetString("smoke_muzzle")
-            weaponSmoke = if (TempDump.isNotNullOrEmpty(smokeName)) {
+            weaponSmoke = if (smokeName.isNotEmpty()) {
                 DeclManager.declManager.FindType(declType_t.DECL_PARTICLE, smokeName) as idDeclParticle
             } else {
                 null
@@ -1002,7 +1002,7 @@ object Weapon {
             continuousSmoke = weaponDef!!.dict.GetBool("continuousSmoke")
             weaponSmokeStartTime = if (continuousSmoke) Game_local.gameLocal.time else 0
             smokeName = weaponDef!!.dict.GetString("smoke_strike")
-            strikeSmoke = if (TempDump.isNotNullOrEmpty(smokeName)) {
+            strikeSmoke = if (smokeName.isNotEmpty()) {
                 DeclManager.declManager.FindType(declType_t.DECL_PARTICLE, smokeName) as idDeclParticle
             } else {
                 null
@@ -1015,7 +1015,7 @@ object Weapon {
             // setup gui light
             guiLight = renderLight_s() //	memset( &guiLight, 0, sizeof( guiLight ) );
             val guiLightShader = weaponDef!!.dict.GetString("mtr_guiLightShader")
-            if (TempDump.isNotNullOrEmpty(guiLightShader)) {
+            if (guiLightShader.isNotEmpty()) {
                 guiLight.shader = DeclManager.declManager.FindMaterial(guiLightShader, false)
                 guiLight.lightRadius[0] = guiLight.lightRadius.set(1, guiLight.lightRadius.set(2, 3f))
                 guiLight.pointLight = true
@@ -1045,7 +1045,7 @@ object Weapon {
             // get the projectile
             projectileDict.Clear()
             projectileName = weaponDef!!.dict.GetString("def_projectile")
-            if (TempDump.isNotNullOrEmpty(projectileName)) {
+            if (projectileName.isNotEmpty()) {
                 val projectileDef = Game_local.gameLocal.FindEntityDef(projectileName, false)
                 if (null == projectileDef) {
                     Game_local.gameLocal.Warning("Unknown projectile '%s' in weapon '%s'", projectileName, objectName)
@@ -1132,7 +1132,7 @@ object Weapon {
             brassDict.Clear()
             brassDelay = weaponDef!!.dict.GetInt("ejectBrassDelay", "0")
             brassDefName = weaponDef!!.dict.GetString("def_ejectBrass")
-            if (TempDump.isNotNullOrEmpty(brassDefName)) {
+            if (brassDefName.isNotEmpty()) {
                 val brassDef = Game_local.gameLocal.FindEntityDef(brassDefName, false)
                 if (null == brassDef) {
                     Game_local.gameLocal.Warning("Unknown brass '%s'", brassDefName)
@@ -1154,7 +1154,7 @@ object Weapon {
             }
             renderEntity.gui[0] = null
             guiName = weaponDef!!.dict.GetString("gui")
-            if (TempDump.isNotNullOrEmpty(guiName)) {
+            if (guiName.isNotEmpty()) {
                 renderEntity.gui[0] = UserInterface.uiManager.FindGui(guiName, true, false, true)!!
             }
             zoomFov = weaponDef!!.dict.GetFloat("zoomFov", "70")
@@ -1181,7 +1181,7 @@ object Weapon {
             WEAPON_LOWERWEAPON.LinkTo(scriptObject, "WEAPON_LOWERWEAPON")
             spawnArgs.set(weaponDef!!.dict)
             shader[0] = spawnArgs.GetString("snd_hum")
-            if (TempDump.isNotNullOrEmpty(shader[0])) {
+            if (shader[0].isNotEmpty()) {
                 sndHum = DeclManager.declManager.FindSound(shader[0])
                 StartSoundShader(sndHum, gameSoundChannel_t.SND_CHANNEL_BODY.ordinal, 0, false)
             }
@@ -1492,7 +1492,7 @@ object Weapon {
                 return null
             }
             val classname = weaponDef!!.dict.GetString("def_dropItem")
-            if (!TempDump.isNotNullOrEmpty(classname)) {
+            if (classname.isEmpty()) {
                 return null
             }
             StopSound(TempDump.etoi(gameSoundChannel_t.SND_CHANNEL_BODY), true)
@@ -1512,7 +1512,7 @@ object Weapon {
                 return false
             }
             val classname = weaponDef!!.dict.GetString("def_dropItem")
-            return TempDump.isNotNullOrEmpty(classname)
+            return classname.isNotEmpty()
         }
 
         fun WeaponStolen() {
@@ -2050,7 +2050,7 @@ object Weapon {
             val model = def.dict.GetString("model_world")
             val attach = def.dict.GetString("joint_attach")
             ent.SetSkin(null)
-            if (TempDump.isNotNullOrEmpty(model)) {
+            if (model.isNotEmpty()) {
                 ent.Show()
                 ent.SetModel(model)
                 if (ent.GetAnimator()!!.ModelDef() != null) {
@@ -2824,14 +2824,14 @@ object Weapon {
 
                             // start impact sound based on material type
                             hitSound = meleeDef!!.dict.GetString(Str.va("snd_%s", materialType))
-                            if (TempDump.isNotNullOrEmpty(hitSound)) {
+                            if (hitSound.isNotEmpty()) {
                                 hitSound = meleeDef!!.dict.GetString("snd_metal")
                             }
                             if (Game_local.gameLocal.time > nextStrikeFx) {
                                 val decal: String?
                                 // project decal
                                 decal = weaponDef!!.dict.GetString("mtr_strike")
-                                if (TempDump.isNotNullOrEmpty(decal)) {
+                                if (decal.isNotEmpty()) {
                                     Game_local.gameLocal.ProjectDecal(
                                         tr.c.point,
                                         tr.c.normal.unaryMinus(),
@@ -2851,7 +2851,7 @@ object Weapon {
                         }
                     }
                 }
-                if (TempDump.isNotNullOrEmpty(hitSound)) {
+                if (hitSound.isNotEmpty()) {
                     val snd = DeclManager.declManager.FindSound(hitSound)
                     StartSoundShader(snd, gameSoundChannel_t.SND_CHANNEL_BODY2.ordinal, 0, true)
                 }

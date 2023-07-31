@@ -44,9 +44,9 @@ class BindWindow {
             if (waitingOnKey) {
                 waitingOnKey = false
                 if (key == KeyInput.K_ESCAPE) {
-                    idStr.snPrintf(ret, ret.capacity(), "clearbind \"%s\"", bindName.GetName())
+                    idStr.snPrintf(ret, ret.capacity(), "clearbind \"%s\"", bindName.GetName()!!)
                 } else {
-                    idStr.snPrintf(ret, ret.capacity(), "bind %d \"%s\"", key, bindName.GetName())
+                    idStr.snPrintf(ret, ret.capacity(), "bind %d \"%s\"", key, bindName.GetName()!!)
                 }
                 return ret.toString()
             } else {

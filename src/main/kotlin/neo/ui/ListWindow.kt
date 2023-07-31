@@ -422,7 +422,7 @@ object ListWindow {
                             var iconMat: idMaterial?
 
                             // leaving the icon name empty doesn't draw anything
-                            if (TempDump.isNotNullOrEmpty(work)) {
+                            if (!work.IsEmpty()) {
                                 hashMat = iconMaterials[work.toString()]
                                 iconMat = hashMat ?: DeclManager.declManager.FindMaterial("_default")
                                 val iconRect = idRectangle()

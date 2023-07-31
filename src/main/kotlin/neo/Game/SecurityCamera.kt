@@ -138,7 +138,7 @@ object SecurityCamera {
 
             // check if a clip model is set
             spawnArgs.GetString("clipmodel", "", str)
-            if (!TempDump.isNotNullOrEmpty(str)) {
+            if (str.IsEmpty()) {
                 str.set(spawnArgs.GetString("model")) // use the visual model
             }
             if (!CollisionModel_local.collisionModelManager.TrmFromModel(str, trm)) {
@@ -260,7 +260,7 @@ object SecurityCamera {
             sweeping = false
             StopSound(TempDump.etoi(gameSoundChannel_t.SND_CHANNEL_ANY), false)
             val fx = spawnArgs.GetString("fx_destroyed")
-            if (TempDump.isNotNullOrEmpty(fx)) { //fx[0] != '\0' ) {
+            if (fx.isNotEmpty()) { //fx[0] != '\0' ) {
                 idEntityFx.StartFx(fx, getVec3_zero(), idMat3.getMat3_zero(), this, true)
             }
             physicsObj.SetSelf(this)
@@ -284,7 +284,7 @@ object SecurityCamera {
             location: Int
         ): Boolean {
             val fx = spawnArgs.GetString("fx_damage")
-            if (TempDump.isNotNullOrEmpty(fx)) { //fx[0] != '\0' ) {
+            if (fx.isNotEmpty()) { //fx[0] != '\0' ) {
                 idEntityFx.StartFx(fx, getVec3_zero(), idMat3.getMat3_zero(), this, true)
             }
             return true

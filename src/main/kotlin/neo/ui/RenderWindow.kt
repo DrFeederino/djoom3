@@ -5,7 +5,6 @@ import neo.Game.GameEdit
 import neo.Renderer.RenderSystem
 import neo.Renderer.RenderWorld
 import neo.Renderer.RenderWorld.*
-import neo.TempDump
 import neo.framework.Common
 import neo.idlib.Dict_h.idDict
 import neo.idlib.Text.Parser.idParser
@@ -189,7 +188,7 @@ class RenderWindow {
                 spawnArgs.Set("_color", lightColor.ToVec3().ToString())
                 GameEdit.gameEdit.ParseSpawnArgsToRenderLight(spawnArgs, rLight)
                 lightDef = world.AddLightDef(rLight)
-                if (!TempDump.isNotNullOrEmpty(modelName.c_str())) {
+                if (modelName.c_str().isEmpty()) {
                     Common.common.Warning("Window '%s' in gui '%s': no model set", GetName(), GetGui().GetSourceFile())
                 }
                 worldEntity = renderEntity_s()

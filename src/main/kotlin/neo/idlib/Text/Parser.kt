@@ -1175,7 +1175,7 @@ object Parser {
                     token.linesCrossed += changedScript
 
                     // set the marker based on the start of the token read in
-                    if (TempDump.isNotNullOrEmpty(marker_p)) {
+                    if (!marker_p.isNullOrEmpty()) {
                         marker_p = "" //token.whiteSpaceEnd_p;//TODO:does marker_p do anythning???
                     }
                     return true

@@ -897,7 +897,7 @@ object MultiplayerGame {
                             }
                             if (isMP) {
                                 var mapName = dict.GetString("name")
-                                if (TempDump.isNotNullOrEmpty(mapName)) {
+                                if (mapName.isNotEmpty()) {
                                     mapName = dict.GetString("path")
                                 }
                                 mapName = Common.common.GetLanguageDict().GetString(mapName)

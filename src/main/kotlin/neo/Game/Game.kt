@@ -431,7 +431,7 @@ object Game {
             renderEntity.clear() //	memset( renderEntity, 0, sizeof( *renderEntity ) );//TODO:clear?
             temp = args.GetString("model")
             modelDef = null
-            if (TempDump.isNotNullOrEmpty(temp)) {
+            if (temp.isNotEmpty()) {
                 modelDef = TempDump.dynamic_cast(
                     idDeclModelDef::class.java,
                     DeclManager.declManager.FindType(declType_t.DECL_MODELDEF, temp, false)
@@ -449,13 +449,13 @@ object Game {
                 renderEntity.bounds.Zero()
             }
             temp = args.GetString("skin")
-            if (TempDump.isNotNullOrEmpty(temp)) {
+            if (temp.isNotEmpty()) {
                 renderEntity.customSkin = DeclManager.declManager.FindSkin(temp)
             } else if (modelDef != null) {
                 renderEntity.customSkin = modelDef.GetDefaultSkin()
             }
             temp = args.GetString("shader")
-            if (TempDump.isNotNullOrEmpty(temp)) {
+            if (temp.isNotEmpty()) {
                 renderEntity.customShader = DeclManager.declManager.FindMaterial(temp)
             }
             args.GetVector("origin", "0 0 0", renderEntity.origin)
@@ -499,7 +499,7 @@ object Game {
             i = 0
             while (i < RenderWorld.MAX_RENDERENTITY_GUI) {
                 temp = args.GetString(if (i == 0) "gui" else Str.va("gui%d", i + 1))
-                if (TempDump.isNotNullOrEmpty(temp)) {
+                if (temp.isNotEmpty()) {
                     renderEntity.gui[i] = Entity.AddRenderGui(temp, args)
                 }
                 i++
@@ -548,7 +548,7 @@ object Game {
             }
             refSound.parms.soundClass = args.GetInt("s_soundClass")
             temp = args.GetString("s_shader")
-            if (TempDump.isNotNullOrEmpty(temp)) {
+            if (temp.isNotEmpty()) {
                 refSound.shader = DeclManager.declManager.FindSound(temp)
             }
         }
@@ -798,7 +798,7 @@ object Game {
                 return null
             }
             temp = args.GetString("skin", "")!!
-            if (TempDump.isNotNullOrEmpty(temp)) {
+            if (temp.isNotEmpty()) {
                 ent.customSkin = DeclManager.declManager.FindSkin(temp)
             }
             ent.numJoints = model.NumJoints()
@@ -844,12 +844,12 @@ object Game {
             )
             args.Set("origin", org.ToString())
             args.Set("spawnclass", "idAFEntity_Generic")
-            if (TempDump.isNotNullOrEmpty(af.model)) {
+            if (!af.model.IsEmpty()) {
                 args.Set("model", af.model.toString())
             } else {
                 args.Set("model", fileName)
             }
-            if (TempDump.isNotNullOrEmpty(af.skin)) {
+            if (!af.skin.IsEmpty()) {
                 args.Set("skin", af.skin.toString())
             }
             args.Set("articulatedFigure", fileName)
@@ -1361,7 +1361,7 @@ object Game {
 
         fun MapCopyDictToEntity(name: String, dict: idDict) {
             val mapFile = Game_local.gameLocal.GetLevelMap()
-            if (mapFile != null && TempDump.isNotNullOrEmpty(name)) {
+            if (mapFile != null && name.isNotEmpty()) {
                 val mapent = mapFile.FindEntity(name)
                 if (mapent != null) {
                     for (i in 0 until dict.GetNumKeyVals()) {
@@ -1382,7 +1382,7 @@ object Game {
                     val ent = mapFile.GetEntity(i)
                     if (ent != null) {
                         val k = ent.epairs.GetString(key)
-                        if (TempDump.isNotNullOrEmpty(k) && count < max) {
+                        if (k.isNotEmpty() && count < max) {
                             list[count++] = k
                         }
                     }
@@ -1415,9 +1415,9 @@ object Game {
                     if (ent != null) {
                         val work = idStr(ent.epairs.GetString("classname"))
                         if (work.Icmp(classname) == 0) {
-                            if (TempDump.isNotNullOrEmpty(match)) {
+                            if (!match.isNullOrEmpty()) {
                                 work.set(ent.epairs.GetString("soundgroup"))
-                                if (count < max && work.Icmp(match!!) == 0) {
+                                if (count < max && work.Icmp(match) == 0) {
                                     list[count++] = ent.epairs.GetString("name")
                                 }
                             } else if (count < max) {
@@ -1442,7 +1442,7 @@ object Game {
 
         fun MapEntityTranslate(name: String, v: idVec3) {
             val mapFile = Game_local.gameLocal.GetLevelMap()
-            if (mapFile != null && TempDump.isNotNullOrEmpty(name)) {
+            if (mapFile != null && name.isNotEmpty()) {
                 val mapent = mapFile.FindEntity(name)
                 if (mapent != null) {
                     val origin = idVec3()

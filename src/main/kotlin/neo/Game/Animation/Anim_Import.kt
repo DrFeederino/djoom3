@@ -3,7 +3,6 @@ package neo.Game.Animation
 import neo.Game.GameSys.SysCvar
 import neo.Game.Game_local
 import neo.Renderer.Model
-import neo.TempDump
 import neo.TempDump.TODO_Exception
 import neo.framework.CVarSystem
 import neo.framework.FileSystem_h
@@ -124,7 +123,7 @@ object Anim_Import {
             var count: Int
 
             // only export sections that match our export mask
-            if (TempDump.isNotNullOrEmpty(SysCvar.g_exportMask.GetString())) {
+            if (!SysCvar.g_exportMask.GetString().isNullOrEmpty()) {
                 if (parser.CheckTokenString("{")) {
                     parser.SkipBracedSection(false)
                     return 0
@@ -331,7 +330,7 @@ object Anim_Import {
 
         fun ExportModel(model: String): Boolean {
             var game = CVarSystem.cvarSystem.GetCVarString("fs_game")
-            if (TempDump.isNotNullOrEmpty(game)) {
+            if (game.isNotEmpty()) {
                 game = Licensee.BASE_GAMEDIR
             }
             Reset()
@@ -348,7 +347,7 @@ object Anim_Import {
 
         fun ExportAnim(anim: String): Boolean {
             var game = CVarSystem.cvarSystem.GetCVarString("fs_game")
-            if (TempDump.isNotNullOrEmpty(game)) {
+            if (game.isNotEmpty()) {
                 game = Licensee.BASE_GAMEDIR
             }
             Reset()
@@ -374,7 +373,7 @@ object Anim_Import {
                 return 0
             }
             Game_local.gameLocal.Printf("--------- Exporting models --------\n")
-            if (TempDump.isNotNullOrEmpty(SysCvar.g_exportMask.GetString())) {
+            if (!SysCvar.g_exportMask.GetString().isNullOrEmpty()) {
                 Game_local.gameLocal.Printf("  Export mask: '%s'\n", SysCvar.g_exportMask.GetString())
             }
             count = 0

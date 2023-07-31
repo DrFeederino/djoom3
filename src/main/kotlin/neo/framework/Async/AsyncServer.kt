@@ -2723,7 +2723,7 @@ object AsyncServer {
             var next: Int
             token = TempDump.ctos(pakbuf)
             next = token.indexOf(';')
-            while (TempDump.isNotNullOrEmpty(token)) {
+            while (token.isNotEmpty()) {
                 if (next != -1) {
                     pakbuf[next] = '\u0000'
                 }

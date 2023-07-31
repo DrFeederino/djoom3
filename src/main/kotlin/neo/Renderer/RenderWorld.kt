@@ -5,7 +5,6 @@ import neo.Renderer.Model.idRenderModel
 import neo.Renderer.tr_local.idRenderEntityLocal
 import neo.Renderer.tr_local.idRenderLightLocal
 import neo.Sound.sound.idSoundEmitter
-import neo.TempDump
 import neo.TempDump.Atomics.*
 import neo.TempDump.SERiAL
 import neo.framework.CmdSystem.cmdFunction_t
@@ -56,7 +55,7 @@ class RenderWorld {
                 shader[0] = tr_local.tr.primaryRenderView!!.globalMaterial
                 return true
             }
-            if (TempDump.isNotNullOrEmpty(RenderSystem_init.r_materialOverride.GetString())) {
+            if (!RenderSystem_init.r_materialOverride.GetString().isNullOrEmpty()) {
                 shader[0] = DeclManager.declManager.FindMaterial(RenderSystem_init.r_materialOverride.GetString()!!)!!
                 return true
             }

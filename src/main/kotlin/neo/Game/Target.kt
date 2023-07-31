@@ -1053,7 +1053,7 @@ object Target {
                 PostEventSec(EV_Flash, 0.0f, flashIn, 0)
             }
             parm = spawnArgs.GetString("snd_influence")
-            if (TempDump.isNotNullOrEmpty(parm)) {
+            if (parm.isNotEmpty()) {
                 PostEventSec(Entity.EV_StartSoundShader, flashIn, parm, gameSoundChannel_t.SND_CHANNEL_ANY)
             }
             if (switchToCamera != null) {
@@ -1091,7 +1091,7 @@ object Target {
                 }
                 light = ent
                 parm = light.spawnArgs.GetString("mat_demonic")
-                if (TempDump.isNotNullOrEmpty(parm)) {
+                if (parm.isNotEmpty()) {
                     light.SetShader(parm)
                 }
                 color.set(light.spawnArgs.GetVector("_color"))
@@ -1109,7 +1109,7 @@ object Target {
                 }
                 sound = ent
                 parm = sound.spawnArgs.GetString("snd_demonic")
-                if (TempDump.isNotNullOrEmpty(parm)) {
+                if (parm.isNotEmpty()) {
                     if (sound.spawnArgs.GetBool("overlayDemonic")) {
                         sound.StartSound("snd_demonic", gameSoundChannel_t.SND_CHANNEL_DEMONIC, 0, false)
                     } else {
@@ -1163,7 +1163,7 @@ object Target {
                 player.SetInfluenceView(parm, skin, spawnArgs.GetInt("visionRadius").toFloat(), this)
             }
             parm = spawnArgs.GetString("mtrWorld")
-            if (TempDump.isNotNullOrEmpty(parm)) {
+            if (parm.isNotEmpty()) {
                 Game_local.gameLocal.SetGlobalMaterial(DeclManager.declManager.FindMaterial(parm))
             }
             if (!restoreOnTrigger) {
@@ -1745,7 +1745,7 @@ object Target {
                 while (i < Game_local.gameLocal.numClients) {
                     if (Game_local.gameLocal.entities[i] != null) {
                         Game_local.gameLocal.entities[i]!!.ProcessEvent(Player.EV_Player_EnableWeapon)
-                        if (TempDump.isNotNullOrEmpty(weap)) {
+                        if (weap.isNotEmpty()) {
                             Game_local.gameLocal.entities[i]!!.PostEventSec(Player.EV_Player_SelectWeapon, 0.5f, weap)
                         }
                     }

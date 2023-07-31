@@ -61,7 +61,7 @@ object GameEdit {
         pattern = pattern.replace("%d".toRegex(), "\\d+")
         var scanner = Scanner(key.toString())
         result = scanner.findInLine(Pattern.compile(pattern))
-        if (TempDump.isNotNullOrEmpty(result)) {
+        if (result.isNotEmpty()) {
             scanner = Scanner(result)
             scanner.findInLine("bind")
             a = scanner.nextInt()

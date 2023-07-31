@@ -4002,21 +4002,23 @@ object Player {
             return FindInventoryItem(name.toString())
         }
 
-        fun GivePDA(pdaName: idStr, item: idDict?) {
+        fun GivePDA(pdaName: idStr?, item: idDict?) {
+            var pdaName = pdaName
             if (Game_local.gameLocal.isMultiplayer && spectating) {
                 return
             }
             if (item != null) {
                 inventory.pdaSecurity.addUnique(item.GetString("inv_name"))
             }
-            if (TempDump.isNotNullOrEmpty(pdaName)) {
-                pdaName.set("personal")
+            if (pdaName == null || pdaName.IsEmpty()) {
+                pdaName = idStr("personal")
             }
-            val pda = DeclManager.declManager.FindType(declType_t.DECL_PDA, pdaName) as idDeclPDA
+
+            val pda = DeclManager.declManager.FindType(declType_t.DECL_PDA, pdaName) as idDeclPDA?
             inventory.pdas.addUnique(pdaName.toString())
 
             // Copy any videos over
-            for (i in 0 until pda.GetNumVideos()) {
+            for (i in 0 until pda!!.GetNumVideos()) {
                 val video = pda.GetVideoByIndex(i)
                 if (video != null) {
                     inventory.videos.addUnique(video.GetName())
@@ -7399,7 +7401,7 @@ object Player {
                         j = 0
                         while (j < inventory.pdaSecurity.size()) {
                             val p = inventory.pdaSecurity[j].toString()
-                            if (TempDump.isNotNullOrEmpty(p)) {
+                            if (p.isNotEmpty()) {
                                 focusUI!!.SetStateInt(p, 1)
                             }
                             j++
@@ -7584,7 +7586,7 @@ object Player {
                                 declType_t.DECL_VIDEO,
                                 inventory.videos[sel],
                                 false
-                            ) as idDeclVideo
+                            ) as idDeclVideo?
                         }
                         if (vid != null) {
                             pdaVideo.set(vid.GetRoq())

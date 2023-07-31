@@ -1,7 +1,6 @@
 package neo.Tools.Compilers.DMap
 
 import neo.Renderer.ModelManager
-import neo.TempDump
 import neo.Tools.Compilers.DMap.dmap.mapTri_s
 import neo.Tools.Compilers.DMap.dmap.optimizeGroup_s
 import neo.Tools.Compilers.DMap.dmap.uEntity_t
@@ -624,7 +623,7 @@ object tritjunction {
                     continue
                 }
                 val modelName = entity.mapEntity.epairs.GetString("model")
-                if (TempDump.isNotNullOrEmpty(modelName)) {
+                if (modelName.isEmpty()) {
                     continue
                 }
                 if (!modelName.contains(".lwo") && !modelName.contains(".ase") && !modelName.contains(".ma")) {

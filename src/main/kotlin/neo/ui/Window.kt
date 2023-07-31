@@ -618,7 +618,7 @@ object Window {
             for (i in 0 until c) {
                 if (idStr.Icmp(
                         _name,
-                        if (guiVar) Str.va("%s", definedVars[i].GetName()) else definedVars[i].GetName()
+                        if (guiVar) Str.va("%s", definedVars[i].GetName()) else definedVars[i].GetName()!!
                     ) == 0
                 ) {
                     retVar = definedVars[i]
@@ -1892,7 +1892,7 @@ object Window {
                         if (overChild != null) {
                             overChild!!.MouseExit()
                             str = overChild!!.cmd.toString()
-                            if (TempDump.isNotNullOrEmpty(str)) {
+                            if (str.isNotEmpty()) {
                                 gui!!.GetDesktop().AddCommand(str)
                                 overChild!!.cmd.set("")
                             }
@@ -1900,7 +1900,7 @@ object Window {
                         overChild = child
                         overChild!!.MouseEnter()
                         str = overChild!!.cmd.toString()
-                        if (TempDump.isNotNullOrEmpty(str)) {
+                        if (str.isNotEmpty()) {
                             gui!!.GetDesktop().AddCommand(str)
                             overChild!!.cmd.set("")
                         }
@@ -1915,7 +1915,7 @@ object Window {
             if (overChild != null) {
                 overChild!!.MouseExit()
                 str = overChild!!.cmd.toString()
-                if (TempDump.isNotNullOrEmpty(str)) {
+                if (str.isNotEmpty()) {
                     gui!!.GetDesktop().AddCommand(str)
                     overChild!!.cmd.set("")
                 }

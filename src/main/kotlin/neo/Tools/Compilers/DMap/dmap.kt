@@ -232,7 +232,7 @@ object dmap {
         while (i < args.Argc()) {
             var s: String?
             s = args.Argv(i)
-            if (TempDump.isNotNullOrEmpty(s) && s.isNotEmpty() && s.startsWith("-")) {
+            if (s.isNotEmpty() && s.startsWith("-")) {
                 s = s.substring(1)
                 if (s.isEmpty() || s.startsWith("\u0000")) {
                     i++

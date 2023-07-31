@@ -801,7 +801,7 @@ object Item {
                             origin.set(ent.GetPhysics().GetOrigin())
                             axis = ent.GetPhysics().GetAxis()
                         }
-                        if (TempDump.isNotNullOrEmpty(SysCvar.g_dropItemRotation.GetString())) {
+                        if (!SysCvar.g_dropItemRotation.GetString().isNullOrEmpty()) {
                             angles.Zero()
                             val sscanf = Scanner(SysCvar.g_dropItemRotation.GetString())
                             sscanf.useLocale(Locale.US)
@@ -929,7 +929,7 @@ object Item {
 
             // check if a clip model is set
             spawnArgs.GetString("clipmodel", "", clipModelName)
-            if (!TempDump.isNotNullOrEmpty(clipModelName)) {
+            if (clipModelName.IsEmpty()) {
                 clipModelName.set(spawnArgs.GetString("model")) // use the visual model
             }
 

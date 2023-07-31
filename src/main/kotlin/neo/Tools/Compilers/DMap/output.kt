@@ -402,7 +402,7 @@ object output {
         } else {
             val name = arrayOf("")
             entity.epairs.GetString("name", "", name)
-            if (TempDump.isNotNullOrEmpty(name[0])) {
+            if (name[0].isNotEmpty()) {
                 Common.common.Error("Entity %d has surfaces, but no name key", entityNum)
             }
             procFile!!.WriteFloatString(

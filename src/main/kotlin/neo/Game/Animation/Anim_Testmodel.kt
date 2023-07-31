@@ -155,7 +155,7 @@ class Anim_Testmodel {
 
             // add the head model if it has one
             headModel = spawnArgs.GetString("def_head", "")!!
-            if (TempDump.isNotNullOrEmpty(headModel)) {
+            if (headModel.isNotEmpty()) {
                 jointName.set(spawnArgs.GetString("head_joint"))
                 joint = animator.GetJointHandle(jointName.toString())
                 if (joint == Model.INVALID_JOINT) {

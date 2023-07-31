@@ -1550,7 +1550,7 @@ object AsyncClient {
                             Common.common.GetLanguageDict().GetString("#str_04325"),
                             true
                         )
-                        if (TempDump.isNotNullOrEmpty(retkey)) {
+                        if (retkey.isNotEmpty()) {
                             if (Session.session.CheckKey(retkey, true, valid)) {
                                 CmdSystem.cmdSystem.BufferCommandText(cmdExecution_t.CMD_EXEC_NOW, "reconnect")
                             } else {
@@ -2331,15 +2331,14 @@ object AsyncClient {
                 CmdSystem.cmdSystem.BufferCommandText(cmdExecution_t.CMD_EXEC_NOW, "disconnect")
                 // "You are missing required pak files to connect to this server.\nThe server gave a web page though:\n%s\nDo you want to go there now?"
                 // "Missing required files"
-                if (TempDump.isNotNullOrEmpty(
+                if (
                         Session.session.MessageBox(
                             msgBoxType_t.MSG_YESNO,
                             Str.va(Common.common.GetLanguageDict().GetString("#str_07217"), buf),
                             Common.common.GetLanguageDict().GetString("#str_07218"),
                             true,
                             "yes"
-                        )
-                    )
+                        ).isNotEmpty()
                 ) {
                     idLib.sys.OpenURL(TempDump.ctos(buf), true)
                 }

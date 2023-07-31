@@ -1221,7 +1221,7 @@ object FileSystem_h {
                 } else if (iGame == 1) {
                     fsgame = fs_game_base.GetString()!!
                 }
-                if (-1 == base && TempDump.isNotNullOrEmpty(fsgame)) {
+                if (-1 == base && fsgame.isNotEmpty()) {
                     base = OSPath.indexOf(fsgame)
                     while (base != -1) {
                         var c1: Char = '\u0000'

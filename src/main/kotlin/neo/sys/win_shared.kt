@@ -1,7 +1,6 @@
 package neo.sys
 
 import com.sun.management.OperatingSystemMXBean
-import neo.TempDump
 import neo.TempDump.TODO_Exception
 import neo.idlib.Text.Str.idStr
 import neo.sys.sys_public.sysMemoryStats_s
@@ -127,7 +126,7 @@ object win_shared {
 
     fun Sys_GetCurrentUser(): String {
         var s_userName: String = ""
-        if (!TempDump.isNotNullOrEmpty(System.getProperty("user.name").also { s_userName = it })) {
+        if (System.getProperty("user.name").also { s_userName = it }.isEmpty()) {
             s_userName = "player"
         }
         return s_userName

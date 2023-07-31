@@ -1519,7 +1519,7 @@ object Actor {
             val damageGroup = GetDamageGroup(location)
             painAnim.set("")
             if (animPrefix.Length() != 0) {
-                if (TempDump.isNotNullOrEmpty(damageGroup) && damageGroup != "legs") {
+                if (damageGroup.isNotEmpty() && damageGroup != "legs") {
                     painAnim.set(String.format("%s_pain_%s", animPrefix.toString(), damageGroup))
                     if (!animator.HasAnim(painAnim)) {
                         painAnim.set(String.format("pain_%s", damageGroup))
@@ -1534,7 +1534,7 @@ object Actor {
                         painAnim.set("")
                     }
                 }
-            } else if (TempDump.isNotNullOrEmpty(damageGroup) && damageGroup != "legs") {
+            } else if (damageGroup.isNotEmpty() && damageGroup != "legs") {
                 painAnim.set(String.format("pain_%s", damageGroup))
                 if (!animator.HasAnim(painAnim)) {
                     painAnim.set(String.format("pain_%s", damageGroup))

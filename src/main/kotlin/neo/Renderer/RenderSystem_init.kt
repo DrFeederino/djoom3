@@ -1400,7 +1400,7 @@ class RenderSystem_init {
         internal class R_TouchGui_f private constructor() : cmdFunction_t() {
             override fun run(args: CmdArgs.idCmdArgs) {
                 val gui = args.Argv(1)
-                if (!TempDump.isNotNullOrEmpty(gui)) {
+                if (gui.isEmpty()) {
                     idLib.common.Printf("USAGE: touchGui <guiName>\n")
                     return
                 }

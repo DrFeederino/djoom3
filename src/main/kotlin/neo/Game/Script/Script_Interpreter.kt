@@ -20,7 +20,6 @@ import neo.TempDump.NOT
 import neo.TempDump.btoi
 import neo.TempDump.btos
 import neo.TempDump.ctos
-import neo.TempDump.isNotNullOrEmpty
 import neo.TempDump.itob
 import neo.TempDump.strLen
 import neo.framework.Common
@@ -1125,7 +1124,7 @@ object Script_Interpreter {
 
                     Script_Compiler.OP_NOT_S -> {
                         var_c = GetVariable(st.c)
-                        var_c!!.floatPtr = (btoi(!isNotNullOrEmpty(GetString(st.a))).toFloat())
+                        var_c!!.floatPtr = (btoi(GetString(st.a).isNullOrEmpty()).toFloat())
                     }
 
                     Script_Compiler.OP_NOT_ENT -> {

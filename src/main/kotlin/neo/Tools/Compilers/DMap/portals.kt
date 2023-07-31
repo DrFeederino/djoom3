@@ -582,7 +582,7 @@ object portals {
                 // don't place lights that have a light_start field, because they can still
                 // be valid if their origin is outside the world
                 mapEnt.epairs.GetString("light_start", "", v)
-                if (TempDump.isNotNullOrEmpty(v[0])) {
+                if (v[0].isNotEmpty()) {
                     i++
                     continue
                 }
@@ -590,7 +590,7 @@ object portals {
                 // don't place fog lights, because they often
                 // have origins outside the light
                 mapEnt.epairs.GetString("texture", "", v)
-                if (TempDump.isNotNullOrEmpty(v[0])) {
+                if (v[0].isNotEmpty()) {
                     val mat: Material.idMaterial = DeclManager.declManager.FindMaterial(v[0])!!
                     if (mat.IsFogLight()) {
                         i++

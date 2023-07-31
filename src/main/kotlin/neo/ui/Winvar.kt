@@ -36,11 +36,11 @@ object Winvar {
             SetName(_name)
         }
 
-        fun GetName(): String {
+        fun GetName(): String? {
             return if (name != null) {
-                if (guiDict != null && name!!.get(0) == '*') {
+                if (guiDict != null && name!![0] == '*') {
                     guiDict!!.GetString(name!!.substring(1))
-                } else name!!
+                } else name
             } else ""
         }
 
@@ -218,8 +218,8 @@ object Winvar {
         }
 
         override fun Update() {
-            val s = GetName()
-            if (guiDict != null && s[0] != '\u0000') {
+            val s = GetName()!!
+            if (guiDict != null && s.isNotEmpty()) {
                 data = guiDict!!.GetBool(s)
             }
         }
@@ -351,8 +351,8 @@ object Winvar {
         }
 
         override fun Update() {
-            val s = GetName()
-            if (guiDict != null && !s.isEmpty()) {
+            val s = GetName()!!
+            if (guiDict != null && s.isNotEmpty()) {
                 data.set(guiDict!!.GetString(s))
             }
         }
@@ -431,8 +431,8 @@ object Winvar {
         }
 
         override fun Update() {
-            val s = GetName()
-            if (guiDict != null && s[0] != '\u0000') {
+            val s = GetName()!!
+            if (guiDict != null && s.isNotEmpty()) {
                 data = guiDict!!.GetInt(s)
             }
         }
@@ -509,8 +509,8 @@ object Winvar {
         }
 
         override fun Update() {
-            val s = GetName()
-            if (guiDict != null && s[0] != '\u0000') {
+            val s = GetName()!!
+            if (guiDict != null && s.isNotEmpty()) {
                 data = guiDict!!.GetFloat(s)
             }
         }
@@ -652,8 +652,8 @@ object Winvar {
         }
 
         override fun Update() {
-            val s = GetName()
-            if (guiDict != null && s[0] != '\u0000') {
+            val s = GetName()!!
+            if (guiDict != null && s.isNotEmpty()) {
                 val v = guiDict!!.GetVec4(s)
                 data.x = v.x
                 data.y = v.y
@@ -787,8 +787,8 @@ object Winvar {
         }
 
         override fun Update() {
-            val s = GetName()
-            if (guiDict != null && s[0] != '\u0000') {
+            val s = GetName()!!
+            if (guiDict != null && s.isNotEmpty()) {
                 data = guiDict!!.GetVec2(s)
             }
         }
@@ -930,8 +930,8 @@ object Winvar {
         }
 
         override fun Update() {
-            val s = GetName()
-            if (guiDict != null && s[0] != '\u0000') {
+            val s = GetName()!!
+            if (guiDict != null && s.isNotEmpty()) {
                 data.set(guiDict!!.GetVec4(s))
             }
         }
@@ -1054,8 +1054,8 @@ object Winvar {
         }
 
         override fun Update() {
-            val s = GetName()
-            if (guiDict != null && s[0] != '\u0000') {
+            val s = GetName()!!
+            if (guiDict != null && s.isNotEmpty()) {
                 data.set(guiDict!!.GetVector(s))
             }
         }
@@ -1167,8 +1167,8 @@ object Winvar {
         }
 
         override fun Update() {
-            val s = GetName()
-            if (guiDict != null && s[0] != '\u0000') {
+            val s = GetName()!!
+            if (guiDict != null && s.isNotEmpty()) {
                 data.set(guiDict!!.GetString(s))
                 if (mat.isNotEmpty()) {
                     if (data.IsEmpty()) {

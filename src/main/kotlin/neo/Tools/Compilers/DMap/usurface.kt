@@ -610,7 +610,7 @@ object usurface {
                     continue
                 }
                 val modelName = entity.mapEntity.epairs.GetString("model")
-                if (TempDump.isNotNullOrEmpty(modelName)) {
+                if (modelName.isNotEmpty()) {
                     continue
                 }
                 val model = ModelManager.renderModelManager.FindModel(modelName)!!

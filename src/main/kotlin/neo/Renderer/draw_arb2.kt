@@ -44,7 +44,6 @@ import neo.Renderer.tr_render.RB_CreateSingleDrawInteractions
 import neo.Renderer.tr_render.RB_DrawElementsWithCounters
 import neo.TempDump.NOT
 import neo.TempDump.TODO_Exception
-import neo.TempDump.isNotNullOrEmpty
 import neo.framework.CmdSystem.cmdFunction_t
 import neo.framework.Common
 import neo.framework.FileSystem_h.fileSystem
@@ -446,7 +445,7 @@ object draw_arb2 {
 
         // see if it is already loaded
         i = 0
-        while (progs[i] != null && isNotNullOrEmpty(progs[i]!!.name)) {
+        while (progs[i] != null) {
             if (progs[i]!!.target != target) {
                 i++
                 continue
@@ -663,7 +662,7 @@ object draw_arb2 {
             var i: Int
             Common.common.Printf("----- R_ReloadARBPrograms -----\n")
             i = 0
-            while (progs[i] != null && isNotNullOrEmpty(progs[i]!!.name)) {
+            while (progs[i] != null) {
                 R_LoadARBProgram(i)
                 i++
             }

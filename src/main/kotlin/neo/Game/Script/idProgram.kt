@@ -21,7 +21,6 @@ import neo.Game.Script.Script_Program.idVarDef.initialized_t
 import neo.Game.Script.Script_Program.idVarDefName
 import neo.Game.Script.Script_Program.statement_s
 import neo.Game.Script.Script_Thread.idThread
-import neo.TempDump.isNotNullOrEmpty
 import neo.framework.FileSystem_h.fileSystem
 import neo.framework.FileSystem_h.fsMode_t
 import neo.framework.File_h.idFile
@@ -263,8 +262,8 @@ class idProgram {
         BeginCompilation();
 
         // load the default script
-        if (isNotNullOrEmpty(defaultScript)) {
-            CompileFile(defaultScript!!);
+        if (!defaultScript.isNullOrEmpty()) {
+            CompileFile(defaultScript);
         }
         FinishCompilation();
     }

@@ -274,7 +274,7 @@ class Common {
 
                 // parse command line options
                 val args: CmdArgs.idCmdArgs
-                if (TempDump.isNotNullOrEmpty(cmdline)) {
+                if (cmdline.isNotEmpty()) {
                     // tokenize if the OS doesn't do it for us
                     args = CmdArgs.idCmdArgs()
                     args.TokenizeString(cmdline, true)
@@ -3020,7 +3020,7 @@ class Common {
                                     if ( /*static*/className == "info_location" && list[k].toString() == "location") {
                                         hasLocation = true
                                     }
-                                    if (TempDump.isNotNullOrEmpty(`val`) && TestMapVal(`val`)) {
+                                    if (`val`.isNotEmpty() && TestMapVal(`val`)) {
                                         if (!hasLocation || list[k].toString() == "location") {
                                             val out = Str.va("%s,%s,%s\r\n", `val`, list[k], file)
                                             localizeFile.WriteString(out)
@@ -3032,7 +3032,7 @@ class Common {
                             if (list != null) {
                                 for (k in 0 until list.size()) {
                                     val `val` = ent.epairs.GetString(list[k].toString(), "")!!
-                                    if (TempDump.isNotNullOrEmpty(`val`) && TestMapVal(`val`)) {
+                                    if (`val`.isNotEmpty() && TestMapVal(`val`)) {
                                         val out = Str.va("%s,%s,%s\r\n", `val`, list[k], file)
                                         localizeFile.WriteString(out)
                                     }

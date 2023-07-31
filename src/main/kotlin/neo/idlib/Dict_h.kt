@@ -367,32 +367,32 @@ class Dict_h {
         }
 
         @Throws(idException::class)
-        fun SetFloat(key: String, `val`: Float) {
+        fun SetFloat(key: String?, `val`: Float) {
             Set(key, Str.va("%f", `val`))
         }
 
         @Throws(idException::class)
-        fun SetInt(key: String, `val`: Int) {
+        fun SetInt(key: String?, `val`: Int) {
             Set(key, Str.va("%d", `val`))
         }
 
         @Throws(idException::class)
-        fun SetBool(key: String, `val`: Boolean) {
+        fun SetBool(key: String?, `val`: Boolean) {
             Set(key, Str.va("%d", TempDump.btoi(`val`)))
         }
 
         @Throws(idException::class)
-        fun SetVector(key: String, `val`: idVec3) {
+        fun SetVector(key: String?, `val`: idVec3) {
             Set(key, `val`.ToString())
         }
 
         @Throws(idException::class)
-        fun SetVec2(key: String, `val`: idVec2) {
+        fun SetVec2(key: String?, `val`: idVec2) {
             Set(key, `val`.ToString())
         }
 
         @Throws(idException::class)
-        fun SetVec4(key: String, `val`: idVec4) {
+        fun SetVec4(key: String?, `val`: idVec4) {
             Set(key, `val`.ToString())
         }
 
@@ -428,19 +428,19 @@ class Dict_h {
 
         @JvmOverloads
         @Throws(idException::class)
-        fun GetInt(key: String, defaultString: String = "0"): Int {
+        fun GetInt(key: String?, defaultString: String = "0"): Int {
             return TempDump.atoi(GetString(key, defaultString)!!)
         }
 
         @JvmOverloads
         @Throws(idException::class)
-        fun GetBool(key: String, defaultString: String = "0"): Boolean {
+        fun GetBool(key: String?, defaultString: String = "0"): Boolean {
             return TempDump.atob(GetString(key, defaultString)!!)
         }
 
         @JvmOverloads
         @Throws(idException::class)
-        fun GetVector(key: String, defaultString: String? = null): idVec3 {
+        fun GetVector(key: String?, defaultString: String? = null): idVec3 {
             val out = idVec3()
             GetVector(key, defaultString, out)
             return out

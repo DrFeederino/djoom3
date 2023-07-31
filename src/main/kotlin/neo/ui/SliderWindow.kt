@@ -378,7 +378,7 @@ class SliderWindow {
         }
 
         private fun InitCvar() {
-            if (!TempDump.isNotNullOrEmpty(cvarStr.c_str())) {
+            if (cvarStr.c_str().isEmpty()) {
                 if (null == buddyWin) {
                     Common.common.Warning(
                         "idSliderWindow.InitCvar: gui '%s' window '%s' has an empty cvar string",
