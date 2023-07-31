@@ -454,7 +454,7 @@ object CmdSystem {
             // fail if the command already exists
             cmd = commands
             while (cmd != null) {
-                if (idStr.Cmp(cmdName, cmd.name!!) == 0) {
+                if (idStr.Cmp(cmdName, cmd.name) == 0) {
                     if (function !== cmd.function) {
                         idLib.common.Printf("idCmdSystemLocal::AddCommand: %s already defined\n", cmdName)
                     }
@@ -477,7 +477,7 @@ object CmdSystem {
             var last: commandDef_s?
             last = commands.also { cmd = it }
             while (cmd != null) {
-                if (idStr.Cmp(cmdName, cmd!!.name!!) == 0) {
+                if (idStr.Cmp(cmdName, cmd!!.name) == 0) {
                     if (cmd === commands) { //first iteration.
                         commands = cmd!!.next //TODO:BOINTER. edit: check if this equals **last;
                     } else { //set last.next to last.next.next,
@@ -512,7 +512,7 @@ object CmdSystem {
             var cmd: commandDef_s?
             cmd = commands
             while (cmd != null) {
-                callback.run(cmd.name!!)
+                callback.run(cmd.name)
                 cmd = cmd.next
             }
         }
@@ -528,7 +528,7 @@ object CmdSystem {
                     cmd = cmd.next
                     continue
                 }
-                if (idStr.Icmp(args.Argv(0), cmd.name!!) == 0) {
+                if (idStr.Icmp(args.Argv(0), cmd.name) == 0) {
                     cmd.argCompletion!!.run(args, callback)
                     break
                 }
@@ -768,7 +768,7 @@ object CmdSystem {
             while (cmd != null) {
 
 //                cmd = prev;
-                if (idStr.Icmp(args.Argv(0), cmd!!.name!!) == 0) {
+                if (idStr.Icmp(args.Argv(0), cmd!!.name) == 0) {
                     // rearrange the links so that the command will be
                     // near the head of the list next time it is used
                     if (cmd !== commands) { //no re-arranging necessary for first element.
@@ -780,7 +780,7 @@ object CmdSystem {
                             "net_allowCheats"
                         )
                     ) {
-                        idLib.common.Printf("Command '%s' not valid in multiplayer mode.\n", cmd!!.name!!)
+                        idLib.common.Printf("Command '%s' not valid in multiplayer mode.\n", cmd!!.name)
                         return
                     }
                     // perform the action
@@ -1130,7 +1130,7 @@ object CmdSystem {
                         cmd = cmd.next
                         continue
                     }
-                    if (!match.isEmpty() && idStr(cmd.name!!).Filter(match, false)) {
+                    if (!match.isEmpty() && idStr(cmd.name).Filter(match, false)) {
                         cmd = cmd.next
                         continue
                     }
@@ -1141,7 +1141,7 @@ object CmdSystem {
                 i = 0
                 while (i < cmdList.Num()) {
                     cmd = cmdList[i]
-                    idLib.common.Printf("  %-21s %s\n", cmd.name!!, cmd.description!!)
+                    idLib.common.Printf("  %-21s %s\n", cmd.name, cmd.description)
                     i++
                 }
                 idLib.common.Printf("%d commands\n", cmdList.Num())
@@ -1162,9 +1162,9 @@ object CmdSystem {
      ============
      */
     // NOTE: the const wonkyness is required to make msvc happy
-    class idListSortCompare : cmp_t<commandDef_s> {
-        override fun compare(a: commandDef_s, b: commandDef_s): Int {
-            return idStr.Icmp(a.name!!, b.name!!)
+    class idListSortCompare : cmp_t<commandDef_s?> {
+        override fun compare(a: commandDef_s?, b: commandDef_s?): Int {
+            return idStr.Icmp(a!!.name, b!!.name)
         }
     }
 }

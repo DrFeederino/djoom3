@@ -1122,7 +1122,7 @@ object tr_stencilshadow {
             // we will need to build the planes a little differently
 
             // make the corners
-            val corners: Array<idVec3> = idVec3.Companion.generateArray(8)
+            val corners: Array<idVec3> = idVec3.generateArray(8)
             i = 0
             while (i < 8) {
                 val temp = idVec3()
@@ -1461,6 +1461,6 @@ object tr_stencilshadow {
     class clipTri_t {
         var edgeFlags: IntArray = IntArray(MAX_CLIPPED_POINTS)
         var numVerts = 0
-        val verts: Array<idVec3> = idVec3.Companion.generateArray(MAX_CLIPPED_POINTS)
+        val verts: Array<idVec3> = idVec3.generateArray(MAX_CLIPPED_POINTS)
     }
 }

@@ -893,7 +893,7 @@ object Str {
         }
 
         fun Replace(old: String, nw: String) {
-            data = data.replace(old.toRegex(), nw)
+            data = data.replace(old, nw)
             len = data.length
             //	int		oldLen, newLen, i, j, count;
 //	idStr	oldString=new idStr( data );

@@ -3331,7 +3331,7 @@ object RenderWorld_local {
                     }
 
 //                    if (!readDemo.ReadInt(viewShadow.globalMaterial)) {
-                    if (0.0 == (readDemo.Read(viewShadow.globalMaterial).toDouble())) {
+                    if (0.0 == (readDemo.Read(viewShadow.globalMaterial!!).toDouble())) {
                         return false
                     }
                     if (RenderSystem_init.r_showDemo.GetBool()) {

@@ -1,14 +1,14 @@
-package neo.idlib.containers;
+package neo.idlib.containers
 
-import neo.idlib.Text.Str.idStr;
-import neo.idlib.math.Math_h.idMath;
-
-import java.util.stream.Stream;
+import neo.idlib.Text.Str.idStr
+import neo.idlib.Text.Str.idStr.Companion.Hash
+import neo.idlib.math.Math_h.idMath.IsPowerOfTwo
+import kotlin.math.abs
 
 /**
  *
  */
-public class HashTable {
+class HashTable {
     /*
      ===============================================================================
 
@@ -17,200 +17,194 @@ public class HashTable {
 
      ===============================================================================
      */
+    class idHashTable<Type> {
+        private val heads: Array<hashnode_s<*>?>
 
-    public static class idHashTable<Type> {
-
-        private final hashnode_s[] heads;
         //
-        private final int tablesize;
-        private final int tablesizemask;
-        private int numentries;
+        private val tablesize: Int
+        private val tablesizemask: Int
+        private var numentries: Int
+
         //
         //
-
-        public idHashTable() {
-            int newtablesize = 256;
-
-            tablesize = newtablesize;
-            assert (tablesize > 0);
-
-            heads = Stream.generate(hashnode_s::new).limit(tablesize).toArray(hashnode_s[]::new);//	memset( heads, 0, sizeof( *heads ) * tablesize );
-            numentries = 0;
-
-            tablesizemask = tablesize - 1;
+        constructor() {
+            val newtablesize = 256
+            tablesize = newtablesize
+            assert(tablesize > 0)
+            heads = Array(tablesize) { hashnode_s<Type>() }
+            numentries = 0
+            tablesizemask = tablesize - 1
         }
 
-        public idHashTable(int newtablesize) {
-
-            assert (idMath.INSTANCE.IsPowerOfTwo(newtablesize));
-
-            tablesize = newtablesize;
-            assert (tablesize > 0);
-
-            heads = Stream.generate(hashnode_s::new).limit(tablesize).toArray(hashnode_s[]::new);//	memset( heads, 0, sizeof( *heads ) * tablesize );
-
-            numentries = 0;
-
-            tablesizemask = tablesize - 1;
+        constructor(newtablesize: Int) {
+            assert(IsPowerOfTwo(newtablesize))
+            tablesize = newtablesize
+            assert(tablesize > 0)
+            heads = Array(tablesize) { hashnode_s<Type>() }
+            numentries = 0
+            tablesizemask = tablesize - 1
         }
 
-        public idHashTable(final idHashTable<Type> map) {
-            int i;
-            hashnode_s node;
-            int prev;
-
-            assert (map.tablesize > 0);
-
-            tablesize = map.tablesize;
-            heads = new hashnode_s[tablesize];
-            numentries = map.numentries;
-            tablesizemask = map.tablesizemask;
-
-            for (i = 0; i < tablesize; i++) {
+        constructor(map: idHashTable<Type>) {
+            var i: Int
+            var node: hashnode_s<*>?
+            var prev: Int
+            assert(map.tablesize > 0)
+            tablesize = map.tablesize
+            heads = arrayOfNulls<hashnode_s<*>?>(tablesize)
+            numentries = map.numentries
+            tablesizemask = map.tablesizemask
+            i = 0
+            while (i < tablesize) {
                 if (null == map.heads[i]) {
-                    heads[i] = null;
-                    continue;
+                    heads[i] = null
+                    i++
+                    continue
                 }
 
 //                prev = heads[i];
-                prev = 0;
-                for (node = map.heads[i + prev]; node != null; node = node.next) {
-                    map.heads[i + prev] = new hashnode_s(node.key, node.value, null);//TODO:ECHKECE
-//                    prev = prev.next;
-                    prev++;
+                prev = 0
+                node = map.heads[i + prev]
+                while (node != null) {
+                    map.heads[i + prev] = hashnode_s(node.key, node.value, null) //TODO:ECHKECE
+                    //                    prev = prev.next;
+                    prev++
+                    node = node.next
                 }
+                i++
             }
         }
-//public					~idHashTable( void );
-//
-//					// returns total size of allocated memory
-//public	size_t			Allocated( void ) const;
-//					// returns total size of allocated memory including size of hash table type
-//public	size_t			Size( void ) const;
-//
 
-        public void Set(final String key, Type value) {
-            hashnode_s node;
-            hashnode_s nextPtr;
-            int hash, s;
-
-            hash = GetHash(key);
-            for (nextPtr = heads[hash], node = nextPtr; node != null; nextPtr = node.next, node = nextPtr) {//TODO:what moves us?
-                s = node.key.Cmp(key);
+        //public					~idHashTable( void );
+        //
+        //					// returns total size of allocated memory
+        //public	size_t			Allocated( void ) const;
+        //					// returns total size of allocated memory including size of hash table type
+        //public	size_t			Size( void ) const;
+        //
+        fun Set(key: String?, value: Type?) {
+            var node: hashnode_s<*>?
+            var nextPtr: hashnode_s<*>?
+            val hash: Int
+            var s: Int
+            hash = GetHash(key)
+            nextPtr = heads[hash]
+            node = nextPtr
+            while (node != null) {
+                //TODO:what moves us?
+                s = node.key.Cmp(key!!)
                 if (s == 0) {
-                    node.value = value;
-                    return;
+                    node.value = value as Nothing?
+                    return
                 }
                 if (s > 0) {
-                    break;
+                    break
                 }
+                nextPtr = node.next
+                node = nextPtr
             }
-
-            numentries++;
-
-            nextPtr = new hashnode_s(key, value, heads[hash]);
-            nextPtr.next = node;
+            numentries++
+            nextPtr = hashnode_s<Any?>(key, value, heads[hash])
+            nextPtr.next = node
         }
 
-        public boolean Get(final String key) {
-            return Get(key, null);
-        }
-
-        public boolean Get(final String key, Type[] value) {
-            hashnode_s node;
-            int hash, s;
-
-            hash = GetHash(key);
-            for (node = heads[hash]; node != null; node = node.next) {
-                s = node.key.Cmp(key);
+        @JvmOverloads
+        fun Get(key: String?, value: Array<Type?>? = null): Boolean {
+            var node: hashnode_s<*>?
+            val hash: Int
+            var s: Int
+            hash = GetHash(key)
+            node = heads[hash]
+            while (node != null) {
+                s = node.key.Cmp(key!!)
                 if (s == 0) {
                     if (value != null) {
-                        value[0] = (Type) node.value;
+                        value[0] = node.value as Type
                     }
-                    return true;
+                    return true
                 }
                 if (s > 0) {
-                    break;
+                    break
                 }
+                node = node.next
             }
-
             if (value != null) {
-                value[0] = null;
+                value[0] = null
             }
-
-            return false;
+            return false
         }
 
-        public boolean Remove(final String key) {
-            hashnode_s head;
-            hashnode_s node;
-            hashnode_s prev;
-            int hash;
-
-            hash = GetHash(key);
-            head = heads[hash];
+        fun Remove(key: String?): Boolean {
+            val head: hashnode_s<*>?
+            var node: hashnode_s<*>?
+            var prev: hashnode_s<*>?
+            val hash: Int
+            hash = GetHash(key)
+            head = heads[hash]
             if (head != null) {
-                for (prev = null, node = head; node != null; prev = node, node = node.next) {//TODO:fuck me if any of this shit works.
-                    if (node.key.Cmp(key) != 0) {
+                prev = null
+                node = head
+                while (node != null) {
+                    //TODO:fuck me if any of this shit works.
+                    if (node.key.Cmp(key!!) != 0) {
                         if (prev != null) {
-                            prev.next = node.next;
+                            prev.next = node.next
                         } else {
-                            heads[hash] = node.next;//TODO:double check these pointers.
+                            heads[hash] = node.next //TODO:double check these pointers.
                         }
 
 //				delete node;
-                        numentries--;
-                        return true;
+                        numentries--
+                        return true
                     }
+                    prev = node
+                    node = node.next
                 }
             }
-
-            return false;
+            return false
         }
 
-        public void Clear() {
-            int i;
-            hashnode_s node;
-            hashnode_s next;
-
-            for (i = 0; i < tablesize; i++) {
-                next = heads[i];
+        fun Clear() {
+            var i: Int
+            var node: hashnode_s<*>?
+            var next: hashnode_s<*>?
+            i = 0
+            while (i < tablesize) {
+                next = heads[i]
                 while (next != null) {
-                    node = next;
-                    next = next.next;
-//			delete node;
+                    node = next
+                    next = next.next
+                    //			delete node;
                 }
-
-                heads[i] = null;
+                heads[i] = null
+                i++
             }
-
-            numentries = 0;
+            numentries = 0
         }
 
-        public void DeleteContents() {
-            int i;
-            hashnode_s node;
-            hashnode_s next;
-
-            for (i = 0; i < tablesize; i++) {
-                next = heads[i];
+        fun DeleteContents() {
+            var i: Int
+            var node: hashnode_s<*>?
+            var next: hashnode_s<*>?
+            i = 0
+            while (i < tablesize) {
+                next = heads[i]
                 while (next != null) {
-                    node = next;
-                    next = next.next;
-//			delete node->value;
+                    node = next
+                    next = next.next
+                    //			delete node->value;
 //			delete node;
                 }
-
-                heads[i] = null;
+                heads[i] = null
+                i++
             }
-
-            numentries = 0;
+            numentries = 0
         }
 
         // the entire contents can be itterated over, but note that the
         // exact index for a given element may change when new elements are added
-        public int Num() {
-            return numentries;
+        fun Num(): Int {
+            return numentries
         }
 
         /*
@@ -221,78 +215,82 @@ public class HashTable {
          exact index for a given element may change when new elements are added
          ================
          */
-        public Type GetIndex(int index) {
-            hashnode_s node;
-            int count;
-            int i;
-
-            if ((index < 0) || (index > numentries)) {
-                assert (false);
-                return null;
+        fun GetIndex(index: Int): Type? {
+            var node: hashnode_s<*>?
+            var count: Int
+            var i: Int
+            if (index < 0 || index > numentries) {
+                assert(false)
+                return null
             }
-
-            count = 0;
-            for (i = 0; i < tablesize; i++) {
-                for (node = heads[i]; node != null; node = node.next) {
+            count = 0
+            i = 0
+            while (i < tablesize) {
+                node = heads[i]
+                while (node != null) {
                     if (count == index) {
-                        return (Type) node.value;
+                        return node.value as Type
                     }
-                    count++;
+                    count++
+                    node = node.next
                 }
+                i++
             }
-
-            return null;
+            return null
         }
 
-        public int GetSpread() {
-            int i, average, error, e;
-            hashnode_s node;
+        fun GetSpread(): Int {
+            var i: Int
+            val average: Int
+            var error: Int
+            var e: Int
+            var node: hashnode_s<*>?
 
             // if no items in hash
             if (0 == numentries) {
-                return 100;
+                return 100
             }
-            average = numentries / tablesize;
-            error = 0;
-            for (i = 0; i < tablesize; i++) {
-                int numItems = 0;
-                for (node = heads[i]; node != null; node = node.next) {
-                    numItems++;
+            average = numentries / tablesize
+            error = 0
+            i = 0
+            while (i < tablesize) {
+                var numItems = 0
+                node = heads[i]
+                while (node != null) {
+                    numItems++
+                    node = node.next
                 }
-                e = Math.abs(numItems - average);
+                e = abs((numItems - average).toDouble()).toInt()
                 if (e > 1) {
-                    error += e - 1;
+                    error += e - 1
                 }
+                i++
             }
-            return 100 - (error * 100 / numentries);
+            return 100 - error * 100 / numentries
         }
 
-        int GetHash(final String key) {
-            return (idStr.Companion.Hash(key) & tablesizemask);
+        fun GetHash(key: String?): Int {
+            return Hash(key!!) and tablesizemask
         }
 
-        private class hashnode_s<Type> {
+        private inner class hashnode_s<Type> {
+            var key: idStr
+            var next: hashnode_s<*>? = null
+            var value: Type? = null
 
-            idStr key;
-            hashnode_s next;
-            Type value;
             //
             //
-
-            public hashnode_s() {
-                key = new idStr();
+            constructor() {
+                key = idStr()
             }
 
-            hashnode_s(final idStr k, Type v, hashnode_s n) {
-                key = new idStr(k);
-                value = v;
-                next = n;
+            internal constructor(k: idStr?, v: Type, n: hashnode_s<*>?) {
+                key = idStr(k!!)
+                value = v
+                next = n
             }
 
-            hashnode_s(final String k, Type v, hashnode_s n) {
-                this(new idStr(k), v, n);
-            }
+            internal constructor(k: String?, v: Type, n: hashnode_s<*>?) : this(idStr(k!!), v, n)
         }
     }
-
 }

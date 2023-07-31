@@ -1007,7 +1007,7 @@ object Anim {
         }
 
         fun ReloadAnims() {
-            var animptr: idMD5Anim
+            var animptr: idMD5Anim?
             var i: Int = 0
 
             i = 0
@@ -1021,7 +1021,7 @@ object Anim {
         }
 
         fun ListAnims() {
-            var animptr: idMD5Anim
+            var animptr: idMD5Anim?
             var anim: idMD5Anim
             var   /*size_t*/s: Int
             var num: Int = 0
