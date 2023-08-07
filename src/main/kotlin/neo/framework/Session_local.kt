@@ -620,6 +620,7 @@ object Session_local {
 
         @Throws(idException::class)
         override fun Frame() {
+            Common.common.Async()
             if (Common.com_asyncSound.GetInteger() == 0) {
                 snd_system.soundSystem.AsyncUpdate(win_shared.Sys_Milliseconds())
             }
@@ -720,8 +721,10 @@ object Session_local {
                     if (latchedTicNumber >= minTic) {
                         break
                     }
+                    // Force Async tick call
+                    Common.common.Async()
                     win_main.Sys_Sleep(1)
-                    win_main.hTimer.isTerminated
+                    //win_main.hTimer.isTerminated
                     //                    if (win_main.DEBUG) {
 //                        //TODO:the debugger slows the code too much at this point, so we shall manually move to the next frame.
 //                        com_ticNumber = minTic;
@@ -1772,6 +1775,7 @@ object Session_local {
                 if (BuildDefines.ID_CONSOLE_LOCK) {
                     emptyDrawCount = 0
                 }
+                Common.common.Async()
                 UpdateScreen(true)
             }
         }

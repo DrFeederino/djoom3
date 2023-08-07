@@ -34,7 +34,6 @@ import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.nio.file.Paths
 import java.util.*
-import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.logging.Level
 import java.util.logging.Logger
@@ -81,7 +80,7 @@ object win_main {
     const val WIN98_BUILD_NUMBER = 1998
     val sys_cmdline: StringBuilder = StringBuilder(Lib.MAX_STRING_CHARS)
     val sys_showMallocs: idCVar = idCVar("sys_showMallocs", "0", CVarSystem.CVAR_SYSTEM, "")
-    lateinit var   /*HANDLE*/hTimer: ScheduledExecutorService
+    var   /*HANDLE*/hTimer: ScheduledExecutorService? = null
     var debug_current_alloc/*unsigned*/ = 0
     var debug_current_alloc_count/*unsigned*/ = 0
     var debug_frame_alloc/*unsigned*/ = 0
@@ -807,16 +806,16 @@ object win_main {
 
         // create an auto-reset event that happens 60 times a second
 //        hTimer = Executors.newSingleThreadScheduledExecutor(r -> new Thread("bla" + (thread++)));
-        hTimer = Executors.newSingleThreadScheduledExecutor { r: Runnable ->
-            val thread = Thread(r, "bla-" + count++)
-            thread.priority = Thread.MAX_PRIORITY
-            thread
-        }
+//        hTimer = Executors.newSingleThreadScheduledExecutor { r: Runnable ->
+//            val thread = Thread(r, "bla-" + count++)
+//            thread.priority = Thread.MAX_PRIORITY
+//            thread
+//        }
         //        hTimer = Executors.newScheduledThreadPool(1);
 //        threadInfo = xthreadInfo()
-        if (null == hTimer) {
-            Common.common.Error("idPacketServer::Spawn: CreateWaitableTimer failed")
-        }
+//        if (null == hTimer) {
+//            Common.common.Error("idPacketServer::Spawn: CreateWaitableTimer failed")
+//        }
 
 //        Sys_CreateThread(new Sys_AsyncThread(), null, THREAD_ABOVE_NORMAL, threadInfo, "Async", g_threads, g_thread_count);
 //        if (NOT(threadInfo.threadHandle)) {
@@ -1562,8 +1561,6 @@ object win_main {
         var timer = System.currentTimeMillis()
         while (true) {
             if (System.currentTimeMillis() - timer >= USERCMD_MSEC) {
-                println("Runnin common async")
-                Common.common.Async()
                 timer = System.currentTimeMillis()
             }
 

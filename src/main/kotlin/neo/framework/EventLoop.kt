@@ -108,6 +108,7 @@ class EventLoop {
                 }
                 ProcessEvent(ev)
             }
+            return 0
 
 //	return 0;	// never reached
         }

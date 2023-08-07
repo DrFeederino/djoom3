@@ -438,8 +438,6 @@ class Common {
          */
         override fun Frame() {
             try {
-                println("Running frame")
-//
                 // pump all the events
                 Sys_GenerateEvents();
 //
@@ -1785,7 +1783,7 @@ class Common {
             }
         }
 
-        public fun InitRenderSystem() {
+        private fun InitRenderSystem() {
             if (com_skipRenderer.GetBool()) {
                 return
             }
@@ -2008,7 +2006,7 @@ class Common {
             }
         }
 
-        private /*synchronized*/   fun SingleAsyncTic() {
+        /*synchronized*/   fun SingleAsyncTic() {
             // main thread code can prevent this from happening while modifying
             // critical data structures
 //            Sys_EnterCriticalSection()
@@ -3352,13 +3350,11 @@ class Common {
         var com_frameNumber // variable frame number
                 = 0
 
-        @Volatile
         var com_frameTime // time for the current frame in milliseconds
                 = 0
         var   /*HWND*/com_hwndMsg: Long = 0
         var com_outputMsg = false
 
-        @Volatile
         var com_ticNumber // 60 hz tics
                 = 0
         var time_backend // renderSystem backend time

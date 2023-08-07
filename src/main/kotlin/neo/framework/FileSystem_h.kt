@@ -348,7 +348,6 @@ object FileSystem_h {
     }
 
     class backgroundDownload_s {
-        @Volatile
         var completed = false
         var f: idFile? = null
         var file: fileDownload_s = fileDownload_s()
