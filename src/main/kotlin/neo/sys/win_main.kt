@@ -10,6 +10,7 @@ import neo.framework.CVarSystem.idCVar
 import neo.framework.CmdSystem
 import neo.framework.CmdSystem.cmdFunction_t
 import neo.framework.Common
+import neo.framework.UsercmdGen.USERCMD_MSEC
 import neo.idlib.CmdArgs
 import neo.idlib.Lib
 import neo.idlib.Lib.idException
@@ -21,9 +22,6 @@ import neo.idlib.containers.idStrList
 import neo.sys.RC.CreateResourceIDs_f
 import neo.sys.sys_public.sysEventType_t
 import neo.sys.sys_public.sysEvent_s
-import neo.sys.sys_public.xthreadInfo
-import neo.sys.sys_public.xthreadPriority
-import neo.sys.sys_public.xthread_t
 import neo.sys.win_local.Win32Vars_t
 import java.awt.Toolkit
 import java.awt.datatransfer.DataFlavor
@@ -35,11 +33,9 @@ import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.nio.file.Paths
+import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.locks.LockSupport
-import java.util.concurrent.locks.ReentrantLock
 import java.util.logging.Level
 import java.util.logging.Logger
 
@@ -112,7 +108,7 @@ object win_main {
      ====================
      */
     var parmBytes = 0
-    var threadInfo: xthreadInfo? = null
+    //var threadInfo: xthreadInfo? = null
 
     /*
      ==============
@@ -145,43 +141,43 @@ object win_main {
      Sys_Createthread
      ==================
      */
-    fun Sys_CreateThread(
-        function: xthread_t,
-        parms: Any?,
-        priority: xthreadPriority,
-        info: xthreadInfo,
-        name: String,
-        threads: Array<xthreadInfo> /*[MAX_THREADS]*/,
-        thread_count: IntArray
-    ) {
-        val temp = Thread(function)
-        info.threadId = temp.id
-        info.threadHandle = temp //TODO: do we need this?
-        if (priority == xthreadPriority.THREAD_HIGHEST) {
-            info.threadHandle!!.priority = Thread.MAX_PRIORITY //  we better sleep enough to do this
-        } else if (priority == xthreadPriority.THREAD_ABOVE_NORMAL) {
-            info.threadHandle!!.priority = Thread.NORM_PRIORITY + 2
-        }
-        info.name = name
-        if (thread_count[0] < sys_public.MAX_THREADS) {
-            threads[thread_count[0]++] = info
-            info.threadHandle!!.start()
-        } else {
-            Common.common.DPrintf("WARNING: MAX_THREADS reached\n")
-        }
-    }
+//    fun Sys_CreateThread(
+//        function: xthread_t,
+//        parms: Any?,
+//        priority: xthreadPriority,
+//        info: xthreadInfo,
+//        name: String,
+//        threads: Array<xthreadInfo> /*[MAX_THREADS]*/,
+//        thread_count: IntArray
+//    ) {
+//        val temp = Thread(function)
+//        info.threadId = temp.id
+//        info.threadHandle = temp //TODO: do we need this?
+//        if (priority == xthreadPriority.THREAD_HIGHEST) {
+//            info.threadHandle!!.priority = Thread.MAX_PRIORITY //  we better sleep enough to do this
+//        } else if (priority == xthreadPriority.THREAD_ABOVE_NORMAL) {
+//            info.threadHandle!!.priority = Thread.NORM_PRIORITY + 2
+//        }
+//        info.name = name
+//        if (thread_count[0] < sys_public.MAX_THREADS) {
+//            threads[thread_count[0]++] = info
+//            function.run()
+//        } else {
+//            Common.common.DPrintf("WARNING: MAX_THREADS reached\n")
+//        }
+//    }
 
     /*
      ==================
      Sys_DestroyThread
      ==================
      */
-    fun Sys_DestroyThread(info: xthreadInfo?) {
-        throw TODO_Exception()
-        //	WaitForSingleObject( (HANDLE)info.threadHandle, INFINITE);
-//	CloseHandle( (HANDLE)info.threadHandle );
-//	info.threadHandle = 0;
-    }
+//    fun Sys_DestroyThread(info: xthreadInfo?) {
+//        throw TODO_Exception()
+//        //	WaitForSingleObject( (HANDLE)info.threadHandle, INFINITE);
+////	CloseHandle( (HANDLE)info.threadHandle );
+////	info.threadHandle = 0;
+//    }
 
     /*
      ==================
@@ -223,7 +219,8 @@ object win_main {
     fun Sys_EnterCriticalSection(index: Int = sys_public.CRITICAL_SECTION_ZERO) {
         assert(index >= 0 && index < sys_public.MAX_CRITICAL_SECTIONS)
         //		Sys_DebugPrintf( "busy lock '%s' in thread '%s'\n", lock->name, Sys_GetThreadName() );
-        win_local.win32.criticalSections[index].lock()
+        return
+        //win_local.win32.criticalSections[index].lock()
     }
 
     /*
@@ -234,9 +231,9 @@ object win_main {
     @JvmOverloads
     fun Sys_LeaveCriticalSection(index: Int = sys_public.CRITICAL_SECTION_ZERO) {
         assert(index >= 0 && index < sys_public.MAX_CRITICAL_SECTIONS)
-        if (win_local.win32.criticalSections[index].isLocked) {
-            win_local.win32.criticalSections[index].unlock()
-        }
+//        if (win_local.win32.criticalSections[index].isLocked) {
+//            win_local.win32.criticalSections[index].unlock()
+//        }
     }
 
     /*
@@ -406,7 +403,14 @@ object win_main {
      ==============
      */
     fun Sys_Sleep(msec: Int) {
-        LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(msec.toLong()))
+        val start = System.currentTimeMillis()
+        while (true) {
+            if (System.currentTimeMillis() - start >= msec) {
+                return
+            }
+        }
+//        Thread.sleep(msec.toLong())
+        //LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(msec.toLong()))
     }
 
     /*
@@ -809,7 +813,7 @@ object win_main {
             thread
         }
         //        hTimer = Executors.newScheduledThreadPool(1);
-        threadInfo = xthreadInfo()
+//        threadInfo = xthreadInfo()
         if (null == hTimer) {
             Common.common.Error("idPacketServer::Spawn: CreateWaitableTimer failed")
         }
@@ -820,10 +824,20 @@ object win_main {
 //        }
 
 //        hTimer.scheduleAtFixedRate(threadInfo.threadHandle, 0, USERCMD_MSEC, TimeUnit.MILLISECONDS);
-        hTimer.scheduleAtFixedRate(Runnable { //TODO:debug the line above.(info.threadHandle.start();??)
-//                if (!DEBUG) {//TODO:Session_local.java::742
-            Common.common.Async()
-        }, 0, 1000000000L / 60, TimeUnit.NANOSECONDS)
+//        hTimer.scheduleAtFixedRate(Runnable { //TODO:debug the line above.(info.threadHandle.start();??)
+////                if (!DEBUG) {//TODO:Session_local.java::742
+//       var timerTime = System.currentTimeMillis()
+//        while (true) {
+//            if (System.currentTimeMillis() - timerTime > USERCMD_MSEC) {
+//                Common.common.Async()
+//                println(System.currentTimeMillis() - timerTime)
+//                timerTime = System.currentTimeMillis()
+//            }
+//        }
+        Common.common.Async()
+        //fixedRateTimer("Common", false, Date.from(Instant.now()), USERCMD_MSEC.toLong(),  { Common.common.Async()})
+
+//        }, 0, 1000000000L / 60, TimeUnit.NANOSECONDS)
         //        if (SET_THREAD_AFFINITY) {
 //            // give the async thread an affinity for the second cpu
 //            SetThreadAffinityMask(threadInfo.threadHandle, 2);
@@ -1489,11 +1503,11 @@ object win_main {
 //        // no abort/retry/fail errors
 //        SetErrorMode(SEM_FAILCRITICALERRORS);
 //
-        for (i in 0 until sys_public.MAX_CRITICAL_SECTIONS) {
-//            InitializeCriticalSection( &win32.criticalSections[i] );
-            win_local.win32.criticalSections[i] =
-                ReentrantLock() //TODO: see if we can use synchronized blocks instead?
-        }
+//        for (i in 0 until sys_public.MAX_CRITICAL_SECTIONS) {
+////            InitializeCriticalSection( &win32.criticalSections[i] );
+//            win_local.win32.criticalSections[i] =
+//                ReentrantLock() //TODO: see if we can use synchronized blocks instead?
+//        }
         // get the initial time base
         win_shared.Sys_Milliseconds()
         //
@@ -1545,7 +1559,14 @@ object win_main {
 //	::SetFocus( win32.hWnd );
 //
         // main game loop
+        var timer = System.currentTimeMillis()
         while (true) {
+            if (System.currentTimeMillis() - timer >= USERCMD_MSEC) {
+                println("Runnin common async")
+                Common.common.Async()
+                timer = System.currentTimeMillis()
+            }
+
             Win_Frame()
             if (DEBUG) {
                 Sys_MemFrame()
@@ -1629,37 +1650,37 @@ object win_main {
      Sys_AsyncThread
      ==================
      */
-    internal class Sys_AsyncThread : xthread_t() {
-        var startTime = 0
-        var wakeNumber = 0
-        override fun run() {
-            println("Blaaaaaaaaaaaaaaaaaa!")
-            //            startTime = Sys_Milliseconds();
-//            wakeNumber = 0;
-//
-//            while (true) {
-//#ifdef WIN32
-//		// this will trigger 60 times a second
-//		int r = WaitForSingleObject( hTimer, 100 );
-//		if ( r != WAIT_OBJECT_0 ) {
-//			OutputDebugString( "idPacketServer::PacketServerInterrupt: bad wait return" );
-//		}
-//#endif
-//
-//#if 0
-//		wakeNumber++;
-//		int		msec = Sys_Milliseconds();
-//		int		deltaTime = msec - startTime;
-//		startTime = msec;
-//
-//		char	str[1024];
-//		sprintf( str, "%i ", deltaTime );
-//		OutputDebugString( str );
-//#endif
-//
-//
-            Common.common.Async()
-            //            }
-        }
-    }
+//    internal class Sys_AsyncThread : xthread_t() {
+//        var startTime = 0
+//        var wakeNumber = 0
+//        override fun run() {
+//            println("Blaaaaaaaaaaaaaaaaaa!")
+//            //            startTime = Sys_Milliseconds();
+////            wakeNumber = 0;
+////
+////            while (true) {
+////#ifdef WIN32
+////		// this will trigger 60 times a second
+////		int r = WaitForSingleObject( hTimer, 100 );
+////		if ( r != WAIT_OBJECT_0 ) {
+////			OutputDebugString( "idPacketServer::PacketServerInterrupt: bad wait return" );
+////		}
+////#endif
+////
+////#if 0
+////		wakeNumber++;
+////		int		msec = Sys_Milliseconds();
+////		int		deltaTime = msec - startTime;
+////		startTime = msec;
+////
+////		char	str[1024];
+////		sprintf( str, "%i ", deltaTime );
+////		OutputDebugString( str );
+////#endif
+////
+////
+//            Common.common.Async()
+//            //            }
+//        }
+//    }
 }

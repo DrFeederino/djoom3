@@ -29,9 +29,6 @@ import neo.idlib.containers.HashIndex.idHashIndex
 import neo.idlib.containers.List.idList
 import neo.idlib.containers.idStrList
 import neo.sys.sys_public
-import neo.sys.sys_public.xthreadInfo
-import neo.sys.sys_public.xthreadPriority
-import neo.sys.sys_public.xthread_t
 import neo.sys.win_main
 import neo.sys.win_main.Sys_EnterCriticalSection
 import neo.sys.win_main.Sys_LeaveCriticalSection
@@ -802,7 +799,7 @@ object FileSystem_h {
 
         //
         private var backgroundDownloads: backgroundDownload_s? = null
-        private val backgroundThread: xthreadInfo
+        //private val backgroundThread: xthreadInfo
 
         //
         private var d3xp // 0: didn't check, -1: not installed, 1: installed
@@ -904,22 +901,23 @@ object FileSystem_h {
         }
 
         fun StartBackgroundDownloadThread() {
-            if (TempDump.NOT(backgroundThread.threadHandle)) { //TODO:enable this.
-                win_main.Sys_CreateThread(
-                    BackgroundDownloadThread.INSTANCE,
-                    null,
-                    xthreadPriority.THREAD_NORMAL,
-                    backgroundThread,
-                    "backgroundDownload",
-                    sys_public.g_threads,
-                    sys_public.g_thread_count
-                )
-                if (TempDump.NOT(backgroundThread.threadHandle)) {
-                    idLib.common.Warning("idFileSystemLocal::StartBackgroundDownloadThread: failed")
-                }
-            } else {
-                idLib.common.Printf("background thread already running\n")
-            }
+            return
+//            if (TempDump.NOT(backgroundThread.threadHandle)) { //TODO:enable this.
+//                win_main.Sys_CreateThread(
+//                    BackgroundDownloadThread.INSTANCE,
+//                    null,
+//                    xthreadPriority.THREAD_NORMAL,
+//                    backgroundThread,
+//                    "backgroundDownload",
+//                    emptyArray(),
+//                    sys_public.g_thread_count
+//                )
+//                if (TempDump.NOT(backgroundThread.threadHandle)) {
+//                    idLib.common.Warning("idFileSystemLocal::StartBackgroundDownloadThread: failed")
+//                }
+//            } else {
+//                idLib.common.Printf("background thread already running\n")
+//            }
         }
 
         override fun Restart() {
@@ -4419,131 +4417,131 @@ object FileSystem_h {
          Reads part of a file from a background thread.
          ===================
          */
-        private class BackgroundDownloadThread private constructor() : xthread_t() {
-            override fun  /*int*/run( /*Object... parms*/) {
-                // doo dee doo
-                //throw new TODO_Exception();
-//                while (true) {
-//                    Sys_EnterCriticalSection();
-//                    backgroundDownload_t bgl = fileSystemLocal.backgroundDownloads;
-//                    if (null == bgl) {
-//                        Sys_LeaveCriticalSection();
-//                        Sys_WaitForEvent();
-//                        continue;
-//                    }
-//                    // remove this from the list
-//                    fileSystemLocal.backgroundDownloads = (backgroundDownload_t) bgl.next;
-//                    Sys_LeaveCriticalSection();
-//
-//                    bgl.next = null;
-//
-//                    if (bgl.opcode == DLTYPE_FILE) {
-//                        // use the low level read function, because fread may allocate memory
-////                    if (WIN32) {
-////                        _read(((idFile_Permanent) bgl.f).GetFilePtr()._file, bgl.file.buffer, bgl.file.length);
-////                    } else {
-//                        ((idFile_Permanent) bgl.f).GetFilePtr().read(bgl.file.buffer = ByteBuffer.allocate(bgl.file.length));
-////                        fread(bgl.file.buffer, bgl.file.length, 1, ((idFile_Permanent) bgl.f).GetFilePtr());
+//        private class BackgroundDownloadThread private constructor() : xthread_t() {
+//            override fun  /*int*/run( /*Object... parms*/) {
+//                // doo dee doo
+//                //throw new TODO_Exception();
+////                while (true) {
+////                    Sys_EnterCriticalSection();
+////                    backgroundDownload_t bgl = fileSystemLocal.backgroundDownloads;
+////                    if (null == bgl) {
+////                        Sys_LeaveCriticalSection();
+////                        Sys_WaitForEvent();
+////                        continue;
 ////                    }
-//                        bgl.completed = true;
-//                    } else {
-//                        if (ID_ENABLE_CURL) {
-//                            // DLTYPE_URL
-//                            // use a local buffer for curl error since the size define is local
-//                            char[] error_buf = new char[CURL_ERROR_SIZE];
-//                            bgl.url.dlerror = '\0' + bgl.url.dlerror.substring(1);
-//                            CURL session = curl_easy_init();
-//                            CURLcode ret;
-//                            if (!session) {
-//                                bgl.url.dlstatus = CURLE_FAILED_INIT;
-//                                bgl.url.status = DL_FAILED;
-//                                bgl.completed = true;
-//                                continue;
-//                            }
-//                            ret = curl_easy_setopt(session, CURLOPT_ERRORBUFFER, error_buf);
-//                            if (ret) {
-//                                bgl.url.dlstatus = ret;
-//                                bgl.url.status = DL_FAILED;
-//                                bgl.completed = true;
-//                                continue;
-//                            }
-//                            ret = curl_easy_setopt(session, CURLOPT_URL, bgl.url.url.c_str());
-//                            if (ret) {
-//                                bgl.url.dlstatus = ret;
-//                                bgl.url.status = DL_FAILED;
-//                                bgl.completed = true;
-//                                continue;
-//                            }
-//                            ret = curl_easy_setopt(session, CURLOPT_FAILONERROR, 1);
-//                            if (ret) {
-//                                bgl.url.dlstatus = ret;
-//                                bgl.url.status = DL_FAILED;
-//                                bgl.completed = true;
-//                                continue;
-//                            }
-//                            ret = curl_easy_setopt(session, CURLOPT_WRITEFUNCTION, idFileSystemLocal.CurlWriteFunction);
-//                            if (ret) {
-//                                bgl.url.dlstatus = ret;
-//                                bgl.url.status = DL_FAILED;
-//                                bgl.completed = true;
-//                                continue;
-//                            }
-//                            ret = curl_easy_setopt(session, CURLOPT_WRITEDATA, bgl);
-//                            if (ret) {
-//                                bgl.url.dlstatus = ret;
-//                                bgl.url.status = DL_FAILED;
-//                                bgl.completed = true;
-//                                continue;
-//                            }
-//                            ret = curl_easy_setopt(session, CURLOPT_NOPROGRESS, 0);
-//                            if (ret) {
-//                                bgl.url.dlstatus = ret;
-//                                bgl.url.status = DL_FAILED;
-//                                bgl.completed = true;
-//                                continue;
-//                            }
-//                            ret = curl_easy_setopt(session, CURLOPT_PROGRESSFUNCTION, idFileSystemLocal.CurlProgressFunction);
-//                            if (ret) {
-//                                bgl.url.dlstatus = ret;
-//                                bgl.url.status = DL_FAILED;
-//                                bgl.completed = true;
-//                                continue;
-//                            }
-//                            ret = curl_easy_setopt(session, CURLOPT_PROGRESSDATA, bgl);
-//                            if (ret) {
-//                                bgl.url.dlstatus = ret;
-//                                bgl.url.status = DL_FAILED;
-//                                bgl.completed = true;
-//                                continue;
-//                            }
-//                            bgl.url.dlnow = 0;
-//                            bgl.url.dltotal = 0;
-//                            bgl.url.status = DL_INPROGRESS;
-//                            ret = curl_easy_perform(session);
-//                            if (ret) {
-//                                Sys_Printf("curl_easy_perform failed: %s\n", error_buf);
-////				idStr.Copynz( bgl.url.dlerror, error_buf, MAX_STRING_CHARS );
-//                                bgl.url.dlerror = new String(error_buf);
-//                                bgl.url.dlstatus = ret;
-//                                bgl.url.status = DL_FAILED;
-//                                bgl.completed = true;
-//                                continue;
-//                            }
-//                            bgl.url.status = DL_DONE;
-//                            bgl.completed = true;
-//                        } else {
-//                            bgl.url.status = DL_FAILED;
-//                            bgl.completed = true;
-//                        }
-//                    }
-//                }
-//                return 0;
-            }
-
-            companion object {
-                val INSTANCE: xthread_t = BackgroundDownloadThread()
-            }
-        }
+////                    // remove this from the list
+////                    fileSystemLocal.backgroundDownloads = (backgroundDownload_t) bgl.next;
+////                    Sys_LeaveCriticalSection();
+////
+////                    bgl.next = null;
+////
+////                    if (bgl.opcode == DLTYPE_FILE) {
+////                        // use the low level read function, because fread may allocate memory
+//////                    if (WIN32) {
+//////                        _read(((idFile_Permanent) bgl.f).GetFilePtr()._file, bgl.file.buffer, bgl.file.length);
+//////                    } else {
+////                        ((idFile_Permanent) bgl.f).GetFilePtr().read(bgl.file.buffer = ByteBuffer.allocate(bgl.file.length));
+//////                        fread(bgl.file.buffer, bgl.file.length, 1, ((idFile_Permanent) bgl.f).GetFilePtr());
+//////                    }
+////                        bgl.completed = true;
+////                    } else {
+////                        if (ID_ENABLE_CURL) {
+////                            // DLTYPE_URL
+////                            // use a local buffer for curl error since the size define is local
+////                            char[] error_buf = new char[CURL_ERROR_SIZE];
+////                            bgl.url.dlerror = '\0' + bgl.url.dlerror.substring(1);
+////                            CURL session = curl_easy_init();
+////                            CURLcode ret;
+////                            if (!session) {
+////                                bgl.url.dlstatus = CURLE_FAILED_INIT;
+////                                bgl.url.status = DL_FAILED;
+////                                bgl.completed = true;
+////                                continue;
+////                            }
+////                            ret = curl_easy_setopt(session, CURLOPT_ERRORBUFFER, error_buf);
+////                            if (ret) {
+////                                bgl.url.dlstatus = ret;
+////                                bgl.url.status = DL_FAILED;
+////                                bgl.completed = true;
+////                                continue;
+////                            }
+////                            ret = curl_easy_setopt(session, CURLOPT_URL, bgl.url.url.c_str());
+////                            if (ret) {
+////                                bgl.url.dlstatus = ret;
+////                                bgl.url.status = DL_FAILED;
+////                                bgl.completed = true;
+////                                continue;
+////                            }
+////                            ret = curl_easy_setopt(session, CURLOPT_FAILONERROR, 1);
+////                            if (ret) {
+////                                bgl.url.dlstatus = ret;
+////                                bgl.url.status = DL_FAILED;
+////                                bgl.completed = true;
+////                                continue;
+////                            }
+////                            ret = curl_easy_setopt(session, CURLOPT_WRITEFUNCTION, idFileSystemLocal.CurlWriteFunction);
+////                            if (ret) {
+////                                bgl.url.dlstatus = ret;
+////                                bgl.url.status = DL_FAILED;
+////                                bgl.completed = true;
+////                                continue;
+////                            }
+////                            ret = curl_easy_setopt(session, CURLOPT_WRITEDATA, bgl);
+////                            if (ret) {
+////                                bgl.url.dlstatus = ret;
+////                                bgl.url.status = DL_FAILED;
+////                                bgl.completed = true;
+////                                continue;
+////                            }
+////                            ret = curl_easy_setopt(session, CURLOPT_NOPROGRESS, 0);
+////                            if (ret) {
+////                                bgl.url.dlstatus = ret;
+////                                bgl.url.status = DL_FAILED;
+////                                bgl.completed = true;
+////                                continue;
+////                            }
+////                            ret = curl_easy_setopt(session, CURLOPT_PROGRESSFUNCTION, idFileSystemLocal.CurlProgressFunction);
+////                            if (ret) {
+////                                bgl.url.dlstatus = ret;
+////                                bgl.url.status = DL_FAILED;
+////                                bgl.completed = true;
+////                                continue;
+////                            }
+////                            ret = curl_easy_setopt(session, CURLOPT_PROGRESSDATA, bgl);
+////                            if (ret) {
+////                                bgl.url.dlstatus = ret;
+////                                bgl.url.status = DL_FAILED;
+////                                bgl.completed = true;
+////                                continue;
+////                            }
+////                            bgl.url.dlnow = 0;
+////                            bgl.url.dltotal = 0;
+////                            bgl.url.status = DL_INPROGRESS;
+////                            ret = curl_easy_perform(session);
+////                            if (ret) {
+////                                Sys_Printf("curl_easy_perform failed: %s\n", error_buf);
+//////				idStr.Copynz( bgl.url.dlerror, error_buf, MAX_STRING_CHARS );
+////                                bgl.url.dlerror = new String(error_buf);
+////                                bgl.url.dlstatus = ret;
+////                                bgl.url.status = DL_FAILED;
+////                                bgl.completed = true;
+////                                continue;
+////                            }
+////                            bgl.url.status = DL_DONE;
+////                            bgl.completed = true;
+////                        } else {
+////                            bgl.url.status = DL_FAILED;
+////                            bgl.completed = true;
+////                        }
+////                    }
+////                }
+////                return 0;
+//            }
+//
+//            companion object {
+//                val INSTANCE: xthread_t = BackgroundDownloadThread()
+//            }
+//        }
 
         companion object {
             const val MAX_DESCRIPTION = 256
@@ -4642,7 +4640,7 @@ object FileSystem_h {
             d3xp = 0
             loadedFileFromDir = false
             restartGamePakChecksum = 0
-            backgroundThread = xthreadInfo() //memset( &backgroundThread, 0, sizeof( backgroundThread ) );
+            //backgroundThread = xthreadInfo() //memset( &backgroundThread, 0, sizeof( backgroundThread ) );
             serverPaks = idList()
             addonPaks = null
             mapDict = idDict()

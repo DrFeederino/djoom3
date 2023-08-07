@@ -61,7 +61,8 @@ object sys_public {
     const val FPU_EXCEPTION_NUMERIC_UNDERFLOW = 16
     const val MAX_CRITICAL_SECTIONS = 4
     const val MAX_THREADS = 10
-    val g_threads: Array<xthreadInfo> = Array(MAX_THREADS) { xthreadInfo() }
+
+    //    val g_threads: Array<xthreadInfo> = Array(MAX_THREADS) { xthreadInfo() }
     const val MAX_TRIGGER_EVENTS = 4
     const val TRIGGER_EVENT_THREE = 3
     const val TRIGGER_EVENT_TWO = 2
@@ -388,16 +389,16 @@ object sys_public {
 
      ==============================================================
      */
-    abstract class xthread_t : TimerTask() {
-        override fun run() {} //        public abstract int run(Object... parms);
-    }
-
-    // };
-    class xthreadInfo {
-        var name: String? = null
-        var   /*int*/threadHandle: Thread? = null
-        /*unsigned*/  var threadId: Long = 0
-    }
+//    abstract class xthread_t : TimerTask() {
+//        override fun run() {} //        public abstract int run(Object... parms);
+//    }
+//
+//    // };
+//    class xthreadInfo {
+//        var name: String? = null
+//        var   /*int*/threadHandle: Thread? = null
+//        /*unsigned*/  var threadId: Long = 0
+//    }
 
     /*
      ==============================================================

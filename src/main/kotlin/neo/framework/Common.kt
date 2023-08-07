@@ -48,8 +48,7 @@ import neo.idlib.math.Simd.idSIMD
 import neo.idlib.math.Simd.idSIMD.Test_f
 import neo.idlib.math.Vector.idVec4
 import neo.sys.*
-import neo.sys.win_main.Sys_EnterCriticalSection
-import neo.sys.win_main.Sys_LeaveCriticalSection
+import neo.sys.win_main.Sys_GenerateEvents
 import neo.ui.UserInterface
 import java.io.IOException
 import java.nio.ByteBuffer
@@ -439,9 +438,10 @@ class Common {
          */
         override fun Frame() {
             try {
+                println("Running frame")
 //
-//                // pump all the events
-//                Sys_GenerateEvents();
+                // pump all the events
+                Sys_GenerateEvents();
 //
                 // write config file if anything changed
                 WriteConfiguration()
@@ -1785,7 +1785,7 @@ class Common {
             }
         }
 
-        private fun InitRenderSystem() {
+        public fun InitRenderSystem() {
             if (com_skipRenderer.GetBool()) {
                 return
             }
@@ -2011,8 +2011,8 @@ class Common {
         private /*synchronized*/   fun SingleAsyncTic() {
             // main thread code can prevent this from happening while modifying
             // critical data structures
-            Sys_EnterCriticalSection()
-            try {
+//            Sys_EnterCriticalSection()
+//            try {
                 val stat =
                     com_asyncStats[com_ticNumber and MAX_ASYNC_STATS - 1] //memset( stat, 0, sizeof( *stat ) );
                 stat.milliseconds = win_shared.Sys_Milliseconds()
@@ -2031,9 +2031,9 @@ class Common {
                 com_ticNumber++
                 //                System.out.println(System.nanoTime()+"com_ticNumber=" + com_ticNumber);
                 stat.timeConsumed = win_shared.Sys_Milliseconds() - stat.milliseconds
-            } finally {
-                Sys_LeaveCriticalSection()
-            }
+//            } finally {
+//                Sys_LeaveCriticalSection()
+//            }
         }
 
         @Throws(idException::class)

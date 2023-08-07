@@ -2468,7 +2468,7 @@ class Game_local {
             i = 0
             while (i < aasNames.size()) {
                 aasList[i]
-                    .Init(idStr(mapFileName).SetFileExtension(aasNames[i]), mapFile!!.GetGeometryCRC().toLong())
+                    .Init(idStr(mapFileName).SetFileExtension(aasNames[i]), mapFile!!.GetGeometryCRC())
                 i++
             }
 
