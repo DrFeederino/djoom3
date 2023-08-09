@@ -258,6 +258,7 @@ class EventLoop {
 
                  ===============================================================================
                  */
+        @JvmField
         val eventLoop: idEventLoop = idEventLoop()
     }
 }

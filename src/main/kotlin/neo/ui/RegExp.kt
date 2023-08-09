@@ -1,6 +1,7 @@
 package neo.ui
 
-import neo.TempDump
+import neo.TempDump.btoi
+import neo.TempDump.etoi
 import neo.framework.Common
 import neo.framework.DemoFile.idDemoFile
 import neo.framework.File_h.idFile
@@ -30,81 +31,82 @@ import neo.ui.Winvar.idWinVec4
  */
 class RegExp {
     class idRegister {
-        companion object {
-            val REGCOUNT: IntArray = IntArray(TempDump.etoi(REGTYPE.NUMTYPES))
-            private var DBG_GetFromRegs = 0
-
-            init {
-                val bv = intArrayOf(4, 1, 1, 1, 0, 2, 3, 4)
-                System.arraycopy(bv, 0, REGCOUNT, 0, REGCOUNT.size)
-            }
-        }
-
-        /*unsigned*/  val regs: IntArray = IntArray(4)
+        /*unsigned*/ val regs = ShortArray(4)
         var DBG_D3_KEY = false
 
         //
         var enabled = false
-        val name: idStr = idStr()
+        var name: idStr? = null
         var regCount = 0
         var type: Short = 0
-        var storedValue: idWinVar? = null
+        var `var`: idWinVar? = null
 
         //
         //
         constructor()
-        constructor(p: String, t: Int) {
-            name.set(p)
+        constructor(p: String?, t: Int) {
+            name = idStr(p!!)
             type = t.toShort()
             assert(t >= 0 && t < REGTYPE.NUMTYPES.ordinal)
             regCount = REGCOUNT[t]
             enabled = type.toInt() != REGTYPE.STRING.ordinal
-            storedValue = null
+            `var` = null
         }
 
         fun SetToRegs(registers: FloatArray) {
             var i: Int
-            var v: idVec4 = idVec4()
-            val v2: idVec2
+            var v: idVec4? = idVec4()
+            val v2: idVec2?
             val v3 = idVec3()
             val rect = idRectangle()
-            if (!enabled || storedValue == null || storedValue != null && (storedValue!!.GetDict() != null || !storedValue!!.GetEval())) {
+            if (!enabled || `var` == null || `var` != null && (`var`!!.GetDict() != null || !`var`!!.GetEval())) {
                 return
             }
             when (REGTYPE.values()[type.toInt()]) {
                 REGTYPE.VEC4 -> {
-                    v = (storedValue as idWinVec4).data
+                    v = (`var` as idWinVec4).data
                 }
+
                 REGTYPE.RECTANGLE -> {
-                    rect.set((storedValue as idWinRectangle).data)
+                    rect.set((`var` as idWinRectangle).data)
                     v = rect.ToVec4()
                 }
+
                 REGTYPE.VEC2 -> {
-                    v2 = (storedValue as idWinVec2).data
-                    v[0] = v2[0]
+                    v2 = (`var` as idWinVec2).data
+                    v!![0] = v2!![0]
                     v[1] = v2[1]
                 }
+
                 REGTYPE.VEC3 -> {
-                    v3.set((storedValue as idWinVec3).data)
-                    v[0] = v3[0]
+                    v3.set((`var` as idWinVec3).data)
+                    v!![0] = v3[0]
                     v[1] = v3[1]
                     v[2] = v3[2]
                 }
+
                 REGTYPE.FLOAT -> {
-                    v[0] = (storedValue as idWinFloat).data
+                    v!![0] = (`var` as idWinFloat).data
                 }
+
                 REGTYPE.INT -> {
-                    v[0] = (storedValue as idWinInt).data.toFloat()
+                    v!![0] = (`var` as idWinInt).data.toFloat()
                 }
+
                 REGTYPE.BOOL -> {
-                    v[0] = TempDump.btoi((storedValue as idWinBool).data).toFloat()
+                    v!![0] = btoi((`var` as idWinBool).data).toFloat()
                 }
+
                 else -> {
                     Common.common.FatalError("idRegister::SetToRegs: bad reg type")
                 }
             }
-            for (i in 0 until regCount) {
-                registers[regs[i]] = v[i]
+            i = 0
+            while (i < regCount) {
+                if (java.lang.Float.isInfinite(v!![i].also { registers[regs[i].toInt()] = it })) {
+                    val bla = 111
+                }
+                i++
             }
         }
 
@@ -112,38 +114,45 @@ class RegExp {
             DBG_GetFromRegs++
             val v = idVec4()
             val rect = idRectangle()
-            if (!enabled || storedValue == null || storedValue != null && (storedValue!!.GetDict() != null || !storedValue!!.GetEval())) {
+            if (!enabled || `var` == null || `var` != null && (`var`!!.GetDict() != null || !`var`!!.GetEval())) {
                 return
             }
             for (i in 0 until regCount) {
-                v[i] = registers.get(regs[i])
+                v[i] = registers[regs[i].toInt()]
             }
             when (REGTYPE.values()[type.toInt()]) {
                 REGTYPE.VEC4 -> {
-                    (storedValue as idWinVec4).set(v)
+                    (`var` as idWinVec4).set(v)
                 }
+
                 REGTYPE.RECTANGLE -> {
                     rect.x = v.x
                     rect.y = v.y
                     rect.w = v.z
                     rect.h = v.w
-                    (storedValue as idWinRectangle).set(rect)
+                    (`var` as idWinRectangle).set(rect)
                 }
+
                 REGTYPE.VEC2 -> {
-                    (storedValue as idWinVec2).set(v.ToVec2())
+                    (`var` as idWinVec2).set(v.ToVec2())
                 }
+
                 REGTYPE.VEC3 -> {
-                    (storedValue as idWinVec3).set(v.ToVec3())
+                    (`var` as idWinVec3).set(v.ToVec3())
                 }
+
                 REGTYPE.FLOAT -> {
-                    (storedValue as idWinFloat).data = v[0]
+                    (`var` as idWinFloat).data = v[0]
                 }
+
                 REGTYPE.INT -> {
-                    (storedValue as idWinInt).data = v[0].toInt()
+                    (`var` as idWinInt).data = v[0].toInt()
                 }
+
                 REGTYPE.BOOL -> {
-                    (storedValue as idWinBool).data = v[0] != 0.0f
+                    (`var` as idWinBool).data = v[0] != 0.0f
                 }
+
                 else -> {
                     Common.common.FatalError("idRegister::GetFromRegs: bad reg type")
                 }
@@ -166,9 +175,9 @@ class RegExp {
             type = f.ReadShort()
             regCount = f.ReadInt()
             for (i in 0..3) {
-                regs[i] = f.ReadUnsignedShort()
+                regs[i] = f.ReadUnsignedShort().toShort()
             }
-            name.set(f.ReadHashString())
+            name!!.set(f.ReadHashString())
         }
 
         fun WriteToDemoFile(f: idDemoFile) {
@@ -176,7 +185,7 @@ class RegExp {
             f.WriteShort(type)
             f.WriteInt(regCount)
             for (i in 0..3) {
-                f.WriteUnsignedShort(regs[i])
+                f.WriteUnsignedShort(regs[i].toInt())
             }
             f.WriteHashString(name.toString())
         }
@@ -186,11 +195,11 @@ class RegExp {
             savefile.WriteBool(enabled)
             savefile.WriteShort(type)
             savefile.WriteInt(regCount)
-            savefile.WriteShort(regs[0].toShort())
-            len = name.Length()
+            savefile.WriteShort(regs[0])
+            len = name!!.Length()
             savefile.WriteInt(len)
             savefile.WriteString(name)
-            storedValue!!.WriteToSaveGame(savefile)
+            `var`!!.WriteToSaveGame(savefile)
         }
 
         fun ReadFromSaveGame(savefile: idFile) {
@@ -198,15 +207,33 @@ class RegExp {
             enabled = savefile.ReadBool()
             type = savefile.ReadShort()
             regCount = savefile.ReadInt()
-            regs[0] = savefile.ReadShort().toInt()
+            regs[0] = savefile.ReadShort()
             len = savefile.ReadInt()
-            name.Fill(' ', len)
-            savefile.ReadString(name)
-            storedValue!!.ReadFromSaveGame(savefile)
+            name!!.Fill(' ', len)
+            savefile.ReadString(name!!)
+            `var`!!.ReadFromSaveGame(savefile)
         }
 
         enum class REGTYPE {
-            VEC4 /*= 0*/, FLOAT, BOOL, INT, STRING, VEC2, VEC3, RECTANGLE, NUMTYPES
+            VEC4 /*= 0*/,
+            FLOAT,
+            BOOL,
+            INT,
+            STRING,
+            VEC2,
+            VEC3,
+            RECTANGLE,
+            NUMTYPES
+        }
+
+        companion object {
+            val REGCOUNT = IntArray(etoi(REGTYPE.NUMTYPES))
+            private var DBG_GetFromRegs = 0
+
+            init {
+                val bv = intArrayOf(4, 1, 1, 1, 0, 2, 3, 4)
+                System.arraycopy(bv, 0, REGCOUNT, 0, REGCOUNT.size)
+            }
         }
     }
 
@@ -214,15 +241,23 @@ class RegExp {
         private val regHash: idHashIndex
         private val regs: idList<idRegister>
 
+        //
+        //
+        init {
+            regs = idList(4) //.SetGranularity(4);
+            regHash = idHashIndex(32, 4) //.SetGranularity(4);
+            //            regHash.Clear(32, 4);
+        }
+
         // ~idRegisterList();
-        fun AddReg(name: String, type: Int, src: idParser, win: idWindow, `var`: idWinVar) {
+        fun AddReg(name: String?, type: Int, src: idParser, win: idWindow?, `var`: idWinVar) {
             var reg: idRegister?
             reg = FindReg(name)
             if (null == reg) {
                 assert(type >= 0 && type < REGTYPE.NUMTYPES.ordinal)
                 val numRegs = idRegister.REGCOUNT[type]
                 reg = idRegister(name, type)
-                reg.storedValue = `var`
+                reg.`var` = `var`
                 if (type == REGTYPE.STRING.ordinal) {
                     val tok = idToken()
                     if (src.ReadToken(tok)) {
@@ -234,17 +269,17 @@ class RegExp {
                     }
                 } else {
                     for (i in 0 until numRegs) {
-                        reg.regs[i] = win.ParseExpression(src, null)
+                        reg.regs[i] = win!!.ParseExpression(src, null).toShort()
                         if (i < numRegs - 1) {
                             src.ExpectTokenString(",")
                         }
                     }
                 }
-                val hash = regHash.GenerateKey(name, false)
+                val hash = regHash.GenerateKey(name!!, false)
                 regHash.Add(hash, regs.Append(reg))
             } else {
                 val numRegs = idRegister.REGCOUNT[type]
-                reg.storedValue = `var`
+                reg.`var` = `var`
                 if (type == REGTYPE.STRING.ordinal) {
                     val tok = idToken()
                     if (src.ReadToken(tok)) {
@@ -252,7 +287,7 @@ class RegExp {
                     }
                 } else {
                     for (i in 0 until numRegs) {
-                        reg.regs[i] = win.ParseExpression(src, null)
+                        reg.regs[i] = win!!.ParseExpression(src, null).toShort()
                         if (i < numRegs - 1) {
                             src.ExpectTokenString(",")
                         }
@@ -261,26 +296,26 @@ class RegExp {
             }
         }
 
-        fun AddReg(name: String, type: Int, data: idVec4, win: idWindow, `var`: idWinVar) {
+        fun AddReg(name: String?, type: Int, data: idVec4, win: idWindow, `var`: idWinVar?) {
             if (FindReg(name) == null) {
                 assert(type >= 0 && type < REGTYPE.NUMTYPES.ordinal)
                 val numRegs = idRegister.REGCOUNT[type]
                 val reg = idRegister(name, type)
-                reg.storedValue = `var`
+                reg.`var` = `var`
                 for (i in 0 until numRegs) {
-                    reg.regs[i] = win.ExpressionConstant(data[i])
+                    reg.regs[i] = win.ExpressionConstant(data[i]).toShort()
                 }
-                val hash = regHash.GenerateKey(name, false)
+                val hash = regHash.GenerateKey(name!!, false)
                 regHash.Add(hash, regs.Append(reg))
             }
         }
 
-        fun FindReg(name: String): idRegister? {
-            val hash = regHash.GenerateKey(name, false)
+        fun FindReg(name: String?): idRegister? {
+            val hash = regHash.GenerateKey(name!!, false)
             var i = regHash.First(hash)
             while (i != -1) {
-                if (regs[i].name.Icmp(name) == 0) {
-//                    System.out.println(regs.oGet(i));
+                if (regs[i].name!!.Icmp(name) == 0) {
+//                    System.out.println(regs.get(i));
                     return regs[i]
                 }
                 i = regHash.Next(i)
@@ -348,14 +383,6 @@ class RegExp {
                 regs[i].ReadFromSaveGame(savefile)
                 i++
             }
-        }
-
-        //
-        //
-        init {
-            regs = idList(4) //.SetGranularity(4);
-            regHash = idHashIndex(32, 4) //.SetGranularity(4);
-            //            regHash.Clear(32, 4);
         }
     }
 }

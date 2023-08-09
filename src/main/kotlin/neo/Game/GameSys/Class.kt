@@ -1230,7 +1230,7 @@ class Class {
          ================
          */
         class DisplayInfo_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs) {
+            override fun run(args: CmdArgs.idCmdArgs?) {
                 Game_local.gameLocal.Printf(
                     "Class memory status: %d bytes allocated in %d objects\n",
                     memused,
@@ -1252,7 +1252,7 @@ class Class {
          ================
          */
         class ListClasses_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs) {
+            override fun run(args: CmdArgs.idCmdArgs?) {
                 var i: Int
                 var type: idTypeInfo
                 Game_local.gameLocal.Printf("%-24s %-24s %-6s %-6s\n", "Classname", "Superclass", "Type", "Subclasses")

@@ -25,14 +25,18 @@ object Math_h {
     private const val IEEE_FLT_EXPONENT_BITS = 8
     private const val IEEE_FLT_MANTISSA_BITS = 23
     private const val IEEE_FLT_SIGN_BIT = 31
+
+    @JvmStatic
     fun DEG2RAD(a: Float): Float {
         return a * idMath.M_DEG2RAD
     }
 
+    @JvmStatic
     fun RAD2DEG(a: Float): Float {
         return a * idMath.M_RAD2DEG
     }
 
+    @JvmStatic
     fun SEC2MS(t: Float): Float {
         return idMath.FtoiFast(t * idMath.M_SEC2MS).toFloat()
     }
@@ -96,6 +100,7 @@ object Math_h {
 //        return x == -0x400000f
 //    }
 
+    @JvmStatic
     fun FLOAT_IS_DENORMAL(x: Float): Boolean {
         return java.lang.Float.floatToIntBits(x) and 0x7f800000 == 0x00000000 && java.lang.Float.floatToIntBits(x) and 0x007fffff != 0x00000000
     }
@@ -128,6 +133,7 @@ object Math_h {
         return if (f > 0) 1 else if (f < 0) -1 else 0
     }
 
+    @JvmStatic
     fun Square(x: Float): Float { //FUCKME: promoting float to double!
         return x * x
     }
@@ -177,6 +183,7 @@ object Math_h {
             initialized = true
         }
 
+        @JvmStatic
         fun RSqrt(x: Float): Float { // reciprocal square root, returns huge number when x == 0.0
             var i: Long
             val y: Float
@@ -191,6 +198,7 @@ object Math_h {
         }
 
         // inverse square root with 32 bits precision, returns huge number when x == 0.0
+        @JvmStatic
         fun InvSqrt(x: Float): Float {
 
 //	long  a = ((union _flint*)(&x))->i;
@@ -232,6 +240,7 @@ object Math_h {
             return r
         }
 
+        @JvmStatic
         fun Sqrt(x: Float): Float { // square root with 32 bits precision
             return x * InvSqrt(x)
         }
@@ -244,10 +253,12 @@ object Math_h {
             return x * InvSqrt64(x)
         }
 
+        @JvmStatic
         fun Sin(a: Float): Float {
             return sin(a.toDouble()).toFloat()
         } // sine with 32 bits precision
 
+        @JvmStatic
         fun Sin16(a: Float): Float { // sine with 16 bits precision, maximum absolute error is 2.3082e-09
             var a = a
             val s: Float
@@ -281,10 +292,12 @@ object Math_h {
             return sin(a.toDouble())
         } // sine with 64 bits precision
 
+        @JvmStatic
         fun Cos(a: Float): Float {
             return cos(a.toDouble()).toFloat()
         } // cosine with 32 bits precision
 
+        @JvmStatic
         fun Cos16(a: Float): Float { // cosine with 16 bits precision, maximum absolute error is 2.3082e-09
             var a = a
             val s: Float
@@ -327,6 +340,7 @@ object Math_h {
             return cos(a.toDouble())
         } // cosine with 64 bits precision
 
+        @JvmStatic
         fun SinCos(a: Float, s: CFloat, c: CFloat) { // sine and cosine with 32 bits precision
 //#ifdef _WIN32//i wish.
 //	_asm {
@@ -343,6 +357,7 @@ object Math_h {
             //#endif
         }
 
+        @JvmStatic
         fun SinCos16(a: Float, s: CFloat, c: CFloat) { // sine and cosine with 16 bits precision
             var a = a
             val t: Float
@@ -400,10 +415,12 @@ object Math_h {
             //#endif
         }
 
+        @JvmStatic
         fun Tan(a: Float): Float { // tangent with 32 bits precision
             return tan(a.toDouble()).toFloat()
         }
 
+        @JvmStatic
         fun Tan16(a: Float): Float { // tangent with 16 bits precision, maximum absolute error is 1.8897e-08
             var a = a
             var s: Float
@@ -485,6 +502,7 @@ object Math_h {
             } else sin(a.toDouble()).toFloat()
         }
 
+        @JvmStatic
         fun ACos(a: Float): Float { // arc cosine with 32 bits precision, input is clamped to [-1, 1] to avoid a silent NaN
             if (a <= -1.0f) {
                 return PI
@@ -761,11 +779,13 @@ object Math_h {
             return floor((f + 0.5f).toDouble()).toFloat()
         }
 
+        @JvmStatic
         fun Ftoi(f: Float): Int { // float to int conversion
             return f.toInt()
         }
 
         // fast float to int conversion but uses current FPU round mode (default round nearest)
+        @JvmStatic
         fun FtoiFast(f: Float): Int {
 //#ifdef _WIN32
 //	int i;
@@ -862,6 +882,7 @@ object Math_h {
             } else value
         }
 
+        @JvmStatic
         fun ClampFloat(min: Float, max: Float, value: Float): Float {
             if (value < min) {
                 return min

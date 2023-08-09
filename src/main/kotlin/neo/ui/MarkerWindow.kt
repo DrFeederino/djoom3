@@ -4,15 +4,20 @@ import neo.Renderer.Material
 import neo.Renderer.Material.idMaterial
 import neo.TempDump.itob
 import neo.TempDump.wrapToNativeBuffer
+import neo.framework.Common.Companion.common
 import neo.framework.DeclManager
+import neo.framework.FileSystem_h.fileSystem
 import neo.framework.FileSystem_h.idFileList
-import neo.framework.KeyInput
+import neo.framework.File_h.idFile
+import neo.framework.KeyInput.K_MOUSE1
+import neo.framework.KeyInput.K_MOUSE2
+import neo.framework.KeyInput.K_SPACE
 import neo.framework.Session
 import neo.framework.Session.logStats_t
-import neo.idlib.Lib.idLib
 import neo.idlib.Text.Parser.idParser
-import neo.idlib.Text.Str
 import neo.idlib.Text.Str.idStr
+import neo.idlib.Text.Str.idStr.Companion.Icmp
+import neo.idlib.Text.Str.va
 import neo.idlib.containers.List.idList
 import neo.idlib.math.Vector.idVec4
 import neo.sys.sys_public.sysEventType_t
@@ -29,27 +34,27 @@ import kotlin.math.abs
  */
 class MarkerWindow {
     class markerData_t {
-        lateinit var mat: idMaterial
-        val rect: idRectangle = idRectangle()
+        var mat: idMaterial? = null
+        val rect = idRectangle()
         var time = 0
     }
 
     class idMarkerWindow : idWindow {
-        private val loggedStats: Array<logStats_t> = Array(Session.MAX_LOGGED_STATS) { logStats_t() }
+        private val loggedStats = arrayOfNulls<logStats_t>(Session.MAX_LOGGED_STATS)
         private var currentMarker = 0
         private var currentTime = 0
         private var imageBuff: IntArray? = null
-        private val markerColor: idVec4 = idVec4()
+        private val markerColor: idVec4? = null
         private var markerMat: idMaterial? = null
         private var markerStop: idMaterial? = null
 
         //
         //
-        private val markerTimes: idList<markerData_t> = idList()
+        private val markerTimes = idList<markerData_t>()
         private var numStats = 0
 
         //virtual ~idMarkerWindow();
-        private val statData: idStr = idStr()
+        private val statData: idStr? = null
 
         //
         //        @Override
@@ -64,19 +69,23 @@ class MarkerWindow {
             CommonInit()
         }
 
-        constructor(dc: idDeviceContext, gui: idUserInterfaceLocal) : super(dc, gui) {
+        constructor(dc: idDeviceContext?, gui: idUserInterfaceLocal?) : super(dc, gui) {
             this.dc = dc
             this.gui = gui
             CommonInit()
         }
 
+        override fun  /*size_t*/Allocated(): Int {
+            return super.Allocated()
+        }
+
         fun HandleEvent(event: sysEvent_s, updateVisuals: Boolean): String {
-            if (!(event.evType == sysEventType_t.SE_KEY && event.evValue2 != 0)) {
+            if (!(event.evType === sysEventType_t.SE_KEY && event.evValue2 != 0)) {
                 return ""
             }
             val key = event.evValue
-            if (event.evValue2 != 0 && key == KeyInput.K_MOUSE1) {
-                gui!!.GetDesktop().SetChildWinVarVal("markerText", "text", "")
+            if (event.evValue2 != 0 && key == K_MOUSE1) {
+                gui!!.GetDesktop()!!.SetChildWinVarVal("markerText", "text", "")
                 val c = markerTimes.Num()
                 var i: Int
                 i = 0
@@ -86,15 +95,16 @@ class MarkerWindow {
                         currentMarker = i
                         gui!!.SetStateInt("currentMarker", md.time)
                         stopTime = md.time
-                        gui!!.GetDesktop().SetChildWinVarVal(
-                            "markerText",
-                            "text",
-                            Str.va("Marker set at %.2i:%.2i", md.time / 60 / 60, md.time / 60 % 60)
-                        )
-                        gui!!.GetDesktop().SetChildWinVarVal("markerText", "visible", "1")
-                        gui!!.GetDesktop().SetChildWinVarVal("markerBackground", "matcolor", "1 1 1 1")
-                        gui!!.GetDesktop().SetChildWinVarVal("markerBackground", "text", "")
-                        gui!!.GetDesktop().SetChildWinVarVal("markerBackground", "background", md.mat.GetName())
+                        gui!!.GetDesktop()!!
+                            .SetChildWinVarVal(
+                                "markerText",
+                                "text",
+                                va("Marker set at %.2i:%.2i", md.time / 60 / 60, md.time / 60 % 60)
+                            )
+                        gui!!.GetDesktop()!!.SetChildWinVarVal("markerText", "visible", "1")
+                        gui!!.GetDesktop()!!.SetChildWinVarVal("markerBackground", "matcolor", "1 1 1 1")
+                        gui!!.GetDesktop()!!.SetChildWinVarVal("markerBackground", "text", "")
+                        gui!!.GetDesktop()!!.SetChildWinVarVal("markerBackground", "background", md.mat!!.GetName())
                         break
                     }
                     i++
@@ -104,29 +114,34 @@ class MarkerWindow {
                     currentMarker = -1
                     gui!!.SetStateInt("currentMarker", currentTime)
                     stopTime = currentTime
-                    gui!!.GetDesktop().SetChildWinVarVal(
-                        "markerText",
-                        "text",
-                        Str.va("Marker set at %.2i:%.2i", currentTime / 60 / 60, currentTime / 60 % 60)
-                    )
-                    gui!!.GetDesktop().SetChildWinVarVal("markerText", "visible", "1")
-                    gui!!.GetDesktop().SetChildWinVarVal("markerBackground", "matcolor", "0 0 0 0")
-                    gui!!.GetDesktop().SetChildWinVarVal("markerBackground", "text", "No Preview")
+                    gui!!.GetDesktop()!!
+                        .SetChildWinVarVal(
+                            "markerText",
+                            "text",
+                            va("Marker set at %.2i:%.2i", currentTime / 60 / 60, currentTime / 60 % 60)
+                        )
+                    gui!!.GetDesktop()!!.SetChildWinVarVal("markerText", "visible", "1")
+                    gui!!.GetDesktop()!!.SetChildWinVarVal("markerBackground", "matcolor", "0 0 0 0")
+                    gui!!.GetDesktop()!!.SetChildWinVarVal("markerBackground", "text", "No Preview")
                 }
                 val pct = gui!!.State().GetFloat("loadPct")
                 val len = gui!!.State().GetInt("loadLength")
                 if (stopTime > len * pct) {
                     return "cmdDemoGotoMarker"
                 }
-            } else if (key == KeyInput.K_MOUSE2) {
+            } else if (key == K_MOUSE2) {
                 stopTime = -1
-                gui!!.GetDesktop().SetChildWinVarVal("markerText", "text", "")
+                gui!!.GetDesktop()!!.SetChildWinVarVal("markerText", "text", "")
                 gui!!.SetStateInt("currentMarker", -1)
                 return "cmdDemoGotoMarker"
-            } else if (key == KeyInput.K_SPACE) {
+            } else if (key == K_SPACE) {
                 return "cmdDemoPauseFrame"
             }
             return ""
+        }
+
+        override fun PostParse() {
+            super.PostParse()
         }
 
         override fun Draw(time: Int, x: Float, y: Float) {
@@ -147,7 +162,7 @@ class MarkerWindow {
                             md.rect.w = 16f
                             md.rect.h = 16f
                         }
-                        dc!!.DrawMaterial(md.rect.x, md.rect.y, md.rect.w, md.rect.h, markerMat!!, markerColor)
+                        dc!!.DrawMaterial(md.rect.x, md.rect.y, md.rect.w, md.rect.h, markerMat, markerColor)
                     }
                 }
             }
@@ -160,10 +175,10 @@ class MarkerWindow {
                 r.w = 40f
                 r.h = 20f
                 dc!!.DrawText(
-                    Str.va("%.2i:%.2i", currentTime / 60 / 60, currentTime / 60 % 60),
+                    va("%.2i:%.2i", currentTime / 60 / 60, currentTime / 60 % 60),
                     0.25f,
                     0,
-                    idDeviceContext.colorWhite,
+                    idDeviceContext.Companion.colorWhite,
                     r,
                     false
                 )
@@ -174,11 +189,11 @@ class MarkerWindow {
                 pct = stopTime.toFloat() / len
                 r.x += r.w * pct - 16
                 val color = idVec4(1f, 1f, 1f, 0.65f)
-                dc!!.DrawMaterial(r.x, r.y, 32f, 32f, markerStop!!, color)
+                dc!!.DrawMaterial(r.x, r.y, 32f, 32f, markerStop, color)
             }
         }
 
-        override fun RouteMouseCoords(xd: Float, yd: Float): String {
+        override fun RouteMouseCoords(xd: Float, yd: Float): String? {
             val ret = super.RouteMouseCoords(xd, yd)
             val r = idRectangle()
             var i: Int
@@ -191,22 +206,22 @@ class MarkerWindow {
             while (i < c) {
                 val md = markerTimes[i]
                 if (md.rect.Contains(gui!!.CursorY(), gui!!.CursorX())) {
-                    gui!!.GetDesktop().SetChildWinVarVal("markerBackground", "background", md.mat.GetName())
-                    gui!!.GetDesktop().SetChildWinVarVal("markerBackground", "matcolor", "1 1 1 1")
-                    gui!!.GetDesktop().SetChildWinVarVal("markerBackground", "text", "")
+                    gui!!.GetDesktop()!!.SetChildWinVarVal("markerBackground", "background", md.mat!!.GetName())
+                    gui!!.GetDesktop()!!.SetChildWinVarVal("markerBackground", "matcolor", "1 1 1 1")
+                    gui!!.GetDesktop()!!.SetChildWinVarVal("markerBackground", "text", "")
                     break
                 }
                 i++
             }
             if (i >= c) {
                 if (currentMarker == -1) {
-                    gui!!.GetDesktop().SetChildWinVarVal("markerBackground", "matcolor", "0 0 0 0")
-                    gui!!.GetDesktop().SetChildWinVarVal("markerBackground", "text", "No Preview")
+                    gui!!.GetDesktop()!!.SetChildWinVarVal("markerBackground", "matcolor", "0 0 0 0")
+                    gui!!.GetDesktop()!!.SetChildWinVarVal("markerBackground", "text", "No Preview")
                 } else {
                     val md = markerTimes[currentMarker]
-                    gui!!.GetDesktop().SetChildWinVarVal("markerBackground", "background", md.mat.GetName())
-                    gui!!.GetDesktop().SetChildWinVarVal("markerBackground", "matcolor", "1 1 1 1")
-                    gui!!.GetDesktop().SetChildWinVarVal("markerBackground", "text", "")
+                    gui!!.GetDesktop()!!.SetChildWinVarVal("markerBackground", "background", md.mat!!.GetName())
+                    gui!!.GetDesktop()!!.SetChildWinVarVal("markerBackground", "matcolor", "1 1 1 1")
+                    gui!!.GetDesktop()!!.SetChildWinVarVal("markerBackground", "text", "")
                 }
             }
             return ret
@@ -216,57 +231,58 @@ class MarkerWindow {
             super.Activate(activate, act)
             if (activate) {
                 var i: Int
-                gui!!.GetDesktop().SetChildWinVarVal("markerText", "text", "")
+                gui!!.GetDesktop()!!.SetChildWinVarVal("markerText", "text", "")
                 imageBuff = IntArray(512 * 64 * 4) // Mem_Alloc(512 * 64 * 4);
                 markerTimes.Clear()
                 currentMarker = -1
                 currentTime = -1
                 stopTime = -1
-                statData.set(gui!!.State().GetString("statData"))
+                statData!!.set(gui!!.State().GetString("statData"))
                 numStats = 0
                 if (statData.Length() != 0) {
-                    val file = idLib.fileSystem.OpenFileRead(statData.toString())
+                    val file: idFile? = fileSystem.OpenFileRead(statData.toString())
                     if (file != null) {
                         numStats = file.ReadInt()
                         //                        file->Read(loggedStats, numStats * sizeof(loggedStats[0]));
                         i = 0
                         while (i < numStats) {
-                            file.Read(loggedStats[i])
-                            if (loggedStats[i].health < 0) {
-                                loggedStats[i].health = 0
+                            file.Read(loggedStats[i]!!)
+                            if (loggedStats[i]!!.health < 0) {
+                                loggedStats[i]!!.health = 0
                             }
-                            if (loggedStats[i].stamina < 0) {
-                                loggedStats[i].stamina = 0
+                            if (loggedStats[i]!!.stamina < 0) {
+                                loggedStats[i]!!.stamina = 0
                             }
-                            if (loggedStats[i].heartRate < 0) {
-                                loggedStats[i].heartRate = 0f
+                            if (loggedStats[i]!!.heartRate < 0) {
+                                loggedStats[i]!!.heartRate = 0f
                             }
-                            if (loggedStats[i].combat < 0) {
-                                loggedStats[i].combat = 0
+                            if (loggedStats[i]!!.combat < 0) {
+                                loggedStats[i]!!.combat = 0
                             }
                             i++
                         }
-                        idLib.fileSystem.CloseFile(file)
+                        fileSystem.CloseFile(file)
                     }
                 }
                 if (numStats > 1 && background != null) {
                     val markerPath = statData
                     markerPath.StripFilename()
-                    val markers: idFileList = idLib.fileSystem.ListFiles(markerPath.toString(), ".tga", false, true)
+                    val markers: idFileList
+                    markers = fileSystem.ListFiles(markerPath.toString(), ".tga", false, true)
                     var name: idStr
                     i = 0
                     while (i < markers.GetNumFiles()) {
                         name = idStr(markers.GetFile(i))
                         val md = markerData_t()
-                        md.mat = DeclManager.declManager.FindMaterial(name)!!
-                        md.mat.SetSort(Material.SS_GUI.toFloat())
+                        md.mat = DeclManager.declManager.FindMaterial(name)
+                        md.mat!!.SetSort(Material.SS_GUI.toFloat())
                         name.StripPath()
                         name.StripFileExtension()
                         md.time = name.toString().toInt()
                         markerTimes.Append(md)
                         i++
                     }
-                    idLib.fileSystem.FreeFileList(markers)
+                    fileSystem.FreeFileList(markers)
                     //                    memset(imageBuff, 0, 512 * 64 * 4);
                     Arrays.fill(imageBuff, 0, 512 * 64 * 4, 0)
                     val step = 511.0f / (numStats - 1)
@@ -280,48 +296,54 @@ class MarkerWindow {
                     while (i < numStats - 1) {
                         x1 += step
                         x2 = x1 + step
-                        y1 = 63 * (loggedStats[i].health.toFloat() / HEALTH_MAX)
-                        y2 = 63 * (loggedStats[i + 1].health.toFloat() / HEALTH_MAX)
+                        y1 = 63 * (loggedStats[i]!!.health.toFloat() / HEALTH_MAX)
+                        y2 = 63 * (loggedStats[i + 1]!!.health.toFloat() / HEALTH_MAX)
                         Line(x1, y1, x2, y2, imageBuff!!, -0xffff01)
-                        y1 = 63 * (loggedStats[i].heartRate.toFloat() / RATE_MAX)
-                        y2 = 63 * (loggedStats[i + 1].heartRate.toFloat() / RATE_MAX)
+                        y1 = 63 * (loggedStats[i]!!.heartRate / RATE_MAX)
+                        y2 = 63 * (loggedStats[i + 1]!!.heartRate / RATE_MAX)
                         Line(x1, y1, x2, y2, imageBuff!!, -0xff0100)
                         // stamina not quite as high on graph so health does not get obscured with both at 100%
-                        y1 = 62 * (loggedStats[i].stamina.toFloat() / STAMINA_MAX)
-                        y2 = 62 * (loggedStats[i + 1].stamina.toFloat() / STAMINA_MAX)
+                        y1 = 62 * (loggedStats[i]!!.stamina.toFloat() / STAMINA_MAX)
+                        y2 = 62 * (loggedStats[i + 1]!!.stamina.toFloat() / STAMINA_MAX)
                         Line(x1, y1, x2, y2, imageBuff!!, -0x10000)
-                        y1 = 63 * (loggedStats[i].combat.toFloat() / COMBAT_MAX)
-                        y2 = 63 * (loggedStats[i + 1].combat.toFloat() / COMBAT_MAX)
+                        y1 = 63 * (loggedStats[i]!!.combat.toFloat() / COMBAT_MAX)
+                        y2 = 63 * (loggedStats[i + 1]!!.combat.toFloat() / COMBAT_MAX)
                         Line(x1, y1, x2, y2, imageBuff!!, -0xff0001)
                         i++
                     }
                     val stage = background!!.GetStage(0)
-                    if (stage != null) { //TODO: check the wrapToNativeBuffer below.
-                        stage.texture.image[0]!!.UploadScratch(wrapToNativeBuffer(itob(imageBuff!!))!!, 512, 64)
-                    }
+                    stage?.texture?.image?.get(0)?.UploadScratch(wrapToNativeBuffer(itob(imageBuff!!)), 512, 64)
                     //                    Mem_Free(imageBuff);
                     imageBuff = null
                 }
             }
         }
 
-        override fun ParseInternalVar(_name: String, src: idParser): Boolean {
-            if (idStr.Icmp(_name, "markerMat") == 0) {
+        override fun MouseExit() {
+            super.MouseExit()
+        }
+
+        override fun MouseEnter() {
+            super.MouseEnter()
+        }
+
+        override fun ParseInternalVar(_name: String?, src: idParser): Boolean {
+            if (Icmp(_name!!, "markerMat") == 0) {
                 val str = idStr()
                 ParseString(src, str)
                 markerMat = DeclManager.declManager.FindMaterial(str)
                 markerMat!!.SetSort(Material.SS_GUI.toFloat())
                 return true
             }
-            if (idStr.Icmp(_name, "markerStop") == 0) {
+            if (Icmp(_name, "markerStop") == 0) {
                 val str = idStr()
                 ParseString(src, str)
                 markerStop = DeclManager.declManager.FindMaterial(str)
                 markerStop!!.SetSort(Material.SS_GUI.toFloat())
                 return true
             }
-            if (idStr.Icmp(_name, "markerColor") == 0) {
-                ParseVec4(src, markerColor)
+            if (Icmp(_name, "markerColor") == 0) {
+                ParseVec4(src, markerColor!!)
                 return true
             }
             return super.ParseInternalVar(_name, src)
@@ -340,8 +362,8 @@ class MarkerWindow {
         private fun Line(x1: Int, y1: Int, x2: Int, y2: Int, out: IntArray, color: Int) {
             var x1 = x1
             var y1 = y1
-            var deltax = abs(x2 - x1)
-            var deltay = abs(y2 - y1)
+            var deltax = abs((x2 - x1).toDouble()).toInt()
+            var deltay = abs((y2 - y1).toDouble()).toInt()
             val incx = if (x1 > x2) -1 else 1
             val incy = if (y1 > y2) -1 else 1
             val right: Int
@@ -379,7 +401,7 @@ class MarkerWindow {
             if (index >= 0 && index < 512 * 64) {
                 out[index] = color
             } else {
-                idLib.common.Warning("Out of bounds on point %d : %d", x, y)
+                common.Warning("Out of bounds on point %d : %d", x, y)
             }
         }
 

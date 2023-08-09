@@ -979,7 +979,7 @@ class Console {
      ==============
      */
     private class Con_Clear_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             localConsole.Clear()
         }
 
@@ -998,8 +998,8 @@ class Console {
      */
     private class Con_Dump_f private constructor() : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs) {
-            if (args.Argc() != 2) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
+            if (args!!.Argc() != 2) {
                 Common.common.Printf("usage: conDump <filename>\n")
                 return
             }
@@ -1038,6 +1038,8 @@ class Console {
         const val TOTAL_LINES = CON_TEXTSIZE / LINE_WIDTH
         const val NUM_CON_TIMES = 4
         val localConsole: idConsoleLocal = idConsoleLocal()
+
+        @JvmField
         val console: idConsole = localConsole // statically initialized to an idConsoleLocal
 
         //

@@ -89,8 +89,13 @@ class Lib {
      ===============================================================================
      */
     object idLib {
+        @JvmField
         var common: idCommon = Common.idCommonLocal()
+
+        @JvmField
         var cvarSystem: idCVarSystem = CVarSystem.idCVarSystemLocal()
+
+        @JvmField
         var fileSystem: idFileSystem = FileSystem_h.idFileSystemLocal()
         var frameNumber = 0
         lateinit var sys: idSys
@@ -154,6 +159,7 @@ class Lib {
 
     open class idException : RuntimeException {
         //TODO:to exception or to runtimeException!!
+        @JvmField
         var error //[MAX_STRING_CHARS];
                 : String = String()
 
@@ -197,6 +203,8 @@ class Lib {
         // maximum world size
         const val MAX_WORLD_COORD = 128 * 1024
         const val MIN_WORLD_COORD = -128 * 1024
+
+        @JvmField
         val MAX_WORLD_SIZE: Int = MAX_WORLD_COORD - MIN_WORLD_COORD
 
         //
@@ -208,20 +216,49 @@ class Lib {
 
      ===============================================================================
      */
+        @JvmField
         val colorBlack: idVec4 = idVec4(0.00f, 0.00f, 0.00f, 1.00f)
+
+        @JvmField
         val colorBlue: idVec4 = idVec4(0.00f, 0.00f, 1.00f, 1.00f)
+
+        @JvmField
         val colorBrown: idVec4 = idVec4(0.40f, 0.35f, 0.08f, 1.00f)
+
+        @JvmField
         val colorCyan: idVec4 = idVec4(0.00f, 1.00f, 1.00f, 1.00f)
+
+        @JvmField
         val colorDkGrey: idVec4 = idVec4(0.25f, 0.25f, 0.25f, 1.00f)
+
+        @JvmField
         val colorGreen: idVec4 = idVec4(0.00f, 1.00f, 0.00f, 1.00f)
+
+        @JvmField
         val colorLtGrey: idVec4 = idVec4(0.75f, 0.75f, 0.75f, 1.00f)
+
+        @JvmField
         val colorMagenta: idVec4 = idVec4(1.00f, 0.00f, 1.00f, 1.00f)
+
+        @JvmField
         val colorMdGrey: idVec4 = idVec4(0.50f, 0.50f, 0.50f, 1.00f)
+
+        @JvmField
         val colorOrange: idVec4 = idVec4(1.00f, 0.50f, 0.00f, 1.00f)
+
+        @JvmField
         val colorPink: idVec4 = idVec4(0.73f, 0.40f, 0.48f, 1.00f)
+
+        @JvmField
         val colorPurple: idVec4 = idVec4(0.60f, 0.00f, 0.60f, 1.00f)
+
+        @JvmField
         val colorRed: idVec4 = idVec4(1.00f, 0.00f, 0.00f, 1.00f)
+
+        @JvmField
         val colorWhite: idVec4 = idVec4(1.00f, 1.00f, 1.00f, 1.00f)
+
+        @JvmField
         val colorYellow: idVec4 = idVec4(1.00f, 1.00f, 0.00f, 1.00f)
 
         /*
@@ -233,6 +270,8 @@ class Lib {
 
         //
         var colorMask: IntArray = intArrayOf(255, 0)
+
+        @JvmStatic
         fun BIT(num: Int): Int { //TODO:is int voldoende?
             return 1 shl num
         }
@@ -306,6 +345,7 @@ class Lib {
             )
         }
 
+        @JvmStatic
         fun LittleShort(l: Short): Short {
             return if (SWAP_TEST) {
                 ShortSwap(l)
@@ -314,6 +354,7 @@ class Lib {
             }
         }
 
+        @JvmStatic
         fun LittleLong(l: Int): Int {
             return if (SWAP_TEST) {
                 LongSwap(l)
@@ -322,6 +363,7 @@ class Lib {
             }
         }
 
+        @JvmStatic
         fun LittleLong(l: Long): Int {
             return LittleLong(l.toInt()) //TODO:little or long?
         }
@@ -331,6 +373,7 @@ class Lib {
             return LittleLong(l)
         }
 
+        @JvmStatic
         fun BigFloat(l: Float): Float {
             return if (SWAP_TEST) {
                 FloatSwap(l)
@@ -339,6 +382,7 @@ class Lib {
             }
         }
 
+        @JvmStatic
         fun LittleFloat(l: Float): Float {
             return if (SWAP_TEST) {
                 FloatSwap(l)
@@ -347,6 +391,7 @@ class Lib {
             }
         }
 
+        @JvmStatic
         fun BigRevBytes(buffer: ByteBuffer, elcount: Int) {
             if (SWAP_TEST) {
                 buffer.order(ByteOrder.LITTLE_ENDIAN)
@@ -730,14 +775,17 @@ class Lib {
         }
 
         // move from Math.h to keep gcc happy
+        @JvmStatic
         fun Max(x: Double, y: Double): Double {
             return if (x > y) x else y
         }
 
+        @JvmStatic
         fun Min(x: Double, y: Double): Double {
             return if (x < y) x else y
         }
 
+        @JvmStatic
         fun Max(x: Float, y: Float): Float {
             return if (x > y) x else y
         }
@@ -746,10 +794,12 @@ class Lib {
             return if (x < y) x else y
         }
 
+        @JvmStatic
         fun Max(x: Int, y: Int): Int {
             return if (x > y) x else y
         }
 
+        @JvmStatic
         fun Min(x: Int, y: Int): Int {
             return if (x < y) x else y
         }

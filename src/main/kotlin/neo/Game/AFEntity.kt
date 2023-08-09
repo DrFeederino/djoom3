@@ -118,6 +118,7 @@ object AFEntity {
     }
 
     open class idMultiModelAF : idEntity() {
+
         //        public CLASS_PROTOTYPE(idMultiModelAF );//TODO:include this?
         protected var physicsObj: idPhysics_AF = idPhysics_AF()
         private val modelDefHandles: idList<Int> = idList()
@@ -152,16 +153,16 @@ object AFEntity {
                     i++
                     continue
                 }
-                renderEntity.origin.set(physicsObj.GetOrigin(i))
-                renderEntity.axis.set(physicsObj.GetAxis(i))
-                renderEntity.hModel = modelHandles[i]
-                renderEntity.bodyId = i
+                renderEntity!!.origin.set(physicsObj.GetOrigin(i))
+                renderEntity!!.axis.set(physicsObj.GetAxis(i))
+                renderEntity!!.hModel = modelHandles[i]
+                renderEntity!!.bodyId = i
 
                 // add to refresh list
                 if (modelDefHandles[i] == -1) {
-                    modelDefHandles[i] = Game_local.gameRenderWorld.AddEntityDef(renderEntity)
+                    modelDefHandles[i] = Game_local.gameRenderWorld.AddEntityDef(renderEntity!!)
                 } else {
-                    Game_local.gameRenderWorld.UpdateEntityDef(modelDefHandles[i], renderEntity)
+                    Game_local.gameRenderWorld.UpdateEntityDef(modelDefHandles[i], renderEntity!!)
                 }
                 i++
             }
@@ -467,8 +468,8 @@ object AFEntity {
                     Game_local.gameLocal.clip,
                     this,
                     0,
-                    renderEntity.origin,
-                    renderEntity.axis,
+                    renderEntity!!.origin,
+                    renderEntity!!.axis,
                     modelDefHandle
                 )
             }
@@ -721,8 +722,8 @@ object AFEntity {
                     Game_local.gameLocal.clip,
                     this,
                     0,
-                    renderEntity.origin,
-                    renderEntity.axis,
+                    renderEntity!!.origin,
+                    renderEntity!!.axis,
                     modelDefHandle
                 )
             }
@@ -863,7 +864,7 @@ object AFEntity {
 
             // update skeleton model
             if (gibbed && !IsHidden() && skeletonModel != null) {
-                skeleton = renderEntity
+                skeleton = renderEntity!!
                 skeleton.hModel = skeletonModel
                 // add to refresh list
                 if (skeletonModelDefHandle == -1) {
@@ -929,8 +930,8 @@ object AFEntity {
                     velocity.plusAssign(if (i and 1 == 1) dir else dir.unaryMinus())
                     list[i].GetPhysics().SetLinearVelocity(velocity.times(75f))
                 }
-                list[i].GetRenderEntity().noShadow = true
-                list[i].GetRenderEntity().shaderParms[RenderWorld.SHADERPARM_TIME_OF_DEATH] =
+                list[i].GetRenderEntity()!!.noShadow = true
+                list[i].GetRenderEntity()!!.shaderParms[RenderWorld.SHADERPARM_TIME_OF_DEATH] =
                     Game_local.gameLocal.time * 0.001f
                 list[i].PostEventSec(EV_Remove, 4.0f)
                 i++
@@ -961,8 +962,9 @@ object AFEntity {
                 if (Game_local.gameLocal.time > Game_local.gameLocal.GetGibTime()) {
                     Game_local.gameLocal.SetGibTime(Game_local.gameLocal.time + GIB_DELAY)
                     SpawnGibs(dir, damageDefName)
-                    renderEntity.noShadow = true
-                    renderEntity.shaderParms[RenderWorld.SHADERPARM_TIME_OF_DEATH] = Game_local.gameLocal.time * 0.001f
+                    renderEntity!!.noShadow = true
+                    renderEntity!!.shaderParms[RenderWorld.SHADERPARM_TIME_OF_DEATH] =
+                        Game_local.gameLocal.time * 0.001f
                     StartSound("snd_gibbed", gameSoundChannel_t.SND_CHANNEL_ANY, 0, false)
                     gibbed = true
                 }
@@ -986,11 +988,11 @@ object AFEntity {
                 } else {
                     ModelManager.renderModelManager.FindModel(modelName)
                 }
-                if (skeletonModel != null && renderEntity.hModel != null) {
-                    if (skeletonModel!!.NumJoints() != renderEntity.hModel!!.NumJoints()) {
+                if (skeletonModel != null && renderEntity!!.hModel != null) {
+                    if (skeletonModel!!.NumJoints() != renderEntity!!.hModel!!.NumJoints()) {
                         idGameLocal.Error(
                             "gib model '%s' has different number of joints than model '%s'",
-                            skeletonModel!!.Name(), renderEntity.hModel!!.Name()
+                            skeletonModel!!.Name(), renderEntity!!.hModel!!.Name()
                         )
                     }
                 }
@@ -1185,9 +1187,9 @@ object AFEntity {
             }
             fl.takedamage = true
             if (head.GetEntity() != null) {
-                val anim = head.GetEntity()!!.GetAnimator()!!.GetAnim("dead")
+                val anim = head.GetEntity()!!.GetAnimator().GetAnim("dead")
                 if (anim != 0) {
-                    head.GetEntity()!!.GetAnimator()!!
+                    head.GetEntity()!!.GetAnimator()
                         .SetFrame(Anim.ANIMCHANNEL_ALL, anim, 0, Game_local.gameLocal.time, 0)
                 }
             }
@@ -1225,9 +1227,9 @@ object AFEntity {
                 headEnt.SetCombatModel()
                 head.oSet(headEnt)
                 animator.GetJointTransform(joint, Game_local.gameLocal.time, origin, axis)
-                origin.set(renderEntity.origin.plus(origin.times(renderEntity.axis)))
+                origin.set(renderEntity!!.origin.plus(origin.times(renderEntity!!.axis)))
                 headEnt.SetOrigin(origin)
-                headEnt.SetAxis(renderEntity.axis)
+                headEnt.SetAxis(renderEntity!!.axis)
                 headEnt.BindToJoint(this, joint, true)
             }
         }
@@ -1269,8 +1271,8 @@ object AFEntity {
                     Game_local.gameLocal.clip,
                     this,
                     0,
-                    renderEntity.origin,
-                    renderEntity.axis,
+                    renderEntity!!.origin,
+                    renderEntity!!.axis,
                     modelDefHandle
                 )
             }
@@ -1293,7 +1295,7 @@ object AFEntity {
                 return
             }
             super.Gib(dir, damageDefName)
-            if (head!!.GetEntity() != null) {
+            if (head.GetEntity() != null) {
                 head.GetEntity()!!.Hide()
             }
         }
@@ -1397,7 +1399,7 @@ object AFEntity {
             } else {
                 player = other
                 animator.GetJointTransform(eyesJoint, Game_local.gameLocal.time, origin, axis)
-                origin.set(renderEntity.origin.plus(origin.times(renderEntity.axis)))
+                origin.set(renderEntity!!.origin.plus(origin.times(renderEntity!!.axis)))
                 player!!.GetPhysics().SetOrigin(origin)
                 player!!.BindToBody(this, 0, true)
                 af.GetPhysics().SetComeToRest(false)
@@ -1474,7 +1476,7 @@ object AFEntity {
                     )
                 }
                 GetAnimator().GetJointTransform(wheelJoints[i], 0, origin, axis)
-                origin.set(renderEntity.origin.plus(origin.times(renderEntity.axis)))
+                origin.set(renderEntity!!.origin.plus(origin.times(renderEntity!!.axis)))
                 suspension[i] = idAFConstraint_Suspension()
                 suspension[i]!!.Setup(
                     Str.va("suspension%d", i),
@@ -1588,7 +1590,7 @@ object AFEntity {
                     }
 
                     // set wheel position for suspension
-                    origin.set(origin.minus(renderEntity.origin).times(renderEntity.axis.Transpose()))
+                    origin.set(origin.minus(renderEntity!!.origin).times(renderEntity!!.axis.Transpose()))
                     GetAnimator().SetJointPos(wheelJoints[i], jointModTransform_t.JOINTMOD_WORLD_OVERRIDE, origin)
                     i++
                 }
@@ -2156,7 +2158,7 @@ object AFEntity {
                     steamRenderEntity.hModel = ModelManager.renderModelManager.FindModel(temp)
                 }
                 if (steamRenderEntity.hModel != null) {
-                    steamRenderEntity.bounds.set(steamRenderEntity.hModel!!.Bounds(steamRenderEntity))
+                    steamRenderEntity.bounds.set(steamRenderEntity.hModel!!.Bounds(steamRenderEntity)!!)
                 } else {
                     steamRenderEntity.bounds.Zero()
                 }
@@ -2321,7 +2323,7 @@ object AFEntity {
             val data = model as jointTransformData_t
             i = 0
             while (i < data.ent!!.numJoints) {
-                if (data.joints!![i]!!.name.Icmp(jointName) == 0) {
+                if (data.joints!![i].name!!.Icmp(jointName) == 0) {
                     break
                 }
                 i++

@@ -830,14 +830,14 @@ object Roq {
 
     class RoQFileEncode_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs) {
-            if (args.Argc() != 2) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
+            if (args!!.Argc() != 2) {
                 Common.common.Printf("Usage: roq <paramfile>\n")
                 return
             }
             Roq.theRoQ = roq()
             val startMsec = win_shared.Sys_Milliseconds()
-            Roq.theRoQ.EncodeStream(args.Argv(1))
+            Roq.theRoQ.EncodeStream(args!!.Argv(1))
             val stopMsec = win_shared.Sys_Milliseconds()
             Common.common.Printf("total encoding time: %d second\n", (stopMsec - startMsec) / 1000)
         }

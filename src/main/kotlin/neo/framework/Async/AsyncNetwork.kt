@@ -94,7 +94,7 @@ class AsyncNetwork {
              ==================
              */
             private class NextMap_f private constructor() : cmdFunction_t() {
-                override fun run(args: idCmdArgs) {
+                override fun run(args: idCmdArgs?) {
                     server.ExecuteMapChange()
                 }
 
@@ -110,17 +110,17 @@ class AsyncNetwork {
             */
             private class Connect_f private constructor() : cmdFunction_t() {
                 @Throws(idException::class)
-                override fun run(args: idCmdArgs) {
+                override fun run(args: idCmdArgs?) {
                     if (server.IsActive()) {
                         Common.common.Printf("already running a server\n")
                         return
                     }
-                    if (args.Argc() !== 2) {
+                    if (args!!.Argc() !== 2) {
                         Common.common.Printf("USAGE: connect <serverName>\n")
                         return
                     }
                     com_asyncInput.SetBool(false)
-                    client.ConnectToServer(args.Argv(1))
+                    client.ConnectToServer(args!!.Argv(1))
                 }
 
                 companion object {
@@ -135,8 +135,8 @@ class AsyncNetwork {
          */
             private class SpawnServer_f : cmdFunction_t() {
                 @Throws(idException::class)
-                override fun run(args: idCmdArgs) {
-                    if (args.Argc() > 1) {
+                override fun run(args: idCmdArgs?) {
+                    if (args!!.Argc() > 1) {
                         cvarSystem.SetCVarString("si_map", args.Argv(1))
                     }
 
@@ -180,8 +180,8 @@ class AsyncNetwork {
          =================
          */
             private class UpdateUI_f private constructor() : cmdFunction_t() {
-                override fun run(args: idCmdArgs) {
-                    if (args.Argc() !== 2) {
+                override fun run(args: idCmdArgs?) {
+                    if (args!!.Argc() !== 2) {
                         Common.common.Warning("idAsyncNetwork::UpdateUI_f: wrong arguments\n")
                         return
                     }
@@ -189,7 +189,7 @@ class AsyncNetwork {
                         Common.common.Warning("idAsyncNetwork::UpdateUI_f: server is not active\n")
                         return
                     }
-                    val clientNum = args.Args(1).toInt()
+                    val clientNum = args!!.Args(1).toInt()
                     server.UpdateUI(clientNum)
                 }
 
@@ -204,7 +204,7 @@ class AsyncNetwork {
             ==================
             */
             private class Reconnect_f private constructor() : cmdFunction_t() {
-                override fun run(args: idCmdArgs) {
+                override fun run(args: idCmdArgs?) {
                     client.Reconnect()
                 }
 
@@ -219,8 +219,8 @@ class AsyncNetwork {
             ==================
             */
             private class GetServerInfo_f private constructor() : cmdFunction_t() {
-                override fun run(args: idCmdArgs) {
-                    client.GetServerInfo(args.Argv(1))
+                override fun run(args: idCmdArgs?) {
+                    client.GetServerInfo(args!!.Argv(1))
                 }
 
                 companion object {
@@ -234,7 +234,7 @@ class AsyncNetwork {
          ==================
          */
             private class GetLANServers_f private constructor() : cmdFunction_t() {
-                override fun run(args: idCmdArgs) {
+                override fun run(args: idCmdArgs?) {
                     client.GetLANServers()
                 }
 
@@ -249,7 +249,7 @@ class AsyncNetwork {
             ==================
             */
             private class ListServers_f private constructor() : cmdFunction_t() {
-                override fun run(args: idCmdArgs) {
+                override fun run(args: idCmdArgs?) {
                     client.ListServers()
                 }
 
@@ -264,7 +264,7 @@ class AsyncNetwork {
              ==================
              */
             private class CheckNewVersion_f private constructor() : cmdFunction_t() {
-                override fun run(args: idCmdArgs) {
+                override fun run(args: idCmdArgs?) {
                     client.SendVersionCheck()
                 }
 
@@ -279,14 +279,14 @@ class AsyncNetwork {
          ==================
          */
             private class Kick_f private constructor() : cmdFunction_t() {
-                override fun run(args: idCmdArgs) {
+                override fun run(args: idCmdArgs?) {
                     val clientId: idStr
                     val iclient: Int
                     if (!server.IsActive()) {
                         Common.common.Printf("server is not running\n")
                         return
                     }
-                    clientId = idStr(args.Argv(1))
+                    clientId = idStr(args!!.Argv(1))
                     if (!clientId.IsNumeric()) {
                         Common.common.Printf("usage: kick <client number>\n")
                         return
@@ -310,7 +310,7 @@ class AsyncNetwork {
          ==================
          */
             private class Heartbeat_f private constructor() : cmdFunction_t() {
-                override fun run(args: idCmdArgs) {
+                override fun run(args: idCmdArgs?) {
                     if (!server.IsActive()) {
                         Common.common.Printf("server is not running\n")
                         return
@@ -329,8 +329,8 @@ class AsyncNetwork {
          ==================
          */
             private class RemoteConsole_f private constructor() : cmdFunction_t() {
-                override fun run(args: idCmdArgs) {
-                    client.RemoteConsole(args.Args())
+                override fun run(args: idCmdArgs?) {
+                    client.RemoteConsole(args!!.Args())
                 }
 
                 companion object {
@@ -741,6 +741,7 @@ class AsyncNetwork {
             )
 
             // if set run a dedicated server
+            @JvmField
             var serverDedicated: idCVar = idCVar(
                 "net_serverDedicated",
                 "0",

@@ -43,7 +43,10 @@ import neo.Renderer.Material.shaderStage_t
 import neo.Renderer.Model
 import neo.Renderer.RenderSystem
 import neo.Renderer.RenderWorld
-import neo.Renderer.RenderWorld.*
+import neo.Renderer.RenderWorld.guiPoint_t
+import neo.Renderer.RenderWorld.portalConnection_t
+import neo.Renderer.RenderWorld.renderEntity_s
+import neo.Renderer.RenderWorld.renderView_s
 import neo.Sound.snd_shader
 import neo.TempDump
 import neo.Tools.Compilers.AAS.AASFile
@@ -1382,7 +1385,7 @@ object Player {
         // if there is a focusGUIent, the attack button will be changed into mouse clicks
         private var focusGUIent: idEntity?
         private var focusTime: Int
-        private var focusUI // focusGUIent->renderEntity.gui, gui2, or gui3
+        private var focusUI // focusGUIent->renderEntity!!.gui, gui2, or gui3
                 : idUserInterface?
         private var focusVehicle: idAFEntity_Vehicle?
         private var fxFov: Boolean
@@ -1504,7 +1507,7 @@ object Player {
             physicsObj.SetClipMask(Game_local.MASK_PLAYERSOLID)
             SetPhysics(physicsObj)
             InitAASLocation()
-            skin.oSet(renderEntity.customSkin!!)
+            skin.oSet(renderEntity!!.customSkin!!)
 
             // only the local player needs guis
             if (!Game_local.gameLocal.isMultiplayer || entityNumber == Game_local.gameLocal.localClientNum) {
@@ -1556,14 +1559,14 @@ object Player {
             playerView.SetPlayerEntity(this)
 
             // supress model in non-player views, but allow it in mirrors and remote views
-            renderEntity.suppressSurfaceInViewID = entityNumber + 1
+            renderEntity!!.suppressSurfaceInViewID = entityNumber + 1
 
             // don't project shadow on self or weapon
-            renderEntity.noSelfShadow = true
+            renderEntity!!.noSelfShadow = true
             val headEnt = head.GetEntity()
             if (headEnt != null) {
-                headEnt.GetRenderEntity().suppressSurfaceInViewID = entityNumber + 1
-                headEnt.GetRenderEntity().noSelfShadow = true
+                headEnt.GetRenderEntity()!!.suppressSurfaceInViewID = entityNumber + 1
+                headEnt.GetRenderEntity()!!.noSelfShadow = true
             }
             if (Game_local.gameLocal.isMultiplayer) {
                 Init()
@@ -1815,18 +1818,18 @@ object Player {
                 }
             }
             if (Game_local.gameLocal.isMultiplayer || SysCvar.g_showPlayerShadow.GetBool()) {
-                renderEntity.suppressShadowInViewID = 0
+                renderEntity!!.suppressShadowInViewID = 0
                 if (headRenderEnt != null) {
                     headRenderEnt.suppressShadowInViewID = 0
                 }
             } else {
-                renderEntity.suppressShadowInViewID = entityNumber + 1
+                renderEntity!!.suppressShadowInViewID = entityNumber + 1
                 if (headRenderEnt != null) {
                     headRenderEnt.suppressShadowInViewID = entityNumber + 1
                 }
             }
             // never cast shadows from our first-person muzzle flashes
-            renderEntity.suppressShadowInLightID = Weapon.LIGHTID_VIEW_MUZZLE_FLASH + entityNumber
+            renderEntity!!.suppressShadowInLightID = Weapon.LIGHTID_VIEW_MUZZLE_FLASH + entityNumber
             if (headRenderEnt != null) {
                 headRenderEnt.suppressShadowInLightID = Weapon.LIGHTID_VIEW_MUZZLE_FLASH + entityNumber
             }
@@ -2370,11 +2373,11 @@ object Player {
             }
             if ((Game_local.gameLocal.isMultiplayer || SysCvar.g_testDeath.GetBool()) && skin != null) {
                 SetSkin(skin)
-                renderEntity.shaderParms[6] = 0f
+                renderEntity!!.shaderParms[6] = 0f
             } else if (spawnArgs.GetString("spawn_skin", "", value)) {
                 skin.oSet(DeclManager.declManager.FindSkin(value[0])!!)
                 SetSkin(skin)
-                renderEntity.shaderParms[6] = 0f
+                renderEntity!!.shaderParms[6] = 0f
             }
             value[0] = spawnArgs.GetString("bone_hips", "")!!
             hipJoint = animator.GetJointHandle(value[0])
@@ -4847,8 +4850,8 @@ object Player {
                     val amt = min(_health, HEALTH_PER_DOSE)
                     _health -= amt
                     entityGui.spawnArgs.SetInt("gui_parm1", _health)
-                    if (entityGui.GetRenderEntity() != null && entityGui.GetRenderEntity().gui[0] != null) {
-                        entityGui.GetRenderEntity().gui[0]!!.SetStateInt("gui_parm1", _health)
+                    if (entityGui.GetRenderEntity() != null && entityGui.GetRenderEntity()!!.gui[0] != null) {
+                        entityGui.GetRenderEntity()!!.gui[0]!!.SetStateInt("gui_parm1", _health)
                     }
                     health += amt
                     if (health > 100) {
@@ -5107,7 +5110,7 @@ object Player {
 
         fun RouteGuiMouse(gui: idUserInterface) {
             val ev: sysEvent_s
-            val command: String
+            val command: String?
             if (usercmd.mx.toInt() != oldMouseX || usercmd.my.toInt() != oldMouseY) {
                 ev = idLib.sys.GenerateMouseMoveEvent(usercmd.mx - oldMouseX, usercmd.my - oldMouseY)
                 command = gui.HandleEvent(ev, Game_local.gameLocal.time)
@@ -5225,7 +5228,7 @@ object Player {
             if (skinname != null && !skinname.isEmpty()) {
                 influenceSkin = DeclManager.declManager.FindSkin(skinname)
                 if (head.GetEntity() != null) {
-                    head.GetEntity()!!.GetRenderEntity().shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] =
+                    head.GetEntity()!!.GetRenderEntity()!!.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] =
                         -Math_h.MS2SEC(Game_local.gameLocal.time.toFloat())
                 }
                 UpdateVisuals()
@@ -5535,18 +5538,18 @@ object Player {
                 }
             }
             if (Game_local.gameLocal.isMultiplayer || SysCvar.g_showPlayerShadow.GetBool()) {
-                renderEntity.suppressShadowInViewID = 0
+                renderEntity!!.suppressShadowInViewID = 0
                 if (headRenderEnt != null) {
                     headRenderEnt.suppressShadowInViewID = 0
                 }
             } else {
-                renderEntity.suppressShadowInViewID = entityNumber + 1
+                renderEntity!!.suppressShadowInViewID = entityNumber + 1
                 if (headRenderEnt != null) {
                     headRenderEnt.suppressShadowInViewID = entityNumber + 1
                 }
             }
             // never cast shadows from our first-person muzzle flashes
-            renderEntity.suppressShadowInLightID = Weapon.LIGHTID_VIEW_MUZZLE_FLASH + entityNumber
+            renderEntity!!.suppressShadowInLightID = Weapon.LIGHTID_VIEW_MUZZLE_FLASH + entityNumber
             if (headRenderEnt != null) {
                 headRenderEnt.suppressShadowInLightID = Weapon.LIGHTID_VIEW_MUZZLE_FLASH + entityNumber
             }
@@ -6178,7 +6181,7 @@ object Player {
             }
             if (oldButtons xor usercmd.buttons.toInt() and UsercmdGen.BUTTON_ATTACK != 0) {
                 val ev: sysEvent_s
-                var command: String = ""
+                var command: String? = ""
                 val updateVisuals = CBool(false)
                 val ui = ActiveGui()
                 if (ui != null) {
@@ -7094,9 +7097,9 @@ object Player {
             }
             if (health > 0) {
                 if (powerUpSkin != null) {
-                    renderEntity.customSkin = powerUpSkin
+                    renderEntity!!.customSkin = powerUpSkin
                 } else {
-                    renderEntity.customSkin = skin
+                    renderEntity!!.customSkin = skin
                 }
             }
             if (healthPool != 0f && Game_local.gameLocal.time > nextHealthPulse && !AI_DEAD.underscore()!! && health > 0) {
@@ -7137,12 +7140,12 @@ object Player {
                 if (!doingDeathSkin) {
                     deathClearContentsTime = spawnArgs.GetInt("deathSkinTime")
                     doingDeathSkin = true
-                    renderEntity.noShadow = true
+                    renderEntity!!.noShadow = true
                     if (state_hitch) {
-                        renderEntity.shaderParms[RenderWorld.SHADERPARM_TIME_OF_DEATH] =
+                        renderEntity!!.shaderParms[RenderWorld.SHADERPARM_TIME_OF_DEATH] =
                             Game_local.gameLocal.time * 0.001f - 2.0f
                     } else {
-                        renderEntity.shaderParms[RenderWorld.SHADERPARM_TIME_OF_DEATH] =
+                        renderEntity!!.shaderParms[RenderWorld.SHADERPARM_TIME_OF_DEATH] =
                             Game_local.gameLocal.time * 0.001f
                     }
                     UpdateVisuals()
@@ -7154,8 +7157,8 @@ object Player {
                     deathClearContentsTime = 0
                 }
             } else {
-                renderEntity.noShadow = false
-                renderEntity.shaderParms[RenderWorld.SHADERPARM_TIME_OF_DEATH] = 0.0f
+                renderEntity!!.noShadow = false
+                renderEntity!!.shaderParms[RenderWorld.SHADERPARM_TIME_OF_DEATH] = 0.0f
                 UpdateVisuals()
                 doingDeathSkin = false
             }
@@ -7231,7 +7234,7 @@ object Player {
             val start = idVec3()
             val end = idVec3()
             val allowFocus: Boolean
-            var command: String
+            var command: String?
             val trace = trace_s()
             var pt: guiPoint_t
             var kv: idKeyValue?
@@ -7346,7 +7349,7 @@ object Player {
                         continue
                     }
                 }
-                if (TempDump.NOT(ent.GetRenderEntity()) || TempDump.NOT(ent.GetRenderEntity().gui[0]) || !ent.GetRenderEntity().gui[0]!!.IsInteractive()) {
+                if (TempDump.NOT(ent.GetRenderEntity()) || TempDump.NOT(ent.GetRenderEntity()!!.gui[0]) || !ent.GetRenderEntity()!!.gui[0]!!.IsInteractive()) {
                     i++
                     continue
                 }
@@ -7364,11 +7367,11 @@ object Player {
                         continue
                     }
                     ui = if (pt.guiId == 1) {
-                        focusGUIrenderEntity.gui[0]
+                        focusGUIrenderEntity!!.gui[0]
                     } else if (pt.guiId == 2) {
-                        focusGUIrenderEntity.gui[1]
+                        focusGUIrenderEntity!!.gui[1]
                     } else {
-                        focusGUIrenderEntity.gui[2]
+                        focusGUIrenderEntity!!.gui[2]
                     }
                     if (ui == null) {
                         i++

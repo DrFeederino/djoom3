@@ -136,6 +136,7 @@ class DeclManager {
     // The constructor should initialize variables such that
     // an immediate call to FreeData() does no harm.
     {
+        @JvmField
         var base: idDeclBase? = null
 
         // public /*abstract*/ 				~idDecl() {};
@@ -286,6 +287,7 @@ class DeclManager {
 
         companion object {
             @Transient
+            @JvmField
             val SIZE = TempDump.CPP_class.Pointer.SIZE //base is an abstract class.
         }
     }
@@ -476,15 +478,15 @@ class DeclManager {
 
     class idListDecls_f(private val type: declType_t) : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs) {
-            declManager.ListType(args, type)
+        override fun run(args: CmdArgs.idCmdArgs?) {
+            declManager.ListType(args!!, type)
         }
     }
 
     class idPrintDecls_f(private val type: declType_t) : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs) {
-            declManager.PrintType(args, type)
+        override fun run(args: CmdArgs.idCmdArgs?) {
+            declManager.PrintType(args!!, type)
         }
     }
 
@@ -1558,7 +1560,7 @@ class DeclManager {
 //
 //                num = linearLists[i].Num();
 //                for (j = 0; j < num; j++) {
-//                    idDeclLocal decl = linearLists[i].oGet(j);
+//                    idDeclLocal decl = linearLists[i].get(j);
 //
 //                    if (decl.sourceFile == implicitDecls) {
 //                        continue;
@@ -2082,7 +2084,7 @@ class DeclManager {
          */
         internal class ListDecls_f : cmdFunction_t() {
             @Throws(idException::class)
-            override fun run(args: CmdArgs.idCmdArgs) {
+            override fun run(args: CmdArgs.idCmdArgs?) {
                 var i: Int
                 var j: Int
                 var totalDecls = 0
@@ -2150,9 +2152,9 @@ class DeclManager {
          */
         internal class ReloadDecls_f : cmdFunction_t() {
             @Throws(idException::class)
-            override fun run(args: CmdArgs.idCmdArgs) {
+            override fun run(args: CmdArgs.idCmdArgs?) {
                 val force: Boolean
-                if (0 == idStr.Icmp(args.Argv(1), "all")) {
+                if (0 == idStr.Icmp(args!!.Argv(1), "all")) {
                     force = true
                     Common.common.Printf("reloading all decl files:\n")
                 } else {
@@ -2179,9 +2181,9 @@ class DeclManager {
          */
         internal class TouchDecl_f : cmdFunction_t() {
             @Throws(idException::class)
-            override fun run(args: CmdArgs.idCmdArgs) {
+            override fun run(args: CmdArgs.idCmdArgs?) {
                 var i: Int
-                if (args.Argc() != 3) {
+                if (args!!.Argc() != 3) {
                     Common.common.Printf("usage: touch <type> <name>\n")
                     Common.common.Printf("valid types: ")
                     i = 0
@@ -2310,7 +2312,7 @@ class DeclManager {
      */
     internal class ListHuffmanFrequencies_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             var i: Int
             val compression: Float
             compression =
@@ -2351,6 +2353,8 @@ class DeclManager {
         */
         const val MAX_HUFFMAN_SYMBOLS = 256
         const val USE_COMPRESSED_DECLS = true
+
+        @JvmField
         val DECL_LEXER_FLAGS =
             Lexer.LEXFL_NOSTRINGCONCAT or  // multiple strings seperated by whitespaces are not concatenated
                     Lexer.LEXFL_NOSTRINGESCAPECHARS or  // no escape characters inside strings
@@ -2402,6 +2406,8 @@ class DeclManager {
         var totalCompressedLength = 0
         var totalUncompressedLength = 0
         private var declManagerLocal: idDeclManagerLocal = idDeclManagerLocal()
+
+        @JvmField
         var declManager: idDeclManager = declManagerLocal
 
         /*

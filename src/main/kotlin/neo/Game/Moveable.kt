@@ -363,8 +363,8 @@ object Moveable {
                     PostEventMS(EV_Remove, 1000)
                 }
             }
-            if (renderEntity.gui[0] != null) {
-                renderEntity.gui[0] = null
+            if (renderEntity!!.gui[0] != null) {
+                renderEntity!!.gui[0] = null
             }
             ActivateTargets(this)
             fl.takedamage = false
@@ -382,11 +382,11 @@ object Moveable {
         }
 
         protected fun GetRenderModelMaterial(): Material.idMaterial? {
-            if (renderEntity.customShader != null) {
-                return renderEntity.customShader
+            if (renderEntity!!.customShader != null) {
+                return renderEntity!!.customShader
             }
-            return if (renderEntity.hModel != null && renderEntity.hModel!!.NumSurfaces() != 0) {
-                renderEntity.hModel!!.Surface(0).shader
+            return if (renderEntity!!.hModel != null && renderEntity!!.hModel!!.NumSurfaces() != 0) {
+                renderEntity!!.hModel!!.Surface(0)!!.shader
             } else null
         }
 
@@ -894,7 +894,7 @@ object Moveable {
                     debris = ent[0] as idDebris
                     debris.Create(this, physicsObj.GetOrigin(), dir2.ToMat3())
                     debris.Launch()
-                    debris.GetRenderEntity().shaderParms[RenderWorld.SHADERPARM_TIME_OF_DEATH] =
+                    debris.GetRenderEntity()!!.shaderParms[RenderWorld.SHADERPARM_TIME_OF_DEATH] =
                         (Game_local.gameLocal.time + 1500) * 0.001f
                     debris.UpdateVisuals()
                 }

@@ -2,13 +2,16 @@ package neo.ui
 
 import neo.TempDump.SERiAL
 import neo.idlib.containers.List.idList
-import neo.idlib.math.Math_h
+import neo.idlib.math.Math_h.DEG2RAD
 import neo.idlib.math.Vector.idVec3
 import neo.idlib.math.Vector.idVec4
 import java.nio.ByteBuffer
 import kotlin.math.cos
 import kotlin.math.sin
 
+/**
+ *
+ */
 object Rectangle {
     /*
      ================
@@ -19,8 +22,8 @@ object Rectangle {
         var x = v[0]
         var y = v[1]
         if (a != 0f) {
-            val x2 = (((x - origin[0]) * c) - ((y - origin[1]) * s)) + origin[0]
-            val y2 = (((x - origin[0]) * s) + ((y - origin[1]) * c)) + origin[1]
+            val x2 = (x - origin[0]) * c - (y - origin[1]) * s + origin[0]
+            val y2 = (x - origin[0]) * s + (y - origin[1]) * c + origin[1]
             x = x2
             y = y2
         }
@@ -59,7 +62,7 @@ object Rectangle {
         }
 
         //copy constructor
-        constructor(rectangle: idRectangle) : this(rectangle.x, rectangle.y, rectangle.w, rectangle.h)
+        constructor(rectangle: idRectangle?) : this(rectangle!!.x, rectangle.y, rectangle.w, rectangle.h)
 
         fun Bottom(): Float {
             return y + h
@@ -117,8 +120,8 @@ object Rectangle {
             p2.set(Right(), y, 0f)
             p4.set(x, Bottom(), 0f)
             if (a != 0f) {
-                s = sin(Math_h.DEG2RAD(a).toDouble()).toFloat()
-                c = cos(Math_h.DEG2RAD(a).toDouble()).toFloat()
+                s = sin(DEG2RAD(a).toDouble()).toFloat()
+                c = cos(DEG2RAD(a).toDouble()).toFloat()
             } else {
                 c = 0f
                 s = c
@@ -132,7 +135,7 @@ object Rectangle {
             out.h = p4.minus(p1).Length()
         }
 
-        fun plusAssign(a: idRectangle): idRectangle {
+        fun oPluset(a: idRectangle): idRectangle {
             x += a.x
             y += a.y
             w += a.w
@@ -140,7 +143,7 @@ object Rectangle {
             return this
         }
 
-        fun minusAssign(a: idRectangle): idRectangle {
+        fun oMinset(a: idRectangle): idRectangle {
             x -= a.x
             y -= a.y
             w -= a.w
@@ -148,7 +151,7 @@ object Rectangle {
             return this
         }
 
-        fun divAssign(a: idRectangle): idRectangle {
+        fun oDivset(a: idRectangle): idRectangle {
             x /= a.x
             y /= a.y
             w /= a.w
@@ -156,7 +159,7 @@ object Rectangle {
             return this
         }
 
-        fun divAssign(a: Float): idRectangle {
+        fun oDivset(a: Float): idRectangle {
             val inva = 1.0f / a
             x *= inva
             y *= inva
@@ -165,7 +168,7 @@ object Rectangle {
             return this
         }
 
-        fun timesAssign(a: Float): idRectangle {
+        fun oMulset(a: Float): idRectangle {
             x *= a
             y *= a
             w *= a
@@ -173,16 +176,16 @@ object Rectangle {
             return this
         }
 
-        fun set(v: idVec4): idRectangle {
-            x = v.x
+        fun set(v: idVec4?): idRectangle {
+            x = v!!.x
             y = v.y
             w = v.z
             h = v.w
             return this
         }
 
-        fun set(r: idRectangle): idRectangle {
-            x = r.x
+        fun set(r: idRectangle?): idRectangle {
+            x = r!!.x
             y = r.y
             w = r.w
             h = r.h
@@ -234,7 +237,7 @@ object Rectangle {
             // use an array so that multiple toString's won't collide
             s = String.format("%.2f %.2f %.2f %.2f", x, y, w, h)
             temp = s.toCharArray()
-            System.arraycopy(temp, 0, str.get(index), 0, temp.size)
+            System.arraycopy(temp, 0, str[index], 0, temp.size)
             index = index + 1 and 7
             return s
         }
@@ -256,7 +259,7 @@ object Rectangle {
         }
 
         companion object {
-            private val str: Array<CharArray> = Array(8) { CharArray(48) }
+            private val str = Array(8) { CharArray(48) }
             private var index = 0
         }
     }
@@ -264,7 +267,7 @@ object Rectangle {
     class idRegion  //
     //
     {
-        protected val rects: idList<idRectangle> = idList()
+        protected val rects = idList<idRectangle>()
         fun Empty() {
             rects.Clear()
         }

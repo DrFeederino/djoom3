@@ -306,20 +306,20 @@ object SecurityCamera {
 
             // camera target for remote render views
             if (cameraTarget != null) {
-                renderEntity.remoteRenderView = cameraTarget!!.GetRenderView()
+                renderEntity!!.remoteRenderView = cameraTarget!!.GetRenderView()
             }
 
             // if set to invisible, skip
-            if (null == renderEntity.hModel || IsHidden()) {
+            if (null == renderEntity!!.hModel || IsHidden()) {
                 return
             }
 
             // add to refresh list
             if (modelDefHandle == -1) {
-                modelDefHandle = Game_local.gameRenderWorld.AddEntityDef(renderEntity)
+                modelDefHandle = Game_local.gameRenderWorld.AddEntityDef(renderEntity!!)
                 val a = 0
             } else {
-                Game_local.gameRenderWorld.UpdateEntityDef(modelDefHandle, renderEntity)
+                Game_local.gameRenderWorld.UpdateEntityDef(modelDefHandle, renderEntity!!)
             }
         }
 
@@ -387,7 +387,7 @@ object SecurityCamera {
             if (alert >= SCANNING && alert <= ACTIVATED) {
                 alertMode = alert
             }
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_MODE] = alertMode.toFloat()
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_MODE] = alertMode.toFloat()
             UpdateVisuals()
         }
 

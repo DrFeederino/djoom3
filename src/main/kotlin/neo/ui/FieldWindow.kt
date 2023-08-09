@@ -1,8 +1,9 @@
 package neo.ui
 
-import neo.TempDump
+import neo.TempDump.itob
 import neo.idlib.Text.Parser.idParser
 import neo.idlib.Text.Str.idStr
+import neo.idlib.Text.Str.idStr.Companion.Icmp
 import neo.ui.DeviceContext.idDeviceContext
 import neo.ui.Rectangle.idRectangle
 import neo.ui.UserInterfaceLocal.idUserInterfaceLocal
@@ -14,7 +15,7 @@ import neo.ui.Window.idWindow
 class FieldWindow {
     internal class idFieldWindow : idWindow {
         private var cursorPos = 0
-        private val cursorVar: idStr = idStr()
+        private val cursorVar: idStr? = null
         private var lastCursorPos = 0
         private var lastTextLength = 0
         private var paintOffset = 0
@@ -27,7 +28,7 @@ class FieldWindow {
             CommonInit()
         }
 
-        constructor(dc: idDeviceContext, gui: idUserInterfaceLocal) : super(dc, gui) {
+        constructor(dc: idDeviceContext?, gui: idUserInterfaceLocal?) : super(dc, gui) {
             this.dc = dc
             this.gui = gui
             CommonInit()
@@ -56,16 +57,16 @@ class FieldWindow {
                 foreColor.data,
                 rect,
                 false,
-                if (TempDump.itob(flags and Window.WIN_FOCUS) || showCursor) cursorPos - paintOffset else -1
+                if (itob(flags and Window.WIN_FOCUS) || showCursor) cursorPos - paintOffset else -1
             )
         }
 
-        override fun ParseInternalVar(_name: String, src: idParser): Boolean {
-            if (idStr.Icmp(_name, "cursorvar") == 0) {
+        override fun ParseInternalVar(_name: String?, src: idParser): Boolean {
+            if (Icmp(_name!!, "cursorvar") == 0) {
                 ParseString(src, cursorVar)
                 return true
             }
-            if (idStr.Icmp(_name, "showcursor") == 0) {
+            if (Icmp(_name, "showcursor") == 0) {
                 showCursor = src.ParseBool()
                 return true
             }

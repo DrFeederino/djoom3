@@ -19,7 +19,10 @@ import neo.Game.Physics.Physics_RigidBody.idPhysics_RigidBody
 import neo.Game.Player.idPlayer
 import neo.Renderer.Material
 import neo.Renderer.RenderSystem
-import neo.Renderer.RenderWorld.*
+import neo.Renderer.RenderWorld
+import neo.Renderer.RenderWorld.deferredEntityCallback_t
+import neo.Renderer.RenderWorld.renderEntity_s
+import neo.Renderer.RenderWorld.renderView_s
 import neo.TempDump
 import neo.framework.DeclManager
 import neo.framework.DeclManager.declType_t
@@ -277,7 +280,7 @@ object Item {
             if (!fl.hidden && pulse) {
                 // also add a highlight shell model
                 val shell: renderEntity_s?
-                shell = renderEntity
+                shell = renderEntity!!
 
                 // we will mess with shader parms when the item is in view
                 // to give the "item pulse" effect
@@ -351,7 +354,7 @@ object Item {
             lastRenderViewTime = renderView.time
 
             // check for glow highlighting if near the center of the view
-            val dir = idVec3(renderEntity.origin.minus(renderView.vieworg))
+            val dir = idVec3(renderEntity!!.origin.minus(renderView.vieworg))
             dir.Normalize()
             val d = dir.times(renderView.viewaxis[0])
 
@@ -375,19 +378,19 @@ object Item {
 
             // fade down after the last pulse finishes
             if (!inView && cycle > lastCycle) {
-                renderEntity.shaderParms[4] = 0.0f
+                renderEntity!!.shaderParms[4] = 0.0f
             } else {
                 // pulse up in 1/4 second
                 cycle -= cycle.toInt().toFloat()
                 if (cycle < 0.1f) {
-                    renderEntity.shaderParms[4] = cycle * 10.0f
+                    renderEntity!!.shaderParms[4] = cycle * 10.0f
                 } else if (cycle < 0.2f) {
-                    renderEntity.shaderParms[4] = 1.0f
+                    renderEntity!!.shaderParms[4] = 1.0f
                 } else if (cycle < 0.3f) {
-                    renderEntity.shaderParms[4] = 1.0f - (cycle - 0.2f) * 10.0f
+                    renderEntity!!.shaderParms[4] = 1.0f - (cycle - 0.2f) * 10.0f
                 } else {
                     // stay off between pulses
-                    renderEntity.shaderParms[4] = 0.0f
+                    renderEntity!!.shaderParms[4] = 0.0f
                 }
             }
 
@@ -408,9 +411,9 @@ object Item {
             }
             Game_local.gameLocal.clip.TraceBounds(
                 trace,
-                renderEntity.origin,
-                renderEntity.origin.minus(idVec3(0, 0, 64)),
-                renderEntity.bounds,
+                renderEntity!!.origin,
+                renderEntity!!.origin.minus(idVec3(0, 0, 64)),
+                renderEntity!!.bounds,
                 Game_local.MASK_SOLID or Material.CONTENTS_CORPSE,
                 this
             )
@@ -465,18 +468,18 @@ object Item {
         }
 
         class ModelCallback private constructor() : deferredEntityCallback_t() {
-            override fun run(e: renderEntity_s, v: renderView_s?): Boolean {
+            override fun run(e: renderEntity_s?, v: renderView_s?): Boolean {
                 val ent: idItem
 
                 // this may be triggered by a model trace or other non-view related source
                 if (null == v) {
                     return false
                 }
-                ent = Game_local.gameLocal.entities[e.entityNum] as idItem
+                ent = Game_local.gameLocal.entities[e!!.entityNum] as idItem
                 if (null == ent) {
                     idGameLocal.Error("obj.ModelCallback: callback with NULL game entity")
                 }
-                return ent.UpdateRenderEntity(e, v)
+                return ent.UpdateRenderEntity(e!!, v)
             }
 
             override fun AllocBuffer(): ByteBuffer {
@@ -1029,8 +1032,8 @@ object Item {
                     smoke,
                     Game_local.gameLocal.time,
                     Game_local.gameLocal.random.CRandomFloat(),
-                    renderEntity.origin,
-                    renderEntity.axis
+                    renderEntity!!.origin,
+                    renderEntity!!.axis
                 )
             }
             // remove the entity

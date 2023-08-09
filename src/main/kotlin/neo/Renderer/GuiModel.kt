@@ -3,10 +3,9 @@ package neo.Renderer
 import neo.Renderer.Material.idMaterial
 import neo.Renderer.Model.srfTriangles_s
 import neo.Renderer.RenderWorld.renderEntity_s
-import neo.Renderer.tr_local.drawSurf_s
 import neo.Renderer.tr_local.viewDef_s
 import neo.Renderer.tr_local.viewEntity_s
-import neo.TempDump
+import neo.TempDump.NOT
 import neo.framework.DeclManager
 import neo.framework.DemoFile.idDemoFile
 import neo.idlib.containers.CInt
@@ -22,7 +21,7 @@ import neo.idlib.math.Vector.idVec5
  */
 class GuiModel {
     internal class guiModelSurface_t {
-        val color: FloatArray = FloatArray(4)
+        val color = FloatArray(4)
         var firstIndex = 0
         var firstVert = 0
         var material: idMaterial? = null
@@ -39,6 +38,12 @@ class GuiModel {
         private val surfaces: idList<guiModelSurface_t>
         private val verts: idList<idDrawVert>
         private var surf: guiModelSurface_t? = null
+
+        init {
+            surfaces = idList()
+            indexes = idList(1000) //.SetGranularity(1000);
+            verts = idList(1000) //.SetGranularity(1000);
+        }
 
         /*
          ================
@@ -57,11 +62,11 @@ class GuiModel {
             //            }
         }
 
-        fun WriteToDemo(demo: idDemoFile) {
+        fun WriteToDemo(demo: idDemoFile?) {
             var i: Int
             var j: Int
             i = verts.Num()
-            demo.WriteInt(i)
+            demo!!.WriteInt(i)
             j = 0
             while (j < i) {
                 demo.WriteVec3(verts[j].xyz)
@@ -69,10 +74,10 @@ class GuiModel {
                 demo.WriteVec3(verts[j].normal)
                 demo.WriteVec3(verts[j].tangents[0])
                 demo.WriteVec3(verts[j].tangents[1])
-                demo.WriteUnsignedChar(verts[j].color[0].toChar())
-                demo.WriteUnsignedChar(verts[j].color[1].toChar())
-                demo.WriteUnsignedChar(verts[j].color[2].toChar())
-                demo.WriteUnsignedChar(verts[j].color[3].toChar())
+                demo.WriteUnsignedChar(Char(verts[j].color[0].toUShort()))
+                demo.WriteUnsignedChar(Char(verts[j].color[1].toUShort()))
+                demo.WriteUnsignedChar(Char(verts[j].color[2].toUShort()))
+                demo.WriteUnsignedChar(Char(verts[j].color[3].toUShort()))
                 j++
             }
             i = indexes.Num()
@@ -108,7 +113,7 @@ class GuiModel {
             var j: Int
             val k = CInt()
             val color = charArrayOf(0.toChar())
-            i._val = (verts.Num())
+            i._val = verts.Num()
             demo.ReadInt(i)
             verts.SetNum(i._val, false)
             j = 0
@@ -119,16 +124,16 @@ class GuiModel {
                 demo.ReadVec3(verts[j].tangents[0])
                 demo.ReadVec3(verts[j].tangents[1])
                 demo.ReadUnsignedChar(color)
-                verts[j].color[0] = color[0].toByte()
+                verts[j].color[0] = color[0].code.toByte()
                 demo.ReadUnsignedChar(color)
-                verts[j].color[1] = color[0].toByte()
+                verts[j].color[1] = color[0].code.toByte()
                 demo.ReadUnsignedChar(color)
-                verts[j].color[2] = color[0].toByte()
+                verts[j].color[2] = color[0].code.toByte()
                 demo.ReadUnsignedChar(color)
-                verts[j].color[3] = color[0].toByte()
+                verts[j].color[3] = color[0].code.toByte()
                 j++
             }
-            i._val = (indexes.Num())
+            i._val = indexes.Num()
             demo.ReadInt(i)
             indexes.SetNum(i._val, false)
             j = 0
@@ -137,7 +142,7 @@ class GuiModel {
                 indexes[j] = k._val
                 j++
             }
-            i._val = (surfaces.Num())
+            i._val = surfaces.Num()
             demo.ReadInt(i)
             surfaces.SetNum(i._val, false)
             j = 0
@@ -186,47 +191,47 @@ class GuiModel {
 
             // for gui editor
             if (null == tr_local.tr.viewDef || !tr_local.tr.viewDef!!.isEditor) {
-                viewDef.renderView.x = 0
-                viewDef.renderView.y = 0
-                viewDef.renderView.width = RenderSystem.SCREEN_WIDTH
-                viewDef.renderView.height = RenderSystem.SCREEN_HEIGHT
-                tr_local.tr.RenderViewToViewport(viewDef.renderView, viewDef.viewport)
-                viewDef.scissor.x1 = 0
-                viewDef.scissor.y1 = 0
-                viewDef.scissor.x2 = viewDef.viewport.x2 - viewDef.viewport.x1
-                viewDef.scissor.y2 = viewDef.viewport.y2 - viewDef.viewport.y1
+                viewDef!!.renderView.x = 0
+                viewDef!!.renderView.y = 0
+                viewDef!!.renderView.width = RenderSystem.SCREEN_WIDTH
+                viewDef!!.renderView.height = RenderSystem.SCREEN_HEIGHT
+                tr_local.tr.RenderViewToViewport(viewDef!!.renderView, viewDef!!.viewport)
+                viewDef!!.scissor.x1 = 0
+                viewDef!!.scissor.y1 = 0
+                viewDef!!.scissor.x2 = viewDef!!.viewport.x2 - viewDef!!.viewport.x1
+                viewDef!!.scissor.y2 = viewDef!!.viewport.y2 - viewDef!!.viewport.y1
             } else {
-                viewDef.renderView.x = tr_local.tr.viewDef!!.renderView.x
-                viewDef.renderView.y = tr_local.tr.viewDef!!.renderView.y
-                viewDef.renderView.width = tr_local.tr.viewDef!!.renderView.width
-                viewDef.renderView.height = tr_local.tr.viewDef!!.renderView.height
-                viewDef.viewport.x1 = tr_local.tr.viewDef!!.renderView.x
-                viewDef.viewport.x2 = tr_local.tr.viewDef!!.renderView.x + tr_local.tr.viewDef!!.renderView.width
-                viewDef.viewport.y1 = tr_local.tr.viewDef!!.renderView.y
-                viewDef.viewport.y2 = tr_local.tr.viewDef!!.renderView.y + tr_local.tr.viewDef!!.renderView.height
-                viewDef.scissor.x1 = tr_local.tr.viewDef!!.scissor.x1
-                viewDef.scissor.y1 = tr_local.tr.viewDef!!.scissor.y1
-                viewDef.scissor.x2 = tr_local.tr.viewDef!!.scissor.x2
-                viewDef.scissor.y2 = tr_local.tr.viewDef!!.scissor.y2
+                viewDef!!.renderView.x = tr_local.tr.viewDef!!.renderView.x
+                viewDef!!.renderView.y = tr_local.tr.viewDef!!.renderView.y
+                viewDef!!.renderView.width = tr_local.tr.viewDef!!.renderView.width
+                viewDef!!.renderView.height = tr_local.tr.viewDef!!.renderView.height
+                viewDef!!.viewport.x1 = tr_local.tr.viewDef!!.renderView.x
+                viewDef!!.viewport.x2 = tr_local.tr.viewDef!!.renderView.x + tr_local.tr.viewDef!!.renderView.width
+                viewDef!!.viewport.y1 = tr_local.tr.viewDef!!.renderView.y
+                viewDef!!.viewport.y2 = tr_local.tr.viewDef!!.renderView.y + tr_local.tr.viewDef!!.renderView.height
+                viewDef!!.scissor.x1 = tr_local.tr.viewDef!!.scissor.x1
+                viewDef!!.scissor.y1 = tr_local.tr.viewDef!!.scissor.y1
+                viewDef!!.scissor.x2 = tr_local.tr.viewDef!!.scissor.x2
+                viewDef!!.scissor.y2 = tr_local.tr.viewDef!!.scissor.y2
             }
-            viewDef.floatTime = tr_local.tr.frameShaderTime
+            viewDef!!.floatTime = tr_local.tr.frameShaderTime
 
             // qglOrtho( 0, 640, 480, 0, 0, 1 );		// always assume 640x480 virtual coordinates
-            viewDef.projectionMatrix[0] = +2.0f / 640.0f
-            viewDef.projectionMatrix[5] = -2.0f / 480.0f
-            viewDef.projectionMatrix[10] = -2.0f / 1.0f
-            viewDef.projectionMatrix[12] = -1.0f
-            viewDef.projectionMatrix[13] = +1.0f
-            viewDef.projectionMatrix[14] = -1.0f
-            viewDef.projectionMatrix[15] = +1.0f
-            viewDef.worldSpace.modelViewMatrix[0] = 1.0f
-            viewDef.worldSpace.modelViewMatrix[5] = 1.0f
-            viewDef.worldSpace.modelViewMatrix[10] = 1.0f
-            viewDef.worldSpace.modelViewMatrix[15] = 1.0f
-            viewDef.maxDrawSurfs = surfaces.Num()
-            viewDef.drawSurfs =
-                drawSurf_s.generateArray(viewDef.maxDrawSurfs) ///*(drawSurf_t **)*/ R_FrameAlloc(viewDef.maxDrawSurfs * sizeof(viewDef.drawSurfs[0]));
-            viewDef.numDrawSurfs = 0
+            viewDef!!.projectionMatrix[0] = +2.0f / 640.0f
+            viewDef!!.projectionMatrix[5] = -2.0f / 480.0f
+            viewDef!!.projectionMatrix[10] = -2.0f / 1.0f
+            viewDef!!.projectionMatrix[12] = -1.0f
+            viewDef!!.projectionMatrix[13] = +1.0f
+            viewDef!!.projectionMatrix[14] = -1.0f
+            viewDef!!.projectionMatrix[15] = +1.0f
+            viewDef!!.worldSpace.modelViewMatrix[0] = 1.0f
+            viewDef!!.worldSpace.modelViewMatrix[5] = 1.0f
+            viewDef!!.worldSpace.modelViewMatrix[10] = 1.0f
+            viewDef!!.worldSpace.modelViewMatrix[15] = 1.0f
+            viewDef!!.maxDrawSurfs = surfaces.Num()
+            viewDef!!.drawSurfs =
+                tr_local.drawSurf_s.Companion.generateArray(viewDef!!.maxDrawSurfs) ///*(drawSurf_t **)*/ R_FrameAlloc(viewDef!!.maxDrawSurfs * sizeof(viewDef!!.drawSurfs[0]));
+            viewDef!!.numDrawSurfs = 0
             val oldViewDef = tr_local.tr.viewDef
             tr_local.tr.viewDef = viewDef
 
@@ -235,7 +240,7 @@ class GuiModel {
                 if (i == 33) {
                     surfaces[i].material!!.DBG_BALLS = i
                 }
-                EmitSurface(surfaces[i], viewDef.worldSpace.modelMatrix, viewDef.worldSpace.modelViewMatrix, false)
+                EmitSurface(surfaces[i], viewDef!!.worldSpace.modelMatrix, viewDef!!.worldSpace.modelViewMatrix, false)
             }
             tr_local.tr.viewDef = oldViewDef
 
@@ -409,7 +414,10 @@ class GuiModel {
                 }
 
                 //                memcpy( & verts[numVerts], dverts, vertCount * sizeof(verts[0]));
-                System.arraycopy(dVerts, 0, verts.getList(), numVerts, vertCount)
+                for (i in 0 until vertCount) {
+                    verts[i + numVerts] = idDrawVert(dVerts[i])
+                }
+                //                }
             }
         }
 
@@ -439,7 +447,7 @@ class GuiModel {
             var t1 = t1
             var s2 = s2
             var t2 = t2
-            val verts = arrayOf<idDrawVert>(
+            val verts = arrayOf(
                 idDrawVert(),
                 idDrawVert(),
                 idDrawVert(),
@@ -559,7 +567,7 @@ class GuiModel {
             t3: idVec2,
             material: idMaterial?
         ) {
-            val tempVerts = Array<idDrawVert>(3) { idDrawVert() }
+            val tempVerts = arrayOfNulls<idDrawVert>(3)
             /*glIndex_t*/
             val tempIndexes = IntArray(3)
             val vertCount = 3
@@ -573,48 +581,48 @@ class GuiModel {
             tempIndexes[0] = 1
             tempIndexes[1] = 0
             tempIndexes[2] = 2
-            tempVerts[0].xyz[0] = p1.x
-            tempVerts[0].xyz[1] = p1.y
-            tempVerts[0].xyz[2] = 0f
-            tempVerts[0].st[0] = t1.x
-            tempVerts[0].st[1] = t1.y
-            tempVerts[0].normal[0] = 0f
-            tempVerts[0].normal[1] = 0f
-            tempVerts[0].normal[2] = 1f
-            tempVerts[0].tangents[0][0] = 1f
-            tempVerts[0].tangents[0][1] = 0f
-            tempVerts[0].tangents[0][2] = 0f
-            tempVerts[0].tangents[1][0] = 0f
-            tempVerts[0].tangents[1][1] = 1f
-            tempVerts[0].tangents[1][2] = 0f
-            tempVerts[1].xyz[0] = p2.x
-            tempVerts[1].xyz[1] = p2.y
-            tempVerts[1].xyz[2] = 0f
-            tempVerts[1].st[0] = t2.x
-            tempVerts[1].st[1] = t2.y
-            tempVerts[1].normal[0] = 0f
-            tempVerts[1].normal[1] = 0f
-            tempVerts[1].normal[2] = 1f
-            tempVerts[1].tangents[0][0] = 1f
-            tempVerts[1].tangents[0][1] = 0f
-            tempVerts[1].tangents[0][2] = 0f
-            tempVerts[1].tangents[1][0] = 0f
-            tempVerts[1].tangents[1][1] = 1f
-            tempVerts[1].tangents[1][2] = 0f
-            tempVerts[2].xyz[0] = p3.x
-            tempVerts[2].xyz[1] = p3.y
-            tempVerts[2].xyz[2] = 0f
-            tempVerts[2].st[0] = t3.x
-            tempVerts[2].st[1] = t3.y
-            tempVerts[2].normal[0] = 0f
-            tempVerts[2].normal[1] = 0f
-            tempVerts[2].normal[2] = 1f
-            tempVerts[2].tangents[0][0] = 1f
-            tempVerts[2].tangents[0][1] = 0f
-            tempVerts[2].tangents[0][2] = 0f
-            tempVerts[2].tangents[1][0] = 0f
-            tempVerts[2].tangents[1][1] = 1f
-            tempVerts[2].tangents[1][2] = 0f
+            tempVerts[0]!!.xyz[0] = p1.x
+            tempVerts[0]!!.xyz[1] = p1.y
+            tempVerts[0]!!.xyz[2] = 0f
+            tempVerts[0]!!.st[0] = t1.x
+            tempVerts[0]!!.st[1] = t1.y
+            tempVerts[0]!!.normal[0] = 0f
+            tempVerts[0]!!.normal[1] = 0f
+            tempVerts[0]!!.normal[2] = 1f
+            tempVerts[0]!!.tangents[0][0] = 1f
+            tempVerts[0]!!.tangents[0][1] = 0f
+            tempVerts[0]!!.tangents[0][2] = 0f
+            tempVerts[0]!!.tangents[1][0] = 0f
+            tempVerts[0]!!.tangents[1][1] = 1f
+            tempVerts[0]!!.tangents[1][2] = 0f
+            tempVerts[1]!!.xyz[0] = p2.x
+            tempVerts[1]!!.xyz[1] = p2.y
+            tempVerts[1]!!.xyz[2] = 0f
+            tempVerts[1]!!.st[0] = t2.x
+            tempVerts[1]!!.st[1] = t2.y
+            tempVerts[1]!!.normal[0] = 0f
+            tempVerts[1]!!.normal[1] = 0f
+            tempVerts[1]!!.normal[2] = 1f
+            tempVerts[1]!!.tangents[0][0] = 1f
+            tempVerts[1]!!.tangents[0][1] = 0f
+            tempVerts[1]!!.tangents[0][2] = 0f
+            tempVerts[1]!!.tangents[1][0] = 0f
+            tempVerts[1]!!.tangents[1][1] = 1f
+            tempVerts[1]!!.tangents[1][2] = 0f
+            tempVerts[2]!!.xyz[0] = p3.x
+            tempVerts[2]!!.xyz[1] = p3.y
+            tempVerts[2]!!.xyz[2] = 0f
+            tempVerts[2]!!.st[0] = t3.x
+            tempVerts[2]!!.st[1] = t3.y
+            tempVerts[2]!!.normal[0] = 0f
+            tempVerts[2]!!.normal[1] = 0f
+            tempVerts[2]!!.normal[2] = 1f
+            tempVerts[2]!!.tangents[0][0] = 1f
+            tempVerts[2]!!.tangents[0][1] = 0f
+            tempVerts[2]!!.tangents[0][2] = 0f
+            tempVerts[2]!!.tangents[1][0] = 0f
+            tempVerts[2]!!.tangents[1][1] = 1f
+            tempVerts[2]!!.tangents[1][2] = 0f
 
             // break the current surface if we are changing to a new material
             if (material !== surf!!.material) {
@@ -638,7 +646,9 @@ class GuiModel {
             }
 
 //            memcpy(verts[numVerts], tempVerts, vertCount * sizeof(verts[0]));
-            System.arraycopy(tempVerts, 0, verts, 0, vertCount)
+            for (i in 0 until vertCount) {
+                verts[i] = idDrawVert(tempVerts[i]!!)
+            }
         }
 
         //---------------------------
@@ -673,8 +683,8 @@ class GuiModel {
 
         private fun EmitSurface(
             surf: guiModelSurface_t,
-            modelMatrix: FloatArray? /*[16]*/,
-            modelViewMatrix: FloatArray? /*[16]*/,
+            modelMatrix: FloatArray /*[16]*/,
+            modelViewMatrix: FloatArray /*[16]*/,
             depthHack: Boolean
         ) {
             val tri: srfTriangles_s
@@ -689,32 +699,39 @@ class GuiModel {
             tri.indexes =
                 IntArray(tri.numIndexes) ///*(glIndex_t *)*/ R_FrameAlloc(tri.numIndexes * sizeof(tri.indexes[0]));
             //            memcpy(tri.indexes, indexes[surf.firstIndex], tri.numIndexes * sizeof(tri.indexes[0]));
-            System.arraycopy(
-                indexes.getList(Array<Int>::class.java)!!.toIntArray(),
-                surf.firstIndex,
-                tri.indexes,
-                0,
-                tri.numIndexes
-            )
+            var s = surf.firstIndex
+            var d = 0
+            while (d < tri.numIndexes) {
+                tri.indexes!![d] = indexes[s]
+                s++
+                d++
+            }
 
             // we might be able to avoid copying these and just let them reference the list vars
             // but some things, like deforms and recursive
             // guis, need to access the verts in cpu space, not just through the vertex range
-            tri.verts = arrayOfNulls(tri.numVerts)
+            tri.verts =
+                arrayOfNulls(tri.numVerts) ///*(idDrawVert *)*/ R_FrameAlloc(tri.numVerts * sizeof(tri.verts[0]));
+            //            memcpy(tri.verts,  & verts[surf.firstVert], tri.numVerts * sizeof(tri.verts[0]));
             System.arraycopy(verts.getList(), surf.firstVert, tri.verts, 0, tri.numVerts)
+            //            for (int s = surf.firstVert, d = 0; d < tri.numVerts; s++, d++) {
+//                tri.verts[d] = new idDrawVert(verts.get(s));
+//            }
 
             // move the verts to the vertex cache
-            tri.ambientCache =
-                VertexCache.vertexCache.AllocFrameTempIdDrawVert(tri.verts!!, tri.numVerts * idDrawVert.BYTES)
+            tri.ambientCache = VertexCache.vertexCache.AllocFrameTemp(tri.verts!!, tri.numVerts * idDrawVert.BYTES)
 
             // if we are out of vertex cache, don't create the surface
-            if (TempDump.NOT(tri.ambientCache)) {
+            if (NOT(tri.ambientCache)) {
                 return
             }
             val renderEntity: renderEntity_s
             renderEntity = renderEntity_s() //memset( & renderEntity, 0, sizeof(renderEntity));
             //            memcpy(renderEntity.shaderParms, surf.color, sizeof(surf.color));
-            System.arraycopy(surf.color, 0, renderEntity.shaderParms, 0, 4)
+            renderEntity.shaderParms[0] = surf.color[0]
+            renderEntity.shaderParms[1] = surf.color[1]
+            renderEntity.shaderParms[2] = surf.color[2]
+            renderEntity.shaderParms[3] = surf.color[3]
             val guiSpace = viewEntity_s() ///*(viewEntity_t *)*/ R_ClearedFrameAlloc(sizeof( * guiSpace));
             //            memcpy(guiSpace.modelMatrix, modelMatrix, sizeof(guiSpace.modelMatrix));
             System.arraycopy(modelMatrix, 0, guiSpace.modelMatrix, 0, guiSpace.modelMatrix.size)
@@ -735,12 +752,6 @@ class GuiModel {
             private var setColorTotal = 0
             private var drawStretchPic = 0
             private var bla4 = 0
-        }
-
-        init {
-            surfaces = idList()
-            indexes = idList(1000) //.SetGranularity(1000);
-            verts = idList(1000) //.SetGranularity(1000);
         }
     }
 }

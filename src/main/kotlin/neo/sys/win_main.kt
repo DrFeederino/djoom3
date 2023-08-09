@@ -1066,6 +1066,7 @@ object win_main {
      Sys_GetProcessorString
      ================
      */
+    @JvmStatic
     fun Sys_GetProcessorString(): String {
         throw TODO_Exception()
         //	return win32.sys_cpustring.GetString();
@@ -1632,7 +1633,7 @@ object win_main {
      */
     class Sys_In_Restart_f private constructor() : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             win_input.Sys_ShutdownInput()
             win_input.Sys_InitInput()
         }

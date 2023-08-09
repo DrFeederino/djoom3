@@ -128,7 +128,7 @@ class Anim_Testmodel {
             val axis = idMat3()
             var kv: idKeyValue?
             val copyJoint = copyJoints_t()
-            if (renderEntity.hModel != null && renderEntity.hModel!!.IsDefaultModel() && TempDump.NOT(animator.ModelDef())) {
+            if (renderEntity!!.hModel != null && renderEntity!!.hModel!!.IsDefaultModel() && TempDump.NOT(animator.ModelDef())) {
                 Game_local.gameLocal.Warning(
                     "Unable to create testmodel for '%s' : model defaulted",
                     spawnArgs.GetString("model")
@@ -208,7 +208,7 @@ class Anim_Testmodel {
             }
 
             // start any shader effects based off of the spawn time
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] =
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] =
                 -Math_h.MS2SEC(Game_local.gameLocal.time.toFloat())
             SetPhysics(physicsObj)
             Game_local.gameLocal.Printf(
@@ -231,7 +231,7 @@ class Anim_Testmodel {
             return false
         }
 
-        fun NextAnim(args: CmdArgs.idCmdArgs) {
+        fun NextAnim(args: CmdArgs.idCmdArgs?) {
             if (TempDump.NOT(animator.NumAnims().toDouble())) {
                 return
             }
@@ -276,7 +276,7 @@ class Anim_Testmodel {
             frame = 1
         }
 
-        fun PrevAnim(args: CmdArgs.idCmdArgs) {
+        fun PrevAnim(args: CmdArgs.idCmdArgs?) {
             if (TempDump.NOT(animator.NumAnims().toDouble())) {
                 return
             }
@@ -321,7 +321,7 @@ class Anim_Testmodel {
             frame = 1
         }
 
-        fun NextFrame(args: CmdArgs.idCmdArgs) {
+        fun NextFrame(args: CmdArgs.idCmdArgs?) {
             if (0 == anim || SysCvar.g_testModelAnimate.GetInteger() != 3 && SysCvar.g_testModelAnimate.GetInteger() != 5) {
                 return
             }
@@ -340,7 +340,7 @@ class Anim_Testmodel {
             mode = -1
         }
 
-        fun PrevFrame(args: CmdArgs.idCmdArgs) {
+        fun PrevFrame(args: CmdArgs.idCmdArgs?) {
             if (0 == anim || SysCvar.g_testModelAnimate.GetInteger() != 3 && SysCvar.g_testModelAnimate.GetInteger() != 5) {
                 return
             }
@@ -359,10 +359,10 @@ class Anim_Testmodel {
             mode = -1
         }
 
-        fun TestAnim(args: CmdArgs.idCmdArgs) {
+        fun TestAnim(args: CmdArgs.idCmdArgs?) {
             val name: String
             val animNum: Int
-            if (args.Argc() < 2) {
+            if (args!!.Argc() < 2) {
                 Game_local.gameLocal.Printf("usage: testanim <animname>\n")
                 return
             }
@@ -423,10 +423,10 @@ class Anim_Testmodel {
          Testmodel console commands
 
          ***********************************************************************/
-        fun BlendAnim(args: CmdArgs.idCmdArgs) {
+        fun BlendAnim(args: CmdArgs.idCmdArgs?) {
             val anim1: Int
             val anim2: Int
-            if (args.Argc() < 4) {
+            if (args!!.Argc() < 4) {
                 Game_local.gameLocal.Printf("usage: testblend <anim1> <anim2> <frames>\n")
                 return
             }
@@ -775,12 +775,15 @@ class Anim_Testmodel {
          =================
          */
         class KeepTestModel_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs) {
+            override fun run(args: CmdArgs.idCmdArgs?) {
                 if (TempDump.NOT(Game_local.gameLocal.testmodel)) {
                     Game_local.gameLocal.Printf("No active testModel.\n")
                     return
                 }
-                Game_local.gameLocal.Printf("modelDef %p kept\n", Game_local.gameLocal.testmodel!!.renderEntity.hModel)
+                Game_local.gameLocal.Printf(
+                    "modelDef %p kept\n",
+                    Game_local.gameLocal.testmodel!!.renderEntity!!.hModel
+                )
                 Game_local.gameLocal.testmodel = null
             }
 
@@ -800,7 +803,7 @@ class Anim_Testmodel {
          =================
          */
         class TestSkin_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs) {
+            override fun run(args: CmdArgs.idCmdArgs?) {
                 val offset = idVec3()
                 val name = idStr()
                 val player: idPlayer?
@@ -815,7 +818,7 @@ class Anim_Testmodel {
                     idLib.common.Printf("No active testModel\n")
                     return
                 }
-                if (args.Argc() < 2) {
+                if (args!!.Argc() < 2) {
                     idLib.common.Printf("removing testSkin.\n")
                     Game_local.gameLocal.testmodel!!.SetSkin(null)
                     return
@@ -840,7 +843,7 @@ class Anim_Testmodel {
          =================
          */
         class TestShaderParm_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs) {
+            override fun run(args: CmdArgs.idCmdArgs?) {
                 val offset = idVec3()
                 var name: idStr
                 val player: idPlayer?
@@ -855,7 +858,7 @@ class Anim_Testmodel {
                     idLib.common.Printf("No active testModel\n")
                     return
                 }
-                if (args.Argc() != 3) {
+                if (args!!.Argc() != 3) {
                     idLib.common.Printf("USAGE: testShaderParm <parmNum> <float | \"time\">\n")
                     return
                 }
@@ -890,7 +893,7 @@ class Anim_Testmodel {
          =================
          */
         class TestModel_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs) {
+            override fun run(args: CmdArgs.idCmdArgs?) {
                 val offset = idVec3()
                 val name = idStr()
                 val player: idPlayer?
@@ -906,7 +909,7 @@ class Anim_Testmodel {
 //		delete gameLocal.testmodel;
                     Game_local.gameLocal.testmodel = null
                 }
-                if (args.Argc() < 2) {
+                if (args!!.Argc() < 2) {
                     return
                 }
                 name.set(args.Argv(1))
@@ -939,7 +942,7 @@ class Anim_Testmodel {
                 dict.Set("angle", Str.va("%f", player.viewAngles.yaw + 180.0f))
                 Game_local.gameLocal.testmodel =
                     Game_local.gameLocal.SpawnEntityType(idTestModel::class.java, dict) as idTestModel
-                Game_local.gameLocal.testmodel!!.renderEntity.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] =
+                Game_local.gameLocal.testmodel!!.renderEntity!!.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] =
                     -Math_h.MS2SEC(Game_local.gameLocal.time.toFloat())
             }
 
@@ -957,14 +960,14 @@ class Anim_Testmodel {
          =====================
          */
         class ArgCompletion_TestModel private constructor() : CmdSystem.argCompletion_t() {
-            override fun run(args: CmdArgs.idCmdArgs, callback: void_callback<String>) {
+            override fun run(args: CmdArgs.idCmdArgs?, callback: void_callback<String>) {
                 var i: Int
                 var num: Int
                 num = DeclManager.declManager.GetNumDecls(declType_t.DECL_ENTITYDEF)
                 i = 0
                 while (i < num) {
                     callback.run(
-                        idStr(args.Argv(0)).toString() + " " + DeclManager.declManager.DeclByIndex(
+                        idStr(args!!.Argv(0)).toString() + " " + DeclManager.declManager.DeclByIndex(
                             declType_t.DECL_ENTITYDEF,
                             i,
                             false
@@ -976,7 +979,7 @@ class Anim_Testmodel {
                 i = 0
                 while (i < num) {
                     callback.run(
-                        idStr(args.Argv(0)).toString() + " " + DeclManager.declManager.DeclByIndex(
+                        idStr(args!!.Argv(0)).toString() + " " + DeclManager.declManager.DeclByIndex(
                             declType_t.DECL_MODELDEF,
                             i,
                             false
@@ -1012,12 +1015,12 @@ class Anim_Testmodel {
          =====================
          */
         class TestParticleStopTime_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs) {
+            override fun run(args: CmdArgs.idCmdArgs?) {
                 if (TempDump.NOT(Game_local.gameLocal.testmodel)) {
                     Game_local.gameLocal.Printf("No testModel active.\n")
                     return
                 }
-                Game_local.gameLocal.testmodel!!.renderEntity.shaderParms[RenderWorld.SHADERPARM_PARTICLE_STOPTIME] =
+                Game_local.gameLocal.testmodel!!.renderEntity!!.shaderParms[RenderWorld.SHADERPARM_PARTICLE_STOPTIME] =
                     Math_h.MS2SEC(Game_local.gameLocal.time.toFloat())
                 Game_local.gameLocal.testmodel!!.UpdateVisuals()
             }
@@ -1036,7 +1039,7 @@ class Anim_Testmodel {
          =====================
          */
         class TestAnim_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs) {
+            override fun run(args: CmdArgs.idCmdArgs?) {
                 if (TempDump.NOT(Game_local.gameLocal.testmodel)) {
                     Game_local.gameLocal.Printf("No testModel active.\n")
                     return
@@ -1058,11 +1061,11 @@ class Anim_Testmodel {
          =====================
          */
         class ArgCompletion_TestAnim private constructor() : CmdSystem.argCompletion_t() {
-            override fun run(args: CmdArgs.idCmdArgs, callback: void_callback<String>) {
+            override fun run(args: CmdArgs.idCmdArgs?, callback: void_callback<String>) {
                 if (Game_local.gameLocal.testmodel != null) {
                     val animator = Game_local.gameLocal.testmodel!!.GetAnimator()
                     for (i in 0 until animator.NumAnims()) {
-                        callback.run(Str.va("%s %s", args.Argv(0), animator.AnimFullName(i)!!))
+                        callback.run(Str.va("%s %s", args!!.Argv(0), animator.AnimFullName(i)!!))
                     }
                 }
             }
@@ -1081,7 +1084,7 @@ class Anim_Testmodel {
          =====================
          */
         class TestBlend_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs) {
+            override fun run(args: CmdArgs.idCmdArgs?) {
                 if (TempDump.NOT(Game_local.gameLocal.testmodel)) {
                     Game_local.gameLocal.Printf("No testModel active.\n")
                     return
@@ -1103,7 +1106,7 @@ class Anim_Testmodel {
          =====================
          */
         class TestModelNextAnim_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs) {
+            override fun run(args: CmdArgs.idCmdArgs?) {
                 if (TempDump.NOT(Game_local.gameLocal.testmodel)) {
                     Game_local.gameLocal.Printf("No testModel active.\n")
                     return
@@ -1125,7 +1128,7 @@ class Anim_Testmodel {
          =====================
          */
         class TestModelPrevAnim_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs) {
+            override fun run(args: CmdArgs.idCmdArgs?) {
                 if (TempDump.NOT(Game_local.gameLocal.testmodel)) {
                     Game_local.gameLocal.Printf("No testModel active.\n")
                     return
@@ -1147,7 +1150,7 @@ class Anim_Testmodel {
          =====================
          */
         class TestModelNextFrame_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs) {
+            override fun run(args: CmdArgs.idCmdArgs?) {
                 if (TempDump.NOT(Game_local.gameLocal.testmodel)) {
                     Game_local.gameLocal.Printf("No testModel active.\n")
                     return
@@ -1169,7 +1172,7 @@ class Anim_Testmodel {
          =====================
          */
         class TestModelPrevFrame_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs) {
+            override fun run(args: CmdArgs.idCmdArgs?) {
                 if (TempDump.NOT(Game_local.gameLocal.testmodel)) {
                     Game_local.gameLocal.Printf("No testModel active.\n")
                     return

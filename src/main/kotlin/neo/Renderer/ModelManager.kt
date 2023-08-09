@@ -1,5 +1,6 @@
 package neo.Renderer
 
+import neo.Renderer.*
 import neo.Renderer.Model.idRenderModel
 import neo.Renderer.Model_beam.idRenderModelBeam
 import neo.Renderer.Model_liquid.idRenderModelLiquid
@@ -8,30 +9,33 @@ import neo.Renderer.Model_md3.idRenderModelMD3
 import neo.Renderer.Model_md5.idRenderModelMD5
 import neo.Renderer.Model_prt.idRenderModelPrt
 import neo.Renderer.Model_sprite.idRenderModelSprite
-import neo.framework.CmdSystem
+import neo.framework.CmdSystem.CMD_FL_CHEAT
+import neo.framework.CmdSystem.CMD_FL_RENDERER
 import neo.framework.CmdSystem.cmdFunction_t
-import neo.framework.CmdSystem.idCmdSystem.ArgCompletion_ModelName
+import neo.framework.CmdSystem.cmdSystem
+import neo.framework.CmdSystem.idCmdSystem
 import neo.framework.Common
 import neo.framework.Common.MemInfo_t
-import neo.framework.FileSystem_h
+import neo.framework.FileSystem_h.fileSystem
 import neo.framework.File_h.idFile
 import neo.framework.Session
 import neo.idlib.CmdArgs
 import neo.idlib.Lib.idException
 import neo.idlib.Text.Str.idStr
+import neo.idlib.Text.Str.idStr.Companion.FormatNumber
+import neo.idlib.Text.Str.idStr.Companion.Icmp
 import neo.idlib.containers.HashIndex.idHashIndex
 import neo.idlib.containers.List.idList
-import neo.sys.win_shared
+import neo.sys.win_shared.Sys_Milliseconds
 
 /**
  *
  */
 object ModelManager {
-    private var localModelManager: idRenderModelManagerLocal = idRenderModelManagerLocal()
-    var renderModelManager: idRenderModelManager = localModelManager
-    fun setRenderModelManagers(renderModelManager: idRenderModelManager) {
-        localModelManager = renderModelManager as idRenderModelManagerLocal
-        ModelManager.renderModelManager = localModelManager
+    private val localModelManager: idRenderModelManagerLocal = idRenderModelManagerLocal()
+    var renderModelManager: idRenderModelManager = ModelManager.localModelManager
+    fun setRenderModelManagers(renderModelManager: idRenderModelManager?) {
+        ModelManager.renderModelManager = ModelManager.localModelManager
     }
 
     /*
@@ -43,7 +47,7 @@ object ModelManager {
 
      ===============================================================================
      */
-    abstract class idRenderModelManager {
+    abstract class idRenderModelManager() {
         // public abstract					~idRenderModelManager() {}
         // registers console commands and clears the list
         @Throws(idException::class)
@@ -62,17 +66,17 @@ object ModelManager {
         abstract fun AllocModel(): idRenderModel
 
         // frees a render model
-        abstract fun FreeModel(model: idRenderModel)
+        abstract fun FreeModel(model: idRenderModel?)
 
         // returns NULL if modelName is NULL or an empty string, otherwise
         // it will create a default model if not loadable
-        abstract fun FindModel(modelName: String): idRenderModel?
+        abstract fun FindModel(modelName: String?): idRenderModel?
         fun FindModel(modelName: idStr): idRenderModel? {
             return FindModel(modelName.toString())
         }
 
         // returns NULL if not loadable
-        abstract fun CheckModel(modelName: String): idRenderModel?
+        abstract fun CheckModel(modelName: String?): idRenderModel?
         fun CheckModel(modelName: idStr): idRenderModel? {
             return CheckModel(modelName.toString())
         }
@@ -81,7 +85,7 @@ object ModelManager {
         abstract fun DefaultModel(): idRenderModel?
 
         // world map parsing will add all the inline models with this call
-        abstract fun AddModel(model: idRenderModel)
+        abstract fun AddModel(model: idRenderModel?)
 
         // when a world map unloads, it removes its internal models from the list
         // before freeing them.
@@ -105,49 +109,61 @@ object ModelManager {
         abstract fun PrintMemInfo(mi: MemInfo_t)
     }
 
-    class idRenderModelManagerLocal : idRenderModelManager() {
+    class idRenderModelManagerLocal() : idRenderModelManager() {
         private var beamModel: idRenderModel?
         private var defaultModel: idRenderModel?
         private val hash: idHashIndex
         private var insideLevelLoad // don't actually load now
                 : Boolean
-        private val models: idList<idRenderModel>
+        private val models: idList<idRenderModel?>
         private var spriteModel: idRenderModel?
         private val trailModel: idRenderModel?
 
+        //
+        //
+        init {
+            models = idList()
+            hash = idHashIndex()
+            defaultModel = null
+            beamModel = null
+            spriteModel = null
+            trailModel = null
+            insideLevelLoad = false
+        }
+
         // virtual					~idRenderModelManagerLocal() {}
         @Throws(idException::class)
-        override fun Init() {
-            CmdSystem.cmdSystem.AddCommand(
+        public override fun Init() {
+            cmdSystem.AddCommand(
                 "listModels",
-                ListModels_f.getInstance(),
-                CmdSystem.CMD_FL_RENDERER,
+                ListModels_f.Companion.instance,
+                CMD_FL_RENDERER,
                 "lists all models"
             )
-            CmdSystem.cmdSystem.AddCommand(
+            cmdSystem.AddCommand(
                 "printModel",
-                PrintModel_f.getInstance(),
-                CmdSystem.CMD_FL_RENDERER,
+                PrintModel_f.Companion.instance,
+                CMD_FL_RENDERER,
                 "prints model info",
-                ArgCompletion_ModelName.Companion.getInstance()
+                idCmdSystem.ArgCompletion_ModelName.getInstance()
             )
-            CmdSystem.cmdSystem.AddCommand(
+            cmdSystem.AddCommand(
                 "reloadModels",
-                ReloadModels_f.getInstance(),
-                CmdSystem.CMD_FL_RENDERER or CmdSystem.CMD_FL_CHEAT,
+                ReloadModels_f.Companion.instance,
+                CMD_FL_RENDERER or CMD_FL_CHEAT,
                 "reloads models"
             )
-            CmdSystem.cmdSystem.AddCommand(
+            cmdSystem.AddCommand(
                 "touchModel",
-                TouchModel_f.getInstance(),
-                CmdSystem.CMD_FL_RENDERER,
+                TouchModel_f.Companion.instance,
+                CMD_FL_RENDERER,
                 "touches a model",
-                ArgCompletion_ModelName.Companion.getInstance()
+                idCmdSystem.ArgCompletion_ModelName.getInstance()
             )
             insideLevelLoad = false
 
             // create a default model
-            val model = idRenderModelStatic()
+            val model: idRenderModelStatic = idRenderModelStatic()
             model.InitEmpty("_DEFAULT")
             model.MakeDefaultModel()
             model.SetLevelLoadReferenced(true)
@@ -167,16 +183,16 @@ object ModelManager {
             AddModel(sprite)
         }
 
-        override fun Shutdown() {
-            models.Clear()
+        public override fun Shutdown() {
+            models.DeleteContents(true)
             hash.Free()
         }
 
-        override fun AllocModel(): idRenderModel {
+        public override fun AllocModel(): idRenderModel {
             return idRenderModelStatic()
         }
 
-        override fun FreeModel(model: idRenderModel) {
+        public override fun FreeModel(model: idRenderModel?) {
             if (null == model) {
                 return
             }
@@ -201,29 +217,29 @@ object ModelManager {
 //	delete model;
         }
 
-        override fun FindModel(modelName: String): idRenderModel? {
+        public override fun FindModel(modelName: String?): idRenderModel? {
             return GetModel(modelName, true)
         }
 
-        override fun CheckModel(modelName: String): idRenderModel? {
+        public override fun CheckModel(modelName: String?): idRenderModel? {
             return GetModel(modelName, false)
         }
 
-        override fun DefaultModel(): idRenderModel? {
+        public override fun DefaultModel(): idRenderModel? {
             return defaultModel
         }
 
-        override fun AddModel(model: idRenderModel) {
-            hash.Add(hash.GenerateKey(model.Name(), false), models.Append(model))
+        public override fun AddModel(model: idRenderModel?) {
+            hash.Add(hash.GenerateKey(model!!.Name(), false), models.Append(model))
         }
 
-        override fun RemoveModel(model: idRenderModel) {
-            val index = models.FindIndex(model)
+        public override fun RemoveModel(model: idRenderModel) {
+            val index: Int = models.FindIndex(model)
             hash.RemoveIndex(hash.GenerateKey(model.Name(), false), index)
             models.RemoveIndex(index)
         }
 
-        override fun ReloadModels(forceAll: Boolean) {
+        public override fun ReloadModels(forceAll: Boolean) {
             if (forceAll) {
                 Common.common.Printf("Reloading all model files...\n")
             } else {
@@ -233,16 +249,16 @@ object ModelManager {
 
             // skip the default model at index 0
             for (i in 1 until models.Num()) {
-                val model = models[i]
+                val model: idRenderModel? = models[i]
 
                 // we may want to allow world model reloading in the future, but we don't now
-                if (!model.IsReloadable()) {
+                if (!model!!.IsReloadable()) {
                     continue
                 }
                 if (!forceAll) {
                     // check timestamp
-                    val current = LongArray(1)
-                    FileSystem_h.fileSystem.ReadFile(model.Name(), null, current)
+                    val current: LongArray = LongArray(1)
+                    fileSystem.ReadFile(model.Name(), null, current)
                     if (current[0] <= model.Timestamp()[0]) {
                         continue
                     }
@@ -256,54 +272,57 @@ object ModelManager {
             tr_lightrun.R_ReCreateWorldReferences()
         }
 
-        override fun FreeModelVertexCaches() {
+        public override fun FreeModelVertexCaches() {
             for (i in 0 until models.Num()) {
-                val model = models[i]
-                model.FreeVertexCache()
+                val model: idRenderModel? = models[i]
+                model!!.FreeVertexCache()
             }
         }
 
-        override fun WritePrecacheCommands(f: idFile) {
+        public override fun WritePrecacheCommands(f: idFile) {
             for (i in 0 until models.Num()) {
-                val model = models[i]
+                val model: idRenderModel? = models[i]
+                if (null == model) {
+                    continue
+                }
                 if (!model.IsReloadable()) {
                     continue
                 }
 
 //		char	str[1024];
-                val str = String.format("touchModel %s\n", model.Name())
+                val str: String = String.format("touchModel %s\n", model.Name())
                 Common.common.Printf("%s", str)
                 f.Printf("%s", str)
             }
         }
 
-        override fun BeginLevelLoad() {
+        public override fun BeginLevelLoad() {
             insideLevelLoad = true
             for (i in 0 until models.Num()) {
-                val model = models[i]
-                if (Common.com_purgeAll.GetBool() && model.IsReloadable()) {
+                val model: idRenderModel? = models[i]
+                if (Common.com_purgeAll.GetBool() && model!!.IsReloadable()) {
                     tr_lightrun.R_CheckForEntityDefsUsingModel(model)
                     model.PurgeModel()
                 }
-                model.SetLevelLoadReferenced(false)
+                model!!.SetLevelLoadReferenced(false)
             }
 
             // purge unused triangle surface memory
             tr_trisurf.R_PurgeTriSurfData(tr_local.frameData)
         }
 
-        override fun EndLevelLoad() {
+        public override fun EndLevelLoad() {
             Common.common.Printf("----- idRenderModelManagerLocal::EndLevelLoad -----\n")
-            val start = win_shared.Sys_Milliseconds()
+            val start: Int = Sys_Milliseconds()
             insideLevelLoad = false
-            var purgeCount = 0
-            var keepCount = 0
-            var loadCount = 0
+            var purgeCount: Int = 0
+            var keepCount: Int = 0
+            var loadCount: Int = 0
 
             // purge any models not touched
             for (i in 0 until models.Num()) {
-                val model = models[i]
-                if (!model.IsLevelLoadReferenced() && model.IsLoaded() && model.IsReloadable()) {
+                val model: idRenderModel? = models[i]
+                if (!model!!.IsLevelLoadReferenced() && model.IsLoaded() && model.IsReloadable()) {
 
 //			common.Printf( "purging %s\n", model.Name() );
                     purgeCount++
@@ -321,18 +340,18 @@ object ModelManager {
 
             // load any new ones
             for (i in 0 until models.Num()) {
-                val model = models[i]
-                if (model.IsLevelLoadReferenced() && !model.IsLoaded() && model.IsReloadable()) {
+                val model: idRenderModel? = models[i]
+                if (model!!.IsLevelLoadReferenced() && !model.IsLoaded() && model.IsReloadable()) {
                     loadCount++
                     model.LoadModel()
-                    if (loadCount and 15 == 0) {
-                        Session.Companion.session.PacifierUpdate()
+                    if ((loadCount and 15) == 0) {
+                        Session.session.PacifierUpdate()
                     }
                 }
             }
 
             // _D3XP added this
-            val end = win_shared.Sys_Milliseconds()
+            val end: Int = Sys_Milliseconds()
             Common.common.Printf("%5d models purged from previous level, ", purgeCount)
             Common.common.Printf("%5d models kept.\n", keepCount)
             if (loadCount != 0) {
@@ -341,32 +360,32 @@ object ModelManager {
             Common.common.Printf("---------------------------------------------------\n")
         }
 
-        override fun PrintMemInfo(mi: MemInfo_t) {
+        public override fun PrintMemInfo(mi: MemInfo_t) {
             var i: Int
             var j: Int
-            var totalMem = 0
+            var totalMem: Int = 0
             val sortIndex: IntArray
             val f: idFile?
-            f = FileSystem_h.fileSystem.OpenFileWrite(mi.filebase.toString() + "_models.txt")
+            f = fileSystem.OpenFileWrite(mi.filebase.toString() + "_models.txt")
             if (null == f) {
                 return
             }
 
             // sort first
-            sortIndex = IntArray(localModelManager.models.Num())
+            sortIndex = IntArray(ModelManager.localModelManager.models.Num())
             i = 0
-            while (i < localModelManager.models.Num()) {
+            while (i < ModelManager.localModelManager.models.Num()) {
                 sortIndex[i] = i
                 i++
             }
             i = 0
-            while (i < localModelManager.models.Num() - 1) {
+            while (i < ModelManager.localModelManager.models.Num() - 1) {
                 j = i + 1
-                while (j < localModelManager.models.Num()) {
-                    if (localModelManager.models[sortIndex[i]]
-                            .Memory() < localModelManager.models[sortIndex[j]].Memory()
+                while (j < ModelManager.localModelManager.models.Num()) {
+                    if (ModelManager.localModelManager.models[sortIndex[i]]!!
+                            .Memory() < ModelManager.localModelManager.models[sortIndex[j]]!!.Memory()
                     ) {
-                        val temp = sortIndex[i]
+                        val temp: Int = sortIndex[i]
                         sortIndex[i] = sortIndex[j]
                         sortIndex[j] = temp
                     }
@@ -377,8 +396,8 @@ object ModelManager {
 
             // print next
             i = 0
-            while (i < localModelManager.models.Num()) {
-                val model = localModelManager.models[sortIndex[i]]
+            while (i < ModelManager.localModelManager.models.Num()) {
+                val model: idRenderModel = ModelManager.localModelManager.models[sortIndex[i]]!!
                 var mem: Int
                 if (!model.IsLoaded()) {
                     i++
@@ -386,31 +405,31 @@ object ModelManager {
                 }
                 mem = model.Memory()
                 totalMem += mem
-                f.Printf("%s %s\n", idStr.Companion.FormatNumber(mem).toString(), model.Name())
+                f.Printf("%s %s\n", FormatNumber(mem).toString(), model.Name())
                 i++
             }
 
 //	delete sortIndex;
             mi.modelAssetsTotal = totalMem
-            f.Printf("\nTotal model bytes allocated: %s\n", idStr.Companion.FormatNumber(totalMem).toString())
-            FileSystem_h.fileSystem.CloseFile(f)
+            f.Printf("\nTotal model bytes allocated: %s\n", FormatNumber(totalMem).toString())
+            fileSystem.CloseFile(f)
         }
 
-        private fun GetModel(modelName: String, createIfNotFound: Boolean): idRenderModel? {
+        private fun GetModel(modelName: String?, createIfNotFound: Boolean): idRenderModel? {
             val canonical: idStr
-            val extension = idStr()
-            if (modelName.isEmpty()) {
+            val extension: idStr = idStr()
+            if (null == modelName || modelName.isEmpty()) {
                 return null
             }
             canonical = idStr(modelName)
             canonical.ToLower()
 
             // see if it is already present
-            val key = hash.GenerateKey(modelName, false)
-            var i = hash.First(key)
+            val key: Int = hash.GenerateKey(modelName, false)
+            var i: Int = hash.First(key)
             while (i != -1) {
-                val model = models[i]
-                if (canonical.Icmp(model.Name()) == 0) {
+                val model: idRenderModel? = models[i]
+                if (canonical.Icmp(model!!.Name()) == 0) {
                     if (!model.IsLoaded()) {
                         // reload it if it was purged
                         model.LoadModel()
@@ -430,7 +449,7 @@ object ModelManager {
             // determine which subclass of idRenderModel to initialize
             var model: idRenderModel?
             canonical.ExtractFileExtension(extension)
-            if (extension.Icmp("ase") == 0 || extension.Icmp("lwo") == 0 || extension.Icmp("flt") == 0) {
+            if ((extension.Icmp("ase") == 0) || (extension.Icmp("lwo") == 0) || (extension.Icmp("flt") == 0)) {
                 model = idRenderModelStatic()
                 model.InitFromFile(modelName)
 
@@ -439,7 +458,7 @@ object ModelManager {
 //                for (modelSurface_s mimi : m.surfaces.Ptr(modelSurface_s[].class)) {
 //                    for (int i = 0; i < mimi.geometry.numVerts; i++) {
 //                        final Vector.idVec3 xyz = mimi.geometry.verts[i].xyz;
-//                        xyz.oSet(xyz.plus(-50));
+//                        xyz.oSet(xyz.oPlus(-50));
 //                    }
 //                }
             } else if (extension.Icmp("ma") == 0) {
@@ -464,7 +483,7 @@ object ModelManager {
                 if (!createIfNotFound) {
                     return null
                 }
-                val smodel = idRenderModelStatic()
+                val smodel: idRenderModelStatic = idRenderModelStatic()
                 smodel.InitEmpty(modelName)
                 smodel.MakeDefaultModel()
                 model = smodel
@@ -485,9 +504,9 @@ object ModelManager {
          ==============
          */
         private class PrintModel_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs) {
+            public override fun run(args: CmdArgs.idCmdArgs?) {
                 val model: idRenderModel?
-                if (args.Argc() != 2) {
+                if (args!!.Argc() != 2) {
                     Common.common.Printf("usage: printModel <modelName>\n")
                     return
                 }
@@ -500,10 +519,7 @@ object ModelManager {
             }
 
             companion object {
-                private val instance: cmdFunction_t = PrintModel_f()
-                fun getInstance(): cmdFunction_t {
-                    return instance
-                }
+                val instance: cmdFunction_t = PrintModel_f()
             }
         }
 
@@ -513,13 +529,13 @@ object ModelManager {
          ==============
          */
         private class ListModels_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs) {
-                var totalMem = 0
-                var inUse = 0
+            public override fun run(args: CmdArgs.idCmdArgs?) {
+                var totalMem: Int = 0
+                var inUse: Int = 0
                 Common.common.Printf(" mem   srf verts tris\n")
                 Common.common.Printf(" ---   --- ----- ----\n")
-                for (i in 0 until localModelManager.models.Num()) {
-                    val model = localModelManager.models[i]
+                for (i in 0 until ModelManager.localModelManager.models.Num()) {
+                    val model: idRenderModel = ModelManager.localModelManager.models[i]!!
                     if (!model.IsLoaded()) {
                         continue
                     }
@@ -534,10 +550,7 @@ object ModelManager {
             }
 
             companion object {
-                private val instance: cmdFunction_t = ListModels_f()
-                fun getInstance(): cmdFunction_t {
-                    return instance
-                }
+                val instance: cmdFunction_t = ListModels_f()
             }
         }
 
@@ -547,15 +560,12 @@ object ModelManager {
          ==============
          */
         private class ReloadModels_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs) {
-                localModelManager.ReloadModels(idStr.Companion.Icmp(args.Argv(1), "all") == 0)
+            public override fun run(args: CmdArgs.idCmdArgs?) {
+                ModelManager.localModelManager.ReloadModels(Icmp(args!!.Argv(1), "all") == 0)
             }
 
             companion object {
-                private val instance: cmdFunction_t = ReloadModels_f()
-                fun getInstance(): cmdFunction_t {
-                    return instance
-                }
+                val instance: cmdFunction_t = ReloadModels_f()
             }
         }
 
@@ -567,38 +577,23 @@ object ModelManager {
          ==============
          */
         private class TouchModel_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs) {
-                val model = args.Argv(1)
+            public override fun run(args: CmdArgs.idCmdArgs?) {
+                val model: String = args!!.Argv(1)
                 if (model.isEmpty()) {
                     Common.common.Printf("usage: touchModel <modelName>\n")
                     return
                 }
                 Common.common.Printf("touchModel %s\n", model)
-                Session.Companion.session.UpdateScreen()
-                val m = ModelManager.renderModelManager.CheckModel(model)
+                Session.session.UpdateScreen()
+                val m: idRenderModel? = ModelManager.renderModelManager.CheckModel(model)
                 if (null == m) {
                     Common.common.Printf("...not found\n")
                 }
             }
 
             companion object {
-                private val instance: cmdFunction_t = TouchModel_f()
-                fun getInstance(): cmdFunction_t {
-                    return instance
-                }
+                val instance: cmdFunction_t = TouchModel_f()
             }
-        }
-
-        //
-        //
-        init {
-            models = idList()
-            hash = idHashIndex()
-            defaultModel = null
-            beamModel = null
-            spriteModel = null
-            trailModel = null
-            insideLevelLoad = false
         }
     }
 }

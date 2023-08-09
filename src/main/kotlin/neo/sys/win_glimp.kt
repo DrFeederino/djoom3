@@ -93,6 +93,7 @@ object win_glimp {
      parameters and try again.
      ===================
      */
+    @JvmStatic
     fun GLimp_Init(parms: glimpParms_t): Boolean {
         common.Printf("Initializing OpenGL subsystem\n")
 
@@ -204,6 +205,7 @@ object win_glimp {
      subsystem.
      ===================
      */
+    @JvmStatic
     fun GLimp_Shutdown() {
         glfwDestroyWindow(window)
         glfwTerminate()
@@ -227,6 +229,7 @@ object win_glimp {
         }
     }
 
+    @JvmStatic
     fun GLimp_SwapBuffers() {
         var error = glGetError()
         if (error > 0) {
@@ -243,14 +246,15 @@ object win_glimp {
     // most OpenGL implementations, this will result in all OpenGL calls
     // being immediate returns, which lets us guage how much time is
     // being spent inside OpenGL.
+    @JvmStatic
     fun GLimp_EnableLogging(enable: Boolean) { //TODO:activate this function. EDIT:make sure it works.
         var enable = enable
         try {
             // return if we're already active
             if (isEnabled && enable) {
                 // decrement log counter and stop if it has reached 0
-                RenderSystem_init.r_logFile.SetInteger(RenderSystem_init.r_logFile.GetInteger() - 1)
-                if (RenderSystem_init.r_logFile.GetInteger() != 0) {
+                RenderSystem_init.r_logFile!!.SetInteger(RenderSystem_init.r_logFile!!.GetInteger() - 1)
+                if (RenderSystem_init.r_logFile!!.GetInteger() != 0) {
                     return
                 }
                 idLib.common.Printf("closing logfile '%s' after %d frames.\n", ospath, initialFrames)
@@ -271,7 +275,7 @@ object win_glimp {
                     var qpath = ""
                     var i: Int
                     val path: String
-                    initialFrames = RenderSystem_init.r_logFile.GetInteger()
+                    initialFrames = RenderSystem_init.r_logFile!!.GetInteger()
 
                     // scan for an unused filename
                     i = 0
@@ -306,14 +310,17 @@ object win_glimp {
         }
     }
 
+    @JvmStatic
     fun GLimp_DeactivateContext() {
         common.DPrintf("TODO: GLimp_ActivateContext\n")
     }
 
+    @JvmStatic
     fun GLimp_ActivateContext() {
         common.DPrintf("TODO: GLimp_DeactivateContext\n");
     }
 
+    @JvmStatic
     fun GLimp_SetScreenParms(parms: glimpParms_t) {
         common.DPrintf("TODO: GLimp_SetScreenParms\n");
     }
@@ -326,11 +333,22 @@ object win_glimp {
      ====================================================================
      */
     class glimpParms_t {
+        @JvmField
         var displayHz = 0
-        var fullScreen = true
+
+        @JvmField
+        var fullScreen = false
+
+        @JvmField
         var height = 0
+
+        @JvmField
         var multiSamples = 0
+
+        @JvmField
         var stereo = false
+
+        @JvmField
         var width = 0
     }
 }

@@ -467,6 +467,7 @@ object KeyInput {
             }
         }
 
+        @JvmStatic
         fun IsDown(keyNum: Int): Boolean {
             return if (keyNum == -1) {
                 false
@@ -688,6 +689,7 @@ object KeyInput {
         }
 
         @Throws(idException::class)
+        @JvmStatic
         fun KeysFromBinding(bind: String?): String {
             var i: Int
             keyName[0] = '\u0000'
@@ -762,17 +764,17 @@ object KeyInput {
 
         class ArgCompletion_KeyName : CmdSystem.argCompletion_t() {
             @Throws(idException::class)
-            override fun run(args: CmdArgs.idCmdArgs, callback: void_callback<String>) {
+            override fun run(args: CmdArgs.idCmdArgs?, callback: void_callback<String>) {
                 var kn: Int
                 var i: Int
                 i = 0
                 while (i < unnamedkeys.length - 1) {
-                    callback.run(Str.va("%s %c", args.Argv(0), unnamedkeys[i]))
+                    callback.run(Str.va("%s %c", args!!.Argv(0), unnamedkeys[i]))
                     i++
                 }
                 kn = 0
                 while (kn < keynames.size) {
-                    callback.run(Str.va("%s %s", args.Argv(0), keynames[kn].name!!))
+                    callback.run(Str.va("%s %s", args!!.Argv(0), keynames[kn].name!!))
                     kn++
                 }
             }
@@ -813,9 +815,9 @@ object KeyInput {
      */
     internal class Key_Unbind_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             val b: Int
-            if (args.Argc() != 2) {
+            if (args!!.Argc() != 2) {
                 Common.common.Printf("unbind <key> : remove commands from a key\n")
                 return
             }
@@ -844,7 +846,7 @@ object KeyInput {
      ===================
      */
     internal class Key_Unbindall_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             var i: Int
             i = 0
             while (i < MAX_KEYS) {
@@ -868,12 +870,12 @@ object KeyInput {
      */
     internal class Key_Bind_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             var i: Int
             val c: Int
             val b: Int
             var cmd: String? //= new char[MAX_STRING_CHARS];
-            c = args.Argc()
+            c = args!!.Argc()
             if (c < 2) {
                 Common.common.Printf("bind <key> [command] : attach a command to a key\n")
                 return
@@ -923,8 +925,8 @@ object KeyInput {
      */
     internal class Key_BindUnBindTwo_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs) {
-            val c = args.Argc()
+        override fun run(args: CmdArgs.idCmdArgs?) {
+            val c = args!!.Argc()
             if (c < 3) {
                 Common.common.Printf("bindunbindtwo <keynum> [command]\n")
                 return
@@ -952,7 +954,7 @@ object KeyInput {
      */
     internal class Key_ListBinds_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             var i: Int
             i = 0
             while (i < MAX_KEYS) {

@@ -19,7 +19,10 @@ class JointTransform {
      ===============================================================================
      */
     class idJointQuat {
+        @JvmField
         val q: idQuat
+
+        @JvmField
         val t: idVec3
 
         constructor() {

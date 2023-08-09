@@ -466,7 +466,7 @@ object IK /*ea*/ {
                 animator!!.ModelHandle(),
                 animator!!.GetAnim(modifiedAnim)!!.MD5Anim(0),
                 numJoints,
-                joints,
+                joints as Array<idJointMat?>,
                 1,
                 animator!!.ModelDef()!!.GetVisualOffset().plus(modelOffset),
                 animator!!.RemoveOrigin()
@@ -606,7 +606,7 @@ object IK /*ea*/ {
             }
             normal.set(self!!.GetPhysics().GetGravityNormal().unaryMinus())
             modelOrigin.set(self!!.GetPhysics().GetOrigin())
-            modelAxis = self!!.GetRenderEntity().axis
+            modelAxis = self!!.GetRenderEntity()!!.axis
             modelHeight = modelOrigin.times(normal)
             modelOrigin.plusAssign(modelOffset.times(modelAxis))
 
@@ -1106,7 +1106,7 @@ object IK /*ea*/ {
                 animator!!.ModelHandle(),
                 animator!!.GetAnim(modifiedAnim)!!.MD5Anim(0),
                 numJoints,
-                joints,
+                joints as Array<idJointMat?>,
                 1,
                 animator!!.ModelDef()!!.GetVisualOffset().plus(modelOffset),
                 animator!!.RemoveOrigin()
@@ -1183,8 +1183,8 @@ object IK /*ea*/ {
             val shoulderAxis = Array<idMat3>(MAX_ARMS) { idMat3() }
             val elbowAxis = Array<idMat3>(MAX_ARMS) { idMat3() }
             val trace = trace_s()
-            modelOrigin.set(self!!.GetRenderEntity().origin)
-            modelAxis = self!!.GetRenderEntity().axis
+            modelOrigin.set(self!!.GetRenderEntity()!!.origin)
+            modelAxis = self!!.GetRenderEntity()!!.axis
 
             // solve IK
             i = 0

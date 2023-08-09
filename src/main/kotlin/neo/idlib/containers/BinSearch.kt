@@ -38,6 +38,7 @@ object BinSearch {
      Finds the last array element which is smaller than or equal to the given value.
      ====================
      */
+    @JvmStatic
     fun <T> idBinSearch_LessEqual(array: Array<T>, arraySize: Int, value: T): Int {
         var len = arraySize
         var mid = len

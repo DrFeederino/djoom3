@@ -5,6 +5,8 @@ package neo.Renderer
  */
 object cg_explicit {
     const val CG_ARRAY = 2
+
+    //
     const val CG_ATTR0 = 2113
     const val CG_ATTR1 = 2114
     const val CG_ATTR10 = 2123
@@ -415,41 +417,96 @@ object cg_explicit {
     const val CG_WPOS = 2373
 
     enum class CGGLenum {
-        CG_GL_MATRIX_IDENTITY,  //= 0,
-        CG_GL_MATRIX_TRANSPOSE,  //= 1,
-        CG_GL_MATRIX_INVERSE,  //= 2,
-        CG_GL_MATRIX_INVERSE_TRANSPOSE,  // = 3,
+        CG_GL_MATRIX_IDENTITY,
+
+        //= 0,
+        CG_GL_MATRIX_TRANSPOSE,
+
+        //= 1,
+        CG_GL_MATRIX_INVERSE,
+
+        //= 2,
+        CG_GL_MATRIX_INVERSE_TRANSPOSE,
+
+        // = 3,
+        //
+        CG_GL_MODELVIEW_MATRIX, CG_GL_PROJECTION_MATRIX, CG_GL_TEXTURE_MATRIX, CG_GL_MODELVIEW_PROJECTION_MATRIX,
 
         //
-        CG_GL_MODELVIEW_MATRIX, CG_GL_PROJECTION_MATRIX, CG_GL_TEXTURE_MATRIX, CG_GL_MODELVIEW_PROJECTION_MATRIX,  //
         CG_GL_VERTEX, CG_GL_FRAGMENT
     }
 
     // } CGenum;
     enum class CGerror {
-        CG_NO_ERROR,  // = 0,
-        CG_COMPILER_ERROR,  // = 1,
-        CG_INVALID_PARAMETER_ERROR,  //= 2,
-        CG_INVALID_PROFILE_ERROR,  // = 3,
-        CG_PROGRAM_LOAD_ERROR,  // = 4,
-        CG_PROGRAM_BIND_ERROR,  // = 5,
-        CG_PROGRAM_NOT_LOADED_ERROR,  // = 6,
-        CG_UNSUPPORTED_GL_EXTENSION_ERROR,  // = 7,
-        CG_INVALID_VALUE_TYPE_ERROR,  // = 8,
-        CG_NOT_MATRIX_PARAM_ERROR,  // = 9,
-        CG_INVALID_ENUMERANT_ERROR,  // = 10,
-        CG_NOT_4x4_MATRIX_ERROR,  // = 11,
-        CG_FILE_READ_ERROR,  // = 12,
-        CG_FILE_WRITE_ERROR,  // = 13,
-        CG_NVPARSE_ERROR,  // = 14,
-        CG_MEMORY_ALLOC_ERROR,  // = 15,
-        CG_INVALID_CONTEXT_HANDLE_ERROR,  // = 16,
-        CG_INVALID_PROGRAM_HANDLE_ERROR,  // = 17,
-        CG_INVALID_PARAM_HANDLE_ERROR,  // = 18,
-        CG_UNKNOWN_PROFILE_ERROR,  // = 19,
-        CG_VAR_ARG_ERROR,  // = 20,
-        CG_INVALID_DIMENSION_ERROR,  // = 21,
-        CG_ARRAY_PARAM_ERROR,  // = 22,
+        CG_NO_ERROR,
+
+        // = 0,
+        CG_COMPILER_ERROR,
+
+        // = 1,
+        CG_INVALID_PARAMETER_ERROR,
+
+        //= 2,
+        CG_INVALID_PROFILE_ERROR,
+
+        // = 3,
+        CG_PROGRAM_LOAD_ERROR,
+
+        // = 4,
+        CG_PROGRAM_BIND_ERROR,
+
+        // = 5,
+        CG_PROGRAM_NOT_LOADED_ERROR,
+
+        // = 6,
+        CG_UNSUPPORTED_GL_EXTENSION_ERROR,
+
+        // = 7,
+        CG_INVALID_VALUE_TYPE_ERROR,
+
+        // = 8,
+        CG_NOT_MATRIX_PARAM_ERROR,
+
+        // = 9,
+        CG_INVALID_ENUMERANT_ERROR,
+
+        // = 10,
+        CG_NOT_4x4_MATRIX_ERROR,
+
+        // = 11,
+        CG_FILE_READ_ERROR,
+
+        // = 12,
+        CG_FILE_WRITE_ERROR,
+
+        // = 13,
+        CG_NVPARSE_ERROR,
+
+        // = 14,
+        CG_MEMORY_ALLOC_ERROR,
+
+        // = 15,
+        CG_INVALID_CONTEXT_HANDLE_ERROR,
+
+        // = 16,
+        CG_INVALID_PROGRAM_HANDLE_ERROR,
+
+        // = 17,
+        CG_INVALID_PARAM_HANDLE_ERROR,
+
+        // = 18,
+        CG_UNKNOWN_PROFILE_ERROR,
+
+        // = 19,
+        CG_VAR_ARG_ERROR,
+
+        // = 20,
+        CG_INVALID_DIMENSION_ERROR,
+
+        // = 21,
+        CG_ARRAY_PARAM_ERROR,
+
+        // = 22,
         CG_OUT_OF_ARRAY_BOUNDS_ERROR
         // = 23,
     }

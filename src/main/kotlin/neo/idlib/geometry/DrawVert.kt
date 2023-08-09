@@ -13,6 +13,7 @@ import kotlin.math.abs
  *
  */
 object DrawVert {
+    @JvmStatic
     fun toByteBuffer(verts: Array<idDrawVert?>): ByteBuffer {
         val data = BufferUtils.createByteBuffer(idDrawVert.BYTES * verts.size)
         for (vert in verts) {
@@ -35,10 +36,20 @@ object DrawVert {
      */
     class idDrawVert : SERiAL {
         private val DBG_count = DBG_counter++
+
+        @JvmField
         var color: ByteArray = ByteArray(4)
+
+        @JvmField
         var normal: idVec3
+
+        @JvmField
         var st: idVec2
+
+        @JvmField
         var tangents: Array<idVec3>
+
+        @JvmField
         var xyz: idVec3
 
         @Transient
@@ -48,7 +59,7 @@ object DrawVert {
             xyz = idVec3()
             st = idVec2()
             normal = idVec3()
-            tangents = idVec3.generateArray(2)
+            tangents = idVec3.Companion.generateArray(2)
         }
 
         /**
@@ -229,6 +240,7 @@ object DrawVert {
 
         companion object {
             @Transient
+            @JvmField
             val SIZE: Int = (idVec3.SIZE
                     + idVec2.SIZE
                     + idVec3.SIZE
@@ -236,6 +248,7 @@ object DrawVert {
                     + 4 * java.lang.Byte.SIZE) //color
 
             @Transient
+            @JvmField
             val BYTES = SIZE / java.lang.Byte.SIZE
 
             ////#if 0 // was MACOS_X see comments concerning DRAWVERT_PADDED in Simd_Altivec.h
@@ -244,6 +257,11 @@ object DrawVert {
             //public	float			operator[]( const int index ) const;
             //public	float &			operator[]( const int index );
             private var DBG_counter = 0
+
+            @JvmStatic
+            fun generateArray(length: Int): Array<idDrawVert> {
+                return Array(length) { idDrawVert() }
+            }
         }
     }
 }

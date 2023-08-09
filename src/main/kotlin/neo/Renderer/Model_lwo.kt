@@ -2944,8 +2944,8 @@ object Model_lwo {
                 surf = lwListAdd(surf, s[index])
                 `object`.nsurfs++
             }
-            //            polygon.pol!![ i].surf.oSet(s[ index]);
-            polygon.pol!![i]!!.surf = s[index] //TODO:should this be an oSet() to preserve the refs?
+            //            polygon.pol!![ i].surf.set(s[ index]);
+            polygon.pol!![i]!!.surf = s[index] //TODO:should this be an set() to preserve the refs?
             i++
         }
         return true

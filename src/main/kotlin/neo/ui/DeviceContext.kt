@@ -6,17 +6,28 @@ import neo.Renderer.RenderSystem
 import neo.Renderer.RenderSystem.fontInfoEx_t
 import neo.Renderer.RenderSystem.fontInfo_t
 import neo.Renderer.RenderSystem.glyphInfo_t
-import neo.TempDump
-import neo.framework.CVarSystem
+import neo.TempDump.ctos
+import neo.TempDump.etoi
+import neo.framework.CVarSystem.CVAR_ARCHIVE
+import neo.framework.CVarSystem.CVAR_GUI
+import neo.framework.CVarSystem.cvarSystem
 import neo.framework.CVarSystem.idCVar
 import neo.framework.Common
+import neo.framework.Common.Companion.common
 import neo.framework.DeclManager
-import neo.idlib.Lib.idLib
-import neo.idlib.Text.Str
+import neo.idlib.Text.Str.C_COLOR_DEFAULT
+import neo.idlib.Text.Str.C_COLOR_ESCAPE
 import neo.idlib.Text.Str.idStr
+import neo.idlib.Text.Str.idStr.Companion.CharIsPrintable
+import neo.idlib.Text.Str.idStr.Companion.ColorForIndex
+import neo.idlib.Text.Str.idStr.Companion.Icmp
+import neo.idlib.Text.Str.idStr.Companion.IsColor
+import neo.idlib.Text.Str.va
 import neo.idlib.containers.List.idList
 import neo.idlib.geometry.DrawVert.idDrawVert
-import neo.idlib.math.Math_h.idMath
+import neo.idlib.math.Math_h.idMath.Cos
+import neo.idlib.math.Math_h.idMath.FtoiFast
+import neo.idlib.math.Math_h.idMath.Sin
 import neo.idlib.math.Matrix.idMat3
 import neo.idlib.math.Matrix.idMat4
 import neo.idlib.math.Vector.idVec3
@@ -27,18 +38,23 @@ import neo.ui.Rectangle.idRegion
 /**
  *
  */
-class DeviceContext {
+object DeviceContext {
+    const val BLINK_DIVISOR = 200
+    const val VIRTUAL_HEIGHT = 480
+    const val VIRTUAL_WIDTH = 640
+    val gui_mediumFontLimit = idCVar("gui_mediumFontLimit", "0.60", CVAR_GUI or CVAR_ARCHIVE, "")
+    val gui_smallFontLimit = idCVar("gui_smallFontLimit", "0.30", CVAR_GUI or CVAR_ARCHIVE, "")
 
     class idDeviceContext {
-        private val cursorImages: Array<idMaterial?> = kotlin.arrayOfNulls(CURSOR.CURSOR_COUNT.ordinal)
-        private val scrollBarImages: Array<idMaterial?> = arrayOfNulls(SCROLLBAR.SCROLLBAR_COUNT.ordinal)
+        private val cursorImages = arrayOfNulls<idMaterial>(CURSOR.CURSOR_COUNT.ordinal)
+        private val scrollBarImages = arrayOfNulls<idMaterial>(SCROLLBAR.SCROLLBAR_COUNT.ordinal)
         private var activeFont: fontInfoEx_t? = null
 
         //
-        private val clipRects: idList<idRectangle> = idList()
+        private val clipRects = idList<idRectangle?>()
 
         //
-        private lateinit var cursor: CURSOR
+        private var cursor: CURSOR? = null
 
         //
         //
@@ -46,19 +62,19 @@ class DeviceContext {
         private var enableClipping = false
 
         // ~idDeviceContext() { }
-        private val fontLang: idStr = idStr()
-        private val fontName: idStr = idStr()
+        private val fontLang: idStr
+        private val fontName = idStr()
         private var initialized = false
 
         //
         //        public void EnableLocalization();
         //
         //
-        private val mat: idMat3 = idMat3()
+        private var mat: idMat3
 
         //
         private var mbcs = false
-        private val origin: idVec3 = idVec3()
+        private val origin: idVec3
 
         //
         private var overStrikeMode = false
@@ -71,41 +87,48 @@ class DeviceContext {
         private var xScale = 0f
         private var yScale = 0f
 
+        init {
+            fontLang = idStr()
+            mat = idMat3()
+            origin = idVec3()
+            Clear()
+        }
+
         fun Init() {
             xScale = 0f
             SetSize(VIRTUAL_WIDTH.toFloat(), VIRTUAL_HEIGHT.toFloat())
-            whiteImage = DeclManager.declManager.FindMaterial("guis/assets/white.tga")!!
+            whiteImage = DeclManager.declManager.FindMaterial("guis/assets/white.tga")
             whiteImage!!.SetSort(Material.SS_GUI.toFloat())
             mbcs = false
             SetupFonts()
             activeFont = fonts[0]
-            colorPurple.set(idVec4(1f, 0f, 1f, 1f))
-            colorOrange.set(idVec4(1f, 1f, 0f, 1f))
-            colorYellow.set(idVec4(0f, 1f, 1f, 1f))
-            colorGreen.set(idVec4(0f, 1f, 0f, 1f))
-            colorBlue.set(idVec4(0f, 0f, 1f, 1f))
-            colorRed.set(idVec4(1f, 0f, 0f, 1f))
-            colorWhite.set(idVec4(1f, 1f, 1f, 1f))
-            colorBlack.set(idVec4(0f, 0f, 0f, 1f))
-            colorNone.set(idVec4(0f, 0f, 0f, 0f))
+            colorPurple = idVec4(1, 0, 1, 1)
+            colorOrange = idVec4(1, 1, 0, 1)
+            colorYellow = idVec4(0, 1, 1, 1)
+            colorGreen = idVec4(0, 1, 0, 1)
+            colorBlue = idVec4(0, 0, 1, 1)
+            colorRed = idVec4(1, 0, 0, 1)
+            colorWhite = idVec4(1, 1, 1, 1)
+            colorBlack = idVec4(0, 0, 0, 1)
+            colorNone = idVec4(0, 0, 0, 0)
             cursorImages[CURSOR.CURSOR_ARROW.ordinal] =
-                DeclManager.declManager.FindMaterial("ui/assets/guicursor_arrow.tga")!!
+                DeclManager.declManager.FindMaterial("ui/assets/guicursor_arrow.tga")
             cursorImages[CURSOR.CURSOR_HAND.ordinal] =
-                DeclManager.declManager.FindMaterial("ui/assets/guicursor_hand.tga")!!
+                DeclManager.declManager.FindMaterial("ui/assets/guicursor_hand.tga")
             scrollBarImages[SCROLLBAR.SCROLLBAR_HBACK.ordinal] =
-                DeclManager.declManager.FindMaterial("ui/assets/scrollbarh.tga")!!
+                DeclManager.declManager.FindMaterial("ui/assets/scrollbarh.tga")
             scrollBarImages[SCROLLBAR.SCROLLBAR_VBACK.ordinal] =
-                DeclManager.declManager.FindMaterial("ui/assets/scrollbarv.tga")!!
+                DeclManager.declManager.FindMaterial("ui/assets/scrollbarv.tga")
             scrollBarImages[SCROLLBAR.SCROLLBAR_THUMB.ordinal] =
-                DeclManager.declManager.FindMaterial("ui/assets/scrollbar_thumb.tga")!!
+                DeclManager.declManager.FindMaterial("ui/assets/scrollbar_thumb.tga")
             scrollBarImages[SCROLLBAR.SCROLLBAR_RIGHT.ordinal] =
-                DeclManager.declManager.FindMaterial("ui/assets/scrollbar_right.tga")!!
+                DeclManager.declManager.FindMaterial("ui/assets/scrollbar_right.tga")
             scrollBarImages[SCROLLBAR.SCROLLBAR_LEFT.ordinal] =
-                DeclManager.declManager.FindMaterial("ui/assets/scrollbar_left.tga")!!
+                DeclManager.declManager.FindMaterial("ui/assets/scrollbar_left.tga")
             scrollBarImages[SCROLLBAR.SCROLLBAR_UP.ordinal] =
-                DeclManager.declManager.FindMaterial("ui/assets/scrollbar_up.tga")!!
+                DeclManager.declManager.FindMaterial("ui/assets/scrollbar_up.tga")
             scrollBarImages[SCROLLBAR.SCROLLBAR_DOWN.ordinal] =
-                DeclManager.declManager.FindMaterial("ui/assets/scrollbar_down.tga")!!
+                DeclManager.declManager.FindMaterial("ui/assets/scrollbar_down.tga")
             cursorImages[CURSOR.CURSOR_ARROW.ordinal]!!.SetSort(Material.SS_GUI.toFloat())
             cursorImages[CURSOR.CURSOR_HAND.ordinal]!!.SetSort(Material.SS_GUI.toFloat())
             scrollBarImages[SCROLLBAR.SCROLLBAR_HBACK.ordinal]!!.SetSort(Material.SS_GUI.toFloat())
@@ -139,9 +162,9 @@ class DeviceContext {
             origin.set(this.origin)
         }
 
-        fun SetTransformInfo(origin: idVec3, mat: idMat3) {
-            this.origin.set(origin)
-            this.mat.set(mat)
+        fun SetTransformInfo(origin: idVec3?, mat: idMat3) {
+            this.origin.set(origin!!)
+            this.mat = mat
         }
 
         @JvmOverloads
@@ -150,8 +173,8 @@ class DeviceContext {
             y: Float,
             w: Float,
             h: Float,
-            mat: idMaterial,
-            color: idVec4,
+            mat: idMaterial?,
+            color: idVec4?,
             scalex: Float = 1.0f /*= 1.0f*/
         ) {
             DrawMaterial(x, y, w, h, mat, color, scalex, 1.0f)
@@ -163,13 +186,13 @@ class DeviceContext {
             w: Float,
             h: Float,
             mat: idMaterial?,
-            color: idVec4,
+            color: idVec4?,
             scaleX: Float /*= 1.0f*/,
             scaleY: Float /*= 1.0f*/
         ) {
             var scaleX = scaleX
             var scaleY = scaleY
-            RenderSystem.renderSystem.SetColor(color)
+            RenderSystem.renderSystem.SetColor(color!!)
             val s0 = floatArrayOf(0f)
             val s1 = floatArrayOf(0f)
             val t0 = floatArrayOf(0f)
@@ -181,11 +204,11 @@ class DeviceContext {
             //
 //  handle negative scales as well
             if (scaleX < 0) {
-                w1[0] = w1[0] * -1
+                w1[0] *= -1f
                 scaleX *= -1f
             }
             if (scaleY < 0) {
-                h1[0] = h1[0] * -1
+                h1[0] *= -1f
                 scaleY *= -1f
             }
             //
@@ -213,12 +236,12 @@ class DeviceContext {
             bla99++
         }
 
-        fun DrawRect(x: Float, y: Float, width: Float, height: Float, size: Float, color: idVec4) {
+        fun DrawRect(x: Float, y: Float, width: Float, height: Float, size: Float, color: idVec4?) {
             val x1 = floatArrayOf(x)
             val y1 = floatArrayOf(y)
             val w1 = floatArrayOf(width)
             val h1 = floatArrayOf(height)
-            if (color.w == 0f) {
+            if (color!!.w == 0f) {
                 return
             }
             RenderSystem.renderSystem.SetColor(color)
@@ -232,12 +255,12 @@ class DeviceContext {
             DrawStretchPic(x1[0], y1[0] + h1[0] - size, w1[0], size, 0f, 0f, 0f, 0f, whiteImage)
         }
 
-        fun DrawFilledRect(x: Float, y: Float, width: Float, height: Float, color: idVec4) {
+        fun DrawFilledRect(x: Float, y: Float, width: Float, height: Float, color: idVec4?) {
             val x1 = floatArrayOf(x)
             val y1 = floatArrayOf(y)
             val w1 = floatArrayOf(width)
             val h1 = floatArrayOf(height)
-            if (color.w == 0f) {
+            if (color!!.w == 0f) {
                 return
             }
             RenderSystem.renderSystem.SetColor(color)
@@ -254,7 +277,7 @@ class DeviceContext {
             text: String?,
             textScale: Float,
             textAlign: Int,
-            color: idVec4,
+            color: idVec4?,
             rectDraw: idRectangle,
             wrap: Boolean,
             cursor: Int = -1 /*= -1*/,
@@ -284,12 +307,12 @@ class DeviceContext {
             var lineBreak: Boolean
             var wordBreak: Boolean
             SetFontByScale(textScale)
-            if (!calcOnly) {
+            if (!calcOnly && !(text != null && !text.isEmpty())) {
                 if (cursor == 0) {
-                    RenderSystem.renderSystem.SetColor(color)
+                    RenderSystem.renderSystem.SetColor(color!!)
                     DrawEditCursor(rectDraw.x, lineSkip + rectDraw.y, textScale)
                 }
-                return idMath.FtoiFast(rectDraw.w / charSkip)
+                return FtoiFast(rectDraw.w / charSkip)
             }
             if (!text.contains("\\0")) {
                 text += '\u0000' //TODO:we temporarily append a '\0' here, but we should refactor the code.
@@ -313,8 +336,7 @@ class DeviceContext {
                         p = text[p_i++]
                     }
                 }
-                var nextCharWidth =
-                    (if (idStr.CharIsPrintable(p.code)) CharWidth(p, textScale) else cursorSkip).toInt()
+                var nextCharWidth = (if (CharIsPrintable(p.code)) CharWidth(p, textScale) else cursorSkip).toInt()
                 // FIXME: this is a temp hack until the guis can be fixed not not overflow the bounding rectangles
                 //	      the side-effect is that list boxes and edit boxes will draw over their scroll bars
                 //  The following line and the !linebreak in the if statement below should be removed
@@ -336,9 +358,9 @@ class DeviceContext {
                 }
                 if (lineBreak || wordBreak) {
                     var x = rectDraw.x
-                    if (textAlign == TempDump.etoi(ALIGN.ALIGN_RIGHT)) {
+                    if (textAlign == etoi(ALIGN.ALIGN_RIGHT)) {
                         x = rectDraw.x + rectDraw.w - newLineWidth
-                    } else if (textAlign == TempDump.etoi(ALIGN.ALIGN_CENTER)) {
+                    } else if (textAlign == etoi(ALIGN.ALIGN_CENTER)) {
                         x = rectDraw.x + (rectDraw.w - newLineWidth) / 2
                     }
                     if (wrap || newLine > 0) {
@@ -352,7 +374,7 @@ class DeviceContext {
                         }
                     }
                     if (!calcOnly) {
-                        count += DrawText(x, y, textScale, color, TempDump.ctos(buff), 0f, 0, 0, cursor)
+                        count += DrawText(x, y, textScale, color, ctos(buff), 0f, 0, 0, cursor)
                     }
                     if (cursor < newLine) {
                         cursor = -1
@@ -384,41 +406,41 @@ class DeviceContext {
                 buff[len] = '\u0000'
                 // update the width
                 bla++
-                if (buff[len - 1].code != Str.C_COLOR_ESCAPE && (len <= 1 || buff[len - 2].code != Str.C_COLOR_ESCAPE)) {
-                    textWidth += textScale * useFont!!.glyphScale * useFont!!.glyphs[buff[len - 1].code].xSkip
+                if (buff[len - 1].code != C_COLOR_ESCAPE && (len <= 1 || buff[len - 2].code != C_COLOR_ESCAPE)) {
+                    textWidth += textScale * useFont!!.glyphScale * useFont!!.glyphs[buff[len - 1].code]!!.xSkip
                     // Jim Dosé, I don't know who you are..but I hate you.
                 }
             }
-            return idMath.FtoiFast(rectDraw.w / charSkip)
+            return FtoiFast(rectDraw.w / charSkip)
         }
 
         fun DrawText(
-            text: idStr,
+            text: idStr?,
             textScale: Float,
             textAlign: Int,
-            color: idVec4,
+            color: idVec4?,
             rectDraw: idRectangle,
             wrap: Boolean,
             cursor: Int /*= -1*/,
             calcOnly: Boolean /*= false*/,
-            breaks: idList<Int>? = null /*= NULL*/
+            breaks: idList<Int>? /*= NULL*/
         ): Int {
             return DrawText(text.toString(), textScale, textAlign, color, rectDraw, wrap, cursor, calcOnly, breaks, 0)
         }
 
         fun DrawText(
-            text: idStr,
+            text: idStr?,
             textScale: Float,
             textAlign: Int,
-            color: idVec4,
+            color: idVec4?,
             rectDraw: idRectangle,
             wrap: Boolean,
             cursor: Int
         ): Int {
-            return DrawText(text.toString(), textScale, textAlign, color, rectDraw, wrap, cursor, false, null, 0)
+            return DrawText(text.toString(), textScale, textAlign, color, rectDraw, wrap, cursor)
         }
 
-        fun DrawMaterialRect(x: Float, y: Float, w: Float, h: Float, size: Float, mat: idMaterial, color: idVec4) {
+        fun DrawMaterialRect(x: Float, y: Float, w: Float, h: Float, size: Float, mat: idMaterial?, color: idVec4) {
             if (color.w == 0f) {
                 return
             }
@@ -528,14 +550,14 @@ class DeviceContext {
             w: Float,
             h: Float,
             mat: idMaterial?,
-            color: idVec4,
+            color: idVec4?,
             scalex: Float /*= 1.0*/,
             scaley: Float /*= 1.0*/,
             angle: Float /*= 0.0f*/
         ) {
             var scalex = scalex
             var scaley = scaley
-            RenderSystem.renderSystem.SetColor(color)
+            RenderSystem.renderSystem.SetColor(color!!)
             val s0 = FloatArray(1)
             val s1 = FloatArray(1)
             val t0 = FloatArray(1)
@@ -547,11 +569,11 @@ class DeviceContext {
             //
             //  handle negative scales as well
             if (scalex < 0) {
-                w1[0] = w1[0] * -1
+                w1[0] *= -1f
                 scalex *= -1f
             }
             if (scaley < 0) {
-                h1[0] = h1[0] * -1
+                h1[0] *= -1f
                 scaley *= -1f
             }
             //
@@ -590,7 +612,7 @@ class DeviceContext {
             shader: idMaterial?,
             angle: Float /*= 0.0f*/
         ) {
-            val verts = Array(4) { idDrawVert() }
+            val verts = arrayOfNulls<idDrawVert>(4)
             val indexes = IntArray(6)
             indexes[0] = 3
             indexes[1] = 0
@@ -598,76 +620,76 @@ class DeviceContext {
             indexes[3] = 2
             indexes[4] = 0
             indexes[5] = 1
-            verts[0].xyz[0] = x
-            verts[0].xyz[1] = y
-            verts[0].xyz[2] = 0f
-            verts[0].st[0] = s0
-            verts[0].st[1] = t0
-            verts[0].normal[0] = 0f
-            verts[0].normal[1] = 0f
-            verts[0].normal[2] = 1f
-            verts[0].tangents[0][0] = 1f
-            verts[0].tangents[0][1] = 0f
-            verts[0].tangents[0][2] = 0f
-            verts[0].tangents[1][0] = 0f
-            verts[0].tangents[1][1] = 1f
-            verts[0].tangents[1][2] = 0f
-            verts[1].xyz[0] = x + w
-            verts[1].xyz[1] = y
-            verts[1].xyz[2] = 0f
-            verts[1].st[0] = s1
-            verts[1].st[1] = t0
-            verts[1].normal[0] = 0f
-            verts[1].normal[1] = 0f
-            verts[1].normal[2] = 1f
-            verts[1].tangents[0][0] = 1f
-            verts[1].tangents[0][1] = 0f
-            verts[1].tangents[0][2] = 0f
-            verts[1].tangents[1][0] = 0f
-            verts[1].tangents[1][1] = 1f
-            verts[1].tangents[1][2] = 0f
-            verts[2].xyz[0] = x + w
-            verts[2].xyz[1] = y + h
-            verts[2].xyz[2] = 0f
-            verts[2].st[0] = s1
-            verts[2].st[1] = t1
-            verts[2].normal[0] = 0f
-            verts[2].normal[1] = 0f
-            verts[2].normal[2] = 1f
-            verts[2].tangents[0][0] = 1f
-            verts[2].tangents[0][1] = 0f
-            verts[2].tangents[0][2] = 0f
-            verts[2].tangents[1][0] = 0f
-            verts[2].tangents[1][1] = 1f
-            verts[2].tangents[1][2] = 0f
-            verts[3].xyz[0] = x
-            verts[3].xyz[1] = y + h
-            verts[3].xyz[2] = 0f
-            verts[3].st[0] = s0
-            verts[3].st[1] = t1
-            verts[3].normal[0] = 0f
-            verts[3].normal[1] = 0f
-            verts[3].normal[2] = 1f
-            verts[3].tangents[0][0] = 1f
-            verts[3].tangents[0][1] = 0f
-            verts[3].tangents[0][2] = 0f
-            verts[3].tangents[1][0] = 0f
-            verts[3].tangents[1][1] = 1f
-            verts[3].tangents[1][2] = 0f
+            verts[0]!!.xyz[0] = x
+            verts[0]!!.xyz[1] = y
+            verts[0]!!.xyz[2] = 0f
+            verts[0]!!.st[0] = s0
+            verts[0]!!.st[1] = t0
+            verts[0]!!.normal[0] = 0f
+            verts[0]!!.normal[1] = 0f
+            verts[0]!!.normal[2] = 1f
+            verts[0]!!.tangents[0][0] = 1f
+            verts[0]!!.tangents[0][1] = 0f
+            verts[0]!!.tangents[0][2] = 0f
+            verts[0]!!.tangents[1][0] = 0f
+            verts[0]!!.tangents[1][1] = 1f
+            verts[0]!!.tangents[1][2] = 0f
+            verts[1]!!.xyz[0] = x + w
+            verts[1]!!.xyz[1] = y
+            verts[1]!!.xyz[2] = 0f
+            verts[1]!!.st[0] = s1
+            verts[1]!!.st[1] = t0
+            verts[1]!!.normal[0] = 0f
+            verts[1]!!.normal[1] = 0f
+            verts[1]!!.normal[2] = 1f
+            verts[1]!!.tangents[0][0] = 1f
+            verts[1]!!.tangents[0][1] = 0f
+            verts[1]!!.tangents[0][2] = 0f
+            verts[1]!!.tangents[1][0] = 0f
+            verts[1]!!.tangents[1][1] = 1f
+            verts[1]!!.tangents[1][2] = 0f
+            verts[2]!!.xyz[0] = x + w
+            verts[2]!!.xyz[1] = y + h
+            verts[2]!!.xyz[2] = 0f
+            verts[2]!!.st[0] = s1
+            verts[2]!!.st[1] = t1
+            verts[2]!!.normal[0] = 0f
+            verts[2]!!.normal[1] = 0f
+            verts[2]!!.normal[2] = 1f
+            verts[2]!!.tangents[0][0] = 1f
+            verts[2]!!.tangents[0][1] = 0f
+            verts[2]!!.tangents[0][2] = 0f
+            verts[2]!!.tangents[1][0] = 0f
+            verts[2]!!.tangents[1][1] = 1f
+            verts[2]!!.tangents[1][2] = 0f
+            verts[3]!!.xyz[0] = x
+            verts[3]!!.xyz[1] = y + h
+            verts[3]!!.xyz[2] = 0f
+            verts[3]!!.st[0] = s0
+            verts[3]!!.st[1] = t1
+            verts[3]!!.normal[0] = 0f
+            verts[3]!!.normal[1] = 0f
+            verts[3]!!.normal[2] = 1f
+            verts[3]!!.tangents[0][0] = 1f
+            verts[3]!!.tangents[0][1] = 0f
+            verts[3]!!.tangents[0][2] = 0f
+            verts[3]!!.tangents[1][0] = 0f
+            verts[3]!!.tangents[1][1] = 1f
+            verts[3]!!.tangents[1][2] = 0f
             val ident = !mat.IsIdentity()
             if (ident) {
-                verts[0].xyz.minusAssign(origin)
-                verts[0].xyz.timesAssign(mat)
-                verts[0].xyz.plusAssign(origin)
-                verts[1].xyz.minusAssign(origin)
-                verts[1].xyz.timesAssign(mat)
-                verts[1].xyz.plusAssign(origin)
-                verts[2].xyz.minusAssign(origin)
-                verts[2].xyz.timesAssign(mat)
-                verts[2].xyz.plusAssign(origin)
-                verts[3].xyz.minusAssign(origin)
-                verts[3].xyz.timesAssign(mat)
-                verts[3].xyz.plusAssign(origin)
+                verts[0]!!.xyz.minusAssign(origin)
+                verts[0]!!.xyz.timesAssign(mat)
+                verts[0]!!.xyz.plusAssign(origin)
+                verts[1]!!.xyz.minusAssign(origin)
+                verts[1]!!.xyz.timesAssign(mat)
+                verts[1]!!.xyz.plusAssign(origin)
+                verts[2]!!.xyz.minusAssign(origin)
+                verts[2]!!.xyz.timesAssign(mat)
+                verts[2]!!.xyz.plusAssign(origin)
+                verts[3]!!.xyz.minusAssign(origin)
+                verts[3]!!.xyz.timesAssign(mat)
+                verts[3]!!.xyz.plusAssign(origin)
             }
 
             //Generate a translation so we can translate to the center of the image rotate and draw
@@ -679,33 +701,33 @@ class DeviceContext {
             //Rotate the verts about the z axis before drawing them
             val rotz = idMat4()
             rotz.Identity()
-            val sinAng = idMath.Sin(angle)
-            val cosAng = idMath.Cos(angle)
+            val sinAng = Sin(angle)
+            val cosAng = Cos(angle)
             rotz[0, 0] = cosAng
             rotz[0, 1] = sinAng
             rotz[1, 0] = -sinAng
             rotz[1, 1] = cosAng
             for (i in 0..3) {
                 //Translate to origin
-                verts[i].xyz.minusAssign(origTrans)
+                verts[i]!!.xyz.minusAssign(origTrans)
 
                 //Rotate
-                verts[i].xyz.set(rotz.times(verts[i].xyz))
+                verts[i]!!.xyz.set(rotz.times(verts[i]!!.xyz))
 
                 //Translate back
-                verts[i].xyz.plusAssign(origTrans)
+                verts[i]!!.xyz.plusAssign(origTrans)
             }
-            RenderSystem.renderSystem.DrawStretchPic(verts, indexes, 4, 6, shader, angle != 0f)
+            RenderSystem.renderSystem.DrawStretchPic(verts as Array<idDrawVert>, indexes, 4, 6, shader, angle != 0f)
         }
 
         fun CharWidth(c: Char, scale: Float): Int {
             val glyph: glyphInfo_t
             val useScale: Float
             SetFontByScale(scale)
-            val font = useFont!!
-            useScale = scale * font.glyphScale
-            glyph = font.glyphs[c.code]
-            return idMath.FtoiFast(glyph.xSkip * useScale)
+            val font = useFont
+            useScale = scale * font!!.glyphScale
+            glyph = font.glyphs[c.code]!!
+            return FtoiFast(glyph.xSkip * useScale)
         }
 
         fun TextWidth(text: String?, scale: Float, limit: Int): Int {
@@ -720,29 +742,29 @@ class DeviceContext {
             if (limit > 0) {
                 i = 0
                 while (text[i] != '\u0000' && i < limit) {
-                    if (idStr.IsColor(text.substring(i))) {
+                    if (IsColor(text.substring(i))) {
                         i++
                     } else {
-                        width += glyphs[text[i].code].xSkip
+                        width += glyphs[text[i].code]!!.xSkip
                     }
                     i++
                 }
             } else {
                 i = 0
                 while (text[i] != '\u0000') {
-                    if (idStr.IsColor(text.substring(i))) {
+                    if (IsColor(text.substring(i))) {
                         i++
                     } else {
-                        width += glyphs[text[i].code].xSkip
+                        width += glyphs[text[i].code]!!.xSkip
                     }
                     i++
                 }
             }
-            return idMath.FtoiFast(scale * useFont!!.glyphScale * width)
+            return FtoiFast(scale * useFont!!.glyphScale * width)
         }
 
         fun TextWidth(text: idStr?, scale: Float, limit: Int): Int {
-            return TextWidth(text?.toString(), scale, limit)
+            return TextWidth(text.toString(), scale, limit)
         }
 
         fun TextHeight(text: String?, scale: Float, limit: Int): Int {
@@ -753,8 +775,8 @@ class DeviceContext {
             val useScale: Float
             var s = 0 //text;
             SetFontByScale(scale)
-            val font = useFont!!
-            useScale = scale * font.glyphScale
+            val font = useFont
+            useScale = scale * font!!.glyphScale
             max = 0f
             if (text != null) {
                 len = text.length
@@ -763,11 +785,11 @@ class DeviceContext {
                 }
                 count = 0
                 while (count < len) {
-                    if (idStr.IsColor(text.substring(s))) {
+                    if (IsColor(text.substring(s))) {
                         s += 2
                         //                        continue;
                     } else {
-                        glyph = font.glyphs[text[s].code]
+                        glyph = font.glyphs[text[s].code]!!
                         if (max < glyph.height) {
                             max = glyph.height.toFloat()
                         }
@@ -776,48 +798,47 @@ class DeviceContext {
                     }
                 }
             }
-            return idMath.FtoiFast(max * useScale)
+            return FtoiFast(max * useScale)
         }
 
         fun MaxCharHeight(scale: Float): Int {
             SetFontByScale(scale)
             val useScale = scale * useFont!!.glyphScale
-            return idMath.FtoiFast(activeFont!!.maxHeight * useScale)
+            return FtoiFast(activeFont!!.maxHeight * useScale)
         }
 
         fun MaxCharWidth(scale: Float): Int {
             SetFontByScale(scale)
             val useScale = scale * useFont!!.glyphScale
-            return idMath.FtoiFast(activeFont!!.maxWidth * useScale)
+            return FtoiFast(activeFont!!.maxWidth * useScale)
         }
 
-        fun FindFont(name: String): Int {
+        fun FindFont(name: String?): Int {
             val c = fonts.Num()
             for (i in 0 until c) {
-                if (idStr.Icmp(name, fonts[i]!!.name) == 0) {
+                if (Icmp(name!!, fonts[i].name!!) == 0) {
                     return i
                 }
             }
 
             // If the font was not found, try to register it
-            val fileName = idStr(name)
-            fileName.Replace("fonts", Str.va("fonts/%s", fontLang))
+            val fileName = idStr(name!!)
+            fileName.Replace("fonts", va("fonts/%s", fontLang))
             val fontInfo = fontInfoEx_t()
             val index = fonts.Append(fontInfo)
-            return if (RenderSystem.renderSystem.RegisterFont(fileName.toString(), fonts[index]!!)) {
-                fonts[index]!!.name =
+            return if (RenderSystem.renderSystem.RegisterFont(fileName.toString(), fonts[index])) {
+                fonts[index].name =
                     name //idStr.Copynz(fonts.oGet(index).name, name, fonts.oGet(index).name.length());
                 index
             } else {
-                idLib.common.Printf("Could not register font %s [%s]\n", name, fileName)
+                common.Printf("Could not register font %s [%s]\n", name, fileName)
                 -1
             }
         }
 
         fun SetupFonts() {
             fonts.SetGranularity(1)
-
-            fontLang.set(idLib.cvarSystem.GetCVarString("sys_lang"))
+            fontLang.set(cvarSystem.GetCVarString("sys_lang"))
             val font = fontLang.toString()
 
             // western european languages can use the english font
@@ -999,9 +1020,9 @@ class DeviceContext {
             if (y[0] >= vidHeight) {
                 y[0] = vidHeight
             }
-            RenderSystem.renderSystem.SetColor(colorWhite)
+            RenderSystem.renderSystem.SetColor(colorWhite!!)
             AdjustCoords(x, y, s, s)
-            DrawStretchPic(x[0], y[0], s[0], s[0], 0f, 0f, 1f, 1f, cursorImages[cursor.ordinal])
+            DrawStretchPic(x[0], y[0], s[0], s[0], 0f, 0f, 1f, 1f, cursorImages[cursor!!.ordinal])
         }
 
         fun SetCursor(n: Int) {
@@ -1040,7 +1061,7 @@ class DeviceContext {
             }
             var c = clipRects.Num()
             while (--c > 0) {
-                val clipRect = clipRects[c]!!
+                val clipRect = clipRects[c]
                 val ox = x[0]
                 val oy = y[0]
                 val ow = w[0]
@@ -1048,7 +1069,7 @@ class DeviceContext {
                 if (ow <= 0.0f || oh <= 0.0f) {
                     break
                 }
-                if (x[0] < clipRect.x) {
+                if (x[0] < clipRect!!.x) {
                     w[0] -= clipRect.x - x[0]
                     x[0] = clipRect.x
                 } else if (x[0] > clipRect.x + clipRect.w) {
@@ -1111,7 +1132,7 @@ class DeviceContext {
             clipRects.Append(idRectangle(x, y, w, h))
         }
 
-        fun PushClipRect(r: idRectangle) {
+        fun PushClipRect(r: idRectangle?) {
             clipRects.Append(r)
         }
 
@@ -1147,8 +1168,8 @@ class DeviceContext {
             }
             SetFontByScale(scale)
             val useScale = scale * useFont!!.glyphScale
-            val glyph2 = useFont!!.glyphs[if (overStrikeMode) '_'.code else '|'.code]
-            val yadj = useScale * glyph2.top
+            val glyph2 = useFont!!.glyphs[(if (overStrikeMode) '_' else '|').code]
+            val yadj = useScale * glyph2!!.top
             PaintChar(
                 x,
                 y - yadj,
@@ -1167,7 +1188,7 @@ class DeviceContext {
             x: Float,
             y: Float,
             scale: Float,
-            color: idVec4,
+            color: idVec4?,
             text: String?,
             adjust: Float,
             limit: Int,
@@ -1177,14 +1198,14 @@ class DeviceContext {
             var x = x
             var len: Int
             var count: Int
-            var newColor: idVec4
+            var newColor: idVec4?
             var glyph: glyphInfo_t
             val useScale: Float
             SetFontByScale(scale)
             useScale = scale * useFont!!.glyphScale
             count = 0
-            if (text != null && text.isNotEmpty() && color.w != 0.0f) {
-                var s: Char = text[0] //(const unsigned char*)text;
+            if (text != null && !text.isEmpty() && color!!.w != 0.0f) {
+                var s = text[0] //(const unsigned char*)text;
                 var s_i = 0
                 RenderSystem.renderSystem.SetColor(color)
                 //		memcpy(newColor[0], color[0], sizeof(idVec4));
@@ -1193,15 +1214,12 @@ class DeviceContext {
                 if (limit > 0 && len > limit) {
                     len = limit
                 }
-                s = text[s_i]
-                while (s_i < len && s.code != 0 && count < len) {
-                    s = text[s_i]
+                while (s_i < len && text[s_i].also { s = it }.code != 0 && count < len) {
                     if (s.code < RenderSystem.GLYPH_START || s.code > RenderSystem.GLYPH_END) {
                         s_i++
                         continue
                     }
-                    s = text[s_i]
-                    glyph = useFont!!.glyphs[s.code]
+                    glyph = useFont!!.glyphs[text[s_i].also { s = it }.code]!!
 
                     //
                     // int yadj = Assets.textFont.glyphs[text[i]].bottom +
@@ -1209,12 +1227,12 @@ class DeviceContext {
                     // (Assets.textFont.glyphs[text[i]].imageHeight -
                     // Assets.textFont.glyphs[text[i]].height);
                     //
-                    if (idStr.IsColor(TempDump.ctos(s.toString().toCharArray()))) {
+                    if (IsColor(ctos(s))) {
                         d1++
-                        if (text[s_i + 1].code == Str.C_COLOR_DEFAULT) {
+                        if (text[s_i + 1].code == C_COLOR_DEFAULT) {
                             newColor = color
                         } else {
-                            newColor = idStr.ColorForIndex(text[s_i + 1].code)
+                            newColor = ColorForIndex(text[s_i + 1].code)
                             newColor[3] = color[3]
                         }
                         if (cursor == count || cursor == count + 1) {
@@ -1312,27 +1330,44 @@ class DeviceContext {
         }
 
         enum class ALIGN {
-            ALIGN_LEFT, ALIGN_CENTER, ALIGN_RIGHT
+            ALIGN_LEFT,
+            ALIGN_CENTER,
+            ALIGN_RIGHT
         }
 
         enum class CURSOR {
-            CURSOR_ARROW, CURSOR_HAND, CURSOR_COUNT
+            CURSOR_ARROW,
+            CURSOR_HAND,
+            CURSOR_COUNT
         }
 
         enum class SCROLLBAR {
-            SCROLLBAR_HBACK, SCROLLBAR_VBACK, SCROLLBAR_THUMB, SCROLLBAR_RIGHT, SCROLLBAR_LEFT, SCROLLBAR_UP, SCROLLBAR_DOWN, SCROLLBAR_COUNT
+            SCROLLBAR_HBACK,
+            SCROLLBAR_VBACK,
+            SCROLLBAR_THUMB,
+            SCROLLBAR_RIGHT,
+            SCROLLBAR_LEFT,
+            SCROLLBAR_UP,
+            SCROLLBAR_DOWN,
+            SCROLLBAR_COUNT
         }
 
         companion object {
-            val colorBlack: idVec4 = idVec4()
-            val colorBlue: idVec4 = idVec4()
-            val colorGreen: idVec4 = idVec4()
-            val colorNone: idVec4 = idVec4()
-            val colorOrange: idVec4 = idVec4()
-            val colorPurple: idVec4 = idVec4()
-            val colorRed: idVec4 = idVec4()
-            val colorWhite: idVec4 = idVec4()
-            val colorYellow: idVec4 = idVec4()
+            var colorBlack: idVec4? = null
+
+            @JvmField
+            var colorBlue: idVec4? = null
+            var colorGreen: idVec4? = null
+            var colorNone: idVec4? = null
+            var colorOrange: idVec4? = null
+            var colorPurple: idVec4? = null
+
+            @JvmField
+            var colorRed: idVec4? = null
+
+            @JvmField
+            var colorWhite: idVec4? = null
+            var colorYellow: idVec4? = null
             var aaaa = 0
             var asdasdasd = 0
             var bla = 0
@@ -1341,21 +1376,7 @@ class DeviceContext {
             var d2 = 0
 
             //
-            private val fonts: idList<fontInfoEx_t?> = idList()
+            private val fonts = idList<fontInfoEx_t>()
         }
-
-        init {
-            Clear()
-        }
-    }
-
-    companion object {
-        const val BLINK_DIVISOR = 200
-        const val VIRTUAL_HEIGHT = 480
-        const val VIRTUAL_WIDTH = 640
-        val gui_mediumFontLimit: idCVar =
-            idCVar("gui_mediumFontLimit", "0.60", CVarSystem.CVAR_GUI or CVarSystem.CVAR_ARCHIVE, "")
-        val gui_smallFontLimit: idCVar =
-            idCVar("gui_smallFontLimit", "0.30", CVarSystem.CVAR_GUI or CVarSystem.CVAR_ARCHIVE, "")
     }
 }

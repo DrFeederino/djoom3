@@ -3,13 +3,17 @@ package neo.Renderer
 import neo.Renderer.Image.cubeFiles_t
 import neo.Renderer.Image.idImageManager
 import neo.Renderer.Image_program.R_LoadImageProgram
-import neo.TempDump
+import neo.TempDump.NOT
 import neo.TempDump.TODO_Exception
-import neo.framework.FileSystem_h
+import neo.TempDump.ctos
+import neo.framework.Common.Companion.common
+import neo.framework.FileSystem_h.FILE_NOT_FOUND_TIMESTAMP
+import neo.framework.FileSystem_h.fileSystem
 import neo.framework.File_h.idFile
-import neo.idlib.Lib
-import neo.idlib.Lib.idLib
+import neo.idlib.Lib.Companion.LittleLong
+import neo.idlib.Lib.Companion.LittleShort
 import neo.idlib.Text.Str.idStr
+import neo.idlib.Text.Str.idStr.Companion.snPrintf
 import org.lwjgl.BufferUtils
 import java.awt.image.BufferedImage
 import java.awt.image.DataBufferByte
@@ -86,11 +90,11 @@ object Image_files {
      ================
      */
     @JvmOverloads
-    fun R_WriteTGA(filename: String, data: ByteBuffer, width: Int, height: Int, flipVertical: Boolean = false) {
-        val buffer: ByteBuffer?
+    fun R_WriteTGA(filename: String?, data: ByteBuffer?, width: Int, height: Int, flipVertical: Boolean = false) {
+        val buffer: ByteBuffer
         var i: Int
-        val bufferSize = width * height * 4 + 18
-        val imgStart = 18
+        val bufferSize: Int = width * height * 4 + 18
+        val imgStart: Int = 18
         buffer = ByteBuffer.allocate(bufferSize) // Mem_Alloc(bufferSize);
         //	memset( buffer, 0, 18 );
         buffer.put(2, 2.toByte()) // uncompressed type
@@ -106,18 +110,18 @@ object Image_files {
         // swap rgb to bgr
         i = imgStart
         while (i < bufferSize) {
-            buffer.put(i, data.get(i - imgStart + 2)) // blue
+            buffer.put(i, data!!.get(i - imgStart + 2)) // blue
             buffer.put(i + 1, data.get(i - imgStart + 1)) // green
             buffer.put(i + 2, data.get(i - imgStart + 0)) // red
             buffer.put(i + 3, data.get(i - imgStart + 3)) // alpha
             i += 4
         }
-        FileSystem_h.fileSystem.WriteFile(filename, buffer, bufferSize)
+        fileSystem.WriteFile(filename!!, buffer, bufferSize)
 
 //        Mem_Free(buffer);
     }
 
-    fun R_WriteTGA(filename: idStr, data: ByteBuffer, width: Int, height: Int) {
+    fun R_WriteTGA(filename: idStr, data: ByteBuffer?, width: Int, height: Int) {
         R_WriteTGA(filename.toString(), data, width, height)
     }
 
@@ -133,7 +137,7 @@ object Image_files {
      LoadBMP
      ==============
      */
-    fun LoadBMP(name: String, width: IntArray?, height: IntArray?, timestamp: LongArray?): ByteBuffer? {
+    fun LoadBMP(name: String?, width: IntArray?, height: IntArray?, timestamp: LongArray?): ByteBuffer? {
         val columns: Int
         var rows: Int
         val numPixels: Int
@@ -141,64 +145,64 @@ object Image_files {
         var row: Int
         var column: Int
         val buf_p: ByteBuffer
-        val buffer = arrayOfNulls<ByteBuffer>(1)
+        val buffer: Array<ByteBuffer?> = arrayOf(null)
         val length: Int
-        val bmpHeader = BMPHeader_t()
-        val bmpRGBA: ByteBuffer?
-        if (TempDump.NOT(width, height)) {
-            FileSystem_h.fileSystem.ReadFile(name, null, timestamp)
+        val bmpHeader: BMPHeader_t = BMPHeader_t()
+        val bmpRGBA: ByteBuffer
+        if (NOT(width, height)) {
+            fileSystem.ReadFile(name!!, null, timestamp)
             return null // just getting timestamp
         }
 
         //
         // load the file
         //
-        length = FileSystem_h.fileSystem.ReadFile(name, buffer, timestamp)
-        if (buffer[0] == null) {
+        length = fileSystem.ReadFile(name!!, buffer, timestamp)
+        if (NOT(*buffer)) {
             return null
         }
         buf_p = buffer[0]!!.duplicate()
         bmpHeader.id[0] = Char(buf_p.get().toUShort()) //*buf_p++;
         bmpHeader.id[1] = Char(buf_p.get().toUShort()) //*buf_p++;
-        bmpHeader.fileSize = Lib.Companion.LittleLong( /* ( long * )*/buf_p.long).toLong() //	buf_p += 4;
-        bmpHeader.reserved0 = Lib.Companion.LittleLong(buf_p.long).toLong() //	buf_p += 4;
-        bmpHeader.bitmapDataOffset = Lib.Companion.LittleLong(buf_p.long).toLong() //	buf_p += 4;
-        bmpHeader.bitmapHeaderSize = Lib.Companion.LittleLong(buf_p.long).toLong() //	buf_p += 4;
-        bmpHeader.width = Lib.Companion.LittleLong(buf_p.long).toLong() //	buf_p += 4;
-        bmpHeader.height = Lib.Companion.LittleLong(buf_p.long).toLong() //	buf_p += 4;
-        bmpHeader.planes = Lib.Companion.LittleShort(buf_p.short) //	buf_p += 2;
-        bmpHeader.bitsPerPixel = Lib.Companion.LittleShort(buf_p.short) //	buf_p += 2;
-        bmpHeader.compression = Lib.Companion.LittleLong(buf_p.long).toLong() //	buf_p += 4;
-        bmpHeader.bitmapDataSize = Lib.Companion.LittleLong(buf_p.long).toLong() //	buf_p += 4;
-        bmpHeader.hRes = Lib.Companion.LittleLong(buf_p.long).toLong() //	buf_p += 4;
-        bmpHeader.vRes = Lib.Companion.LittleLong(buf_p.long).toLong() //	buf_p += 4;
-        bmpHeader.colors = Lib.Companion.LittleLong(buf_p.long).toLong() //	buf_p += 4;
-        bmpHeader.importantColors = Lib.Companion.LittleLong(buf_p.long).toLong() //	buf_p += 4;
-        for (palette in bmpHeader.palette) {
-            for (a in 0 until bmpHeader.palette[0].size) {
+        bmpHeader.fileSize = LittleLong( /* ( long * )*/buf_p.getLong()).toLong() //	buf_p += 4;
+        bmpHeader.reserved0 = LittleLong(buf_p.getLong()).toLong() //	buf_p += 4;
+        bmpHeader.bitmapDataOffset = LittleLong(buf_p.getLong()).toLong() //	buf_p += 4;
+        bmpHeader.bitmapHeaderSize = LittleLong(buf_p.getLong()).toLong() //	buf_p += 4;
+        bmpHeader.width = LittleLong(buf_p.getLong()).toLong() //	buf_p += 4;
+        bmpHeader.height = LittleLong(buf_p.getLong()).toLong() //	buf_p += 4;
+        bmpHeader.planes = LittleShort(buf_p.getShort()) //	buf_p += 2;
+        bmpHeader.bitsPerPixel = LittleShort(buf_p.getShort()) //	buf_p += 2;
+        bmpHeader.compression = LittleLong(buf_p.getLong()).toLong() //	buf_p += 4;
+        bmpHeader.bitmapDataSize = LittleLong(buf_p.getLong()).toLong() //	buf_p += 4;
+        bmpHeader.hRes = LittleLong(buf_p.getLong()).toLong() //	buf_p += 4;
+        bmpHeader.vRes = LittleLong(buf_p.getLong()).toLong() //	buf_p += 4;
+        bmpHeader.colors = LittleLong(buf_p.getLong()).toLong() //	buf_p += 4;
+        bmpHeader.importantColors = LittleLong(buf_p.getLong()).toLong() //	buf_p += 4;
+        for (palette: CharArray in bmpHeader.palette) {
+            for (a in bmpHeader.palette[0].indices) {
 //	memcpy( bmpHeader.palette, buf_p, sizeof( bmpHeader.palette ) );
-                palette[a] = buf_p.char //TODO:should this be getByte()????
+                palette[a] = buf_p.getChar() //TODO:should this be getByte()????
             }
         }
         if (bmpHeader.bitsPerPixel.toInt() == 8) {
             buf_p.position(buf_p.position() + 1024)
         }
         if (bmpHeader.id[0] != 'B' && bmpHeader.id[1] != 'M') {
-            idLib.common.Error("LoadBMP: only Windows-style BMP files supported (%s)\n", name)
+            common.Error("LoadBMP: only Windows-style BMP files supported (%s)\n", name!!)
         }
         if (bmpHeader.fileSize != length.toLong()) {
-            idLib.common.Error(
+            common.Error(
                 "LoadBMP: header size does not match file size (%lu vs. %d) (%s)\n",
                 bmpHeader.fileSize,
                 length,
-                name
+                name!!
             )
         }
         if (bmpHeader.compression != 0L) {
-            idLib.common.Error("LoadBMP: only uncompressed BMP files supported (%s)\n", name)
+            common.Error("LoadBMP: only uncompressed BMP files supported (%s)\n", name!!)
         }
         if (bmpHeader.bitsPerPixel < 8) {
-            idLib.common.Error("LoadBMP: monochrome and 4-bit BMP files not supported (%s)\n", name)
+            common.Error("LoadBMP: monochrome and 4-bit BMP files not supported (%s)\n", name!!)
         }
         columns = bmpHeader.width.toInt()
         rows = bmpHeader.height.toInt()
@@ -227,24 +231,26 @@ object Image_files {
                 var alpha: Byte
                 var palIndex: Int
                 /*unsigned*/
-                var shortPixel: Int
-                when (bmpHeader.bitsPerPixel) {
-                    8.toShort() -> {
+                var shortPixel: Short
+                when (bmpHeader.bitsPerPixel.toInt()) {
+                    8 -> {
                         palIndex = buf_p.get().toInt()
-                        pixbuf.put(bmpHeader.palette[palIndex][2] as Byte)
-                        pixbuf.put(bmpHeader.palette[palIndex][1] as Byte)
-                        pixbuf.put(bmpHeader.palette[palIndex][0] as Byte)
+                        pixbuf.put(bmpHeader.palette[palIndex][2].code.toByte())
+                        pixbuf.put(bmpHeader.palette[palIndex][1].code.toByte())
+                        pixbuf.put(bmpHeader.palette[palIndex][0].code.toByte())
                         pixbuf.put(0xff.toByte())
                     }
-                    16.toShort() -> {
-                        shortPixel = pixbuf.short.toInt()
-                        pixbuf.short // += 2;
-                        pixbuf.put((shortPixel and (31 shl 10) shr 7).toByte())
-                        pixbuf.put((shortPixel and (31 shl 5) shr 2).toByte())
-                        pixbuf.put((shortPixel and 31 shl 3).toByte())
+
+                    16 -> {
+                        shortPixel = pixbuf.getShort()
+                        pixbuf.getShort() // += 2;
+                        pixbuf.put(((shortPixel.toInt() and (31 shl 10)) shr 7).toByte())
+                        pixbuf.put(((shortPixel.toInt() and (31 shl 5)) shr 2).toByte())
+                        pixbuf.put(((shortPixel.toInt() and (31)) shl 3).toByte())
                         pixbuf.put(0xff.toByte())
                     }
-                    24.toShort() -> {
+
+                    24 -> {
                         blue = buf_p.get()
                         green = buf_p.get()
                         red = buf_p.get()
@@ -253,7 +259,8 @@ object Image_files {
                         pixbuf.put(blue)
                         pixbuf.put(255.toByte())
                     }
-                    32.toShort() -> {
+
+                    32 -> {
                         blue = buf_p.get()
                         green = buf_p.get()
                         red = buf_p.get()
@@ -263,10 +270,11 @@ object Image_files {
                         pixbuf.put(blue)
                         pixbuf.put(alpha)
                     }
-                    else -> idLib.common.Error(
+
+                    else -> common.Error(
                         "LoadBMP: illegal pixel_size '%d' in file '%s'\n",
                         bmpHeader.bitsPerPixel,
-                        name
+                        name!!
                     )
                 }
                 column++
@@ -292,34 +300,34 @@ object Image_files {
     private fun LoadPCX(
         filename: String,
         pic: Array<ByteBuffer?>,
-        palette: Array<ByteBuffer?>,
+        palette: Array<ByteBuffer?>?,
         width: IntArray?,
         height: IntArray?,
         timestamp: LongArray?
     ) {
-        val raw = arrayOfNulls<ByteBuffer>(1)
+        val raw: Array<ByteBuffer?> = arrayOf(null)
         val pcx: pcx_t
         var x: Int
         var y: Int
         val len: Int
         var runLength: Int
         var dataByte: Byte
-        val out: ByteBuffer?
-        val pix: ByteBuffer?
+        val out: ByteBuffer
+        val pix: ByteBuffer
         val xmax: Int
         val ymax: Int
-        if (TempDump.NOT(*pic)) {
-            FileSystem_h.fileSystem.ReadFile(filename, null, timestamp)
+        if (NOT(*pic)) {
+            fileSystem.ReadFile(filename, null, timestamp)
             return  // just getting timestamp
         }
         pic[0] = null
-        palette[0] = null
+        palette!![0] = null
 
         //
         // load the file
         //
-        len = FileSystem_h.fileSystem.ReadFile(filename, raw, timestamp)
-        if (raw[0] == null) {
+        len = fileSystem.ReadFile(filename, raw, timestamp)
+        if (NOT(*raw)) {
             return
         }
 
@@ -328,17 +336,16 @@ object Image_files {
         //
         pcx = pcx_t(raw[0])
         raw[0]!!.position(pcx.dataPosition)
-        xmax = Lib.Companion.LittleShort(pcx.xmax).toInt()
-        ymax = Lib.Companion.LittleShort(pcx.ymax).toInt()
-        if (pcx.manufacturer.code != 0x0a || pcx.version.code != 5 || pcx.encoding.code != 1 || pcx.bits_per_pixel.code != 8 || xmax >= 1024 || ymax >= 1024) {
-            idLib.common.Printf(
-                "Bad pcx file %s (%d x %d) (%d x %d)\n",
-                filename,
-                xmax + 1,
-                ymax + 1,
-                pcx.xmax,
-                pcx.ymax
-            )
+        xmax = LittleShort(pcx.xmax).toInt()
+        ymax = LittleShort(pcx.ymax).toInt()
+        if ((pcx.manufacturer.code != 0x0a
+                    ) || (pcx.version.code != 5
+                    ) || (pcx.encoding.code != 1
+                    ) || (pcx.bits_per_pixel.code != 8
+                    ) || (xmax >= 1024
+                    ) || (ymax >= 1024)
+        ) {
+            common.Printf("Bad pcx file %s (%d x %d) (%d x %d)\n", filename, xmax + 1, ymax + 1, pcx.xmax, pcx.ymax)
             return
         }
         out = ByteBuffer.allocate((ymax + 1) * (xmax + 1)) //(byte *)R_StaticAlloc( (ymax+1) * (xmax+1) );
@@ -360,7 +367,7 @@ object Image_files {
             x = 0
             while (x <= xmax) {
                 dataByte = raw[0]!!.get()
-                if (dataByte.toInt() and 0xC0 == 0xC0) {
+                if ((dataByte.toInt() and 0xC0) == 0xC0) {
                     runLength = dataByte.toInt() and 0x3F
                     dataByte = raw[0]!!.get()
                 } else {
@@ -375,7 +382,7 @@ object Image_files {
         }
         if (raw[0]!!.position() > len) //TODO: is this even possible?
         {
-            idLib.common.Printf("PCX file %s was malformed", filename)
+            common.Printf("PCX file %s was malformed", filename)
             //		R_StaticFree (*pic);
             pic[0] = null
         }
@@ -389,18 +396,18 @@ object Image_files {
      ==============
      */
     fun LoadPCX32(filename: String, width: IntArray?, height: IntArray?, timestamp: LongArray?): ByteBuffer? {
-        val palette = arrayOf<ByteBuffer?>()
-        val pic8 = arrayOf<ByteBuffer?>()
+        val palette: Array<ByteBuffer?> = arrayOf(null)
+        val pic8: Array<ByteBuffer?> = arrayOf(null)
         var pic: ByteBuffer? = null
         var i: Int
         val c: Int
         var p: Int
-        if (TempDump.NOT(width, height)) {
-            FileSystem_h.fileSystem.ReadFile(filename, null, timestamp)
+        if (NOT(width, height)) {
+            fileSystem.ReadFile(filename, null, timestamp)
             return null // just getting timestamp
         }
-        Image_files.LoadPCX(filename, pic8, palette, width, height, timestamp)
-        if (TempDump.NOT(pic8[0])) {
+        LoadPCX(filename, pic8, palette, width, height, timestamp)
+        if (NOT(pic8[0])) {
             return null
         }
         c = width!![0] * height!![0]
@@ -434,49 +441,49 @@ object Image_files {
         var pixbuf: ByteBuffer
         var row: Int
         var column: Int
-        val buf_p: ByteBuffer
-        val buffer = arrayOfNulls<ByteBuffer>(1)
-        val targa_header = TargaHeader()
-        val targa_rgba: ByteBuffer?
-        if (TempDump.NOT(width, height)) {
-            FileSystem_h.fileSystem.ReadFile(name, null, timestamp)
+        val buf_p: ByteBuffer?
+        val buffer: Array<ByteBuffer?> = arrayOf(null)
+        val targa_header: TargaHeader = TargaHeader()
+        val targa_rgba: ByteBuffer
+        if (NOT(width, height)) {
+            fileSystem.ReadFile(name, null, timestamp)
             return null // just getting timestamp
         }
 
         //
         // load the file
         //
-        fileSize = FileSystem_h.fileSystem.ReadFile(name, buffer, timestamp)
-        if (buffer[0] == null) { // basically not found
+        fileSize = fileSystem.ReadFile(name, buffer, timestamp)
+        if (NOT(buffer[0])) {
             return null
         }
-        buf_p = buffer[0]!!
-        buf_p.order(ByteOrder.LITTLE_ENDIAN).rewind()
+        buf_p = buffer[0]
+        buf_p!!.order(ByteOrder.LITTLE_ENDIAN).rewind()
         targa_header.id_length = buf_p.get()
         targa_header.colormap_type = buf_p.get()
         targa_header.image_type = buf_p.get()
-        targa_header.colormap_index = Lib.Companion.LittleShort(buf_p.short) //	buf_p += 2;
-        targa_header.colormap_length = Lib.Companion.LittleShort(buf_p.short) //	buf_p += 2;
+        targa_header.colormap_index = LittleShort(buf_p.getShort()) //	buf_p += 2;
+        targa_header.colormap_length = LittleShort(buf_p.getShort()) //	buf_p += 2;
         targa_header.colormap_size = buf_p.get()
-        targa_header.x_origin = Lib.Companion.LittleShort(buf_p.short) //	buf_p += 2;
-        targa_header.y_origin = Lib.Companion.LittleShort(buf_p.short) //	buf_p += 2;
-        targa_header.width = Lib.Companion.LittleShort(buf_p.short) //	buf_p += 2;
-        targa_header.height = Lib.Companion.LittleShort(buf_p.short) //	buf_p += 2;
+        targa_header.x_origin = LittleShort(buf_p.getShort()) //	buf_p += 2;
+        targa_header.y_origin = LittleShort(buf_p.getShort()) //	buf_p += 2;
+        targa_header.width = LittleShort(buf_p.getShort()) //	buf_p += 2;
+        targa_header.height = LittleShort(buf_p.getShort()) //	buf_p += 2;
         targa_header.pixel_size = buf_p.get()
         targa_header.attributes = buf_p.get()
-        if (targa_header.image_type.toInt() != 2 && targa_header.image_type.toInt() != 10 && targa_header.image_type.toInt() != 3) {
-            idLib.common.Error("LoadTGA( %s ): Only type 2 (RGB), 3 (gray), and 10 (RGB) TGA images supported\n", name)
+        if ((targa_header.image_type.toInt() != 2) && (targa_header.image_type.toInt() != 10) && (targa_header.image_type.toInt() != 3)) {
+            common.Error("LoadTGA( %s ): Only type 2 (RGB), 3 (gray), and 10 (RGB) TGA images supported\n", name)
         }
         if (targa_header.colormap_type.toInt() != 0) {
-            idLib.common.Error("LoadTGA( %s ): colormaps not supported\n", name)
+            common.Error("LoadTGA( %s ): colormaps not supported\n", name)
         }
-        if (targa_header.pixel_size.toInt() != 32 && targa_header.pixel_size.toInt() != 24 && targa_header.image_type.toInt() != 3) {
-            idLib.common.Error("LoadTGA( %s ): Only 32 or 24 bit images supported (no colormaps)\n", name)
+        if ((targa_header.pixel_size.toInt() != 32 && targa_header.pixel_size.toInt() != 24) && targa_header.image_type.toInt() != 3) {
+            common.Error("LoadTGA( %s ): Only 32 or 24 bit images supported (no colormaps)\n", name)
         }
         if (targa_header.image_type.toInt() == 2 || targa_header.image_type.toInt() == 3) {
             numBytes = targa_header.width * targa_header.height * (targa_header.pixel_size.toInt() shr 3)
             if (numBytes > fileSize - 18 - targa_header.id_length) {
-                idLib.common.Error("LoadTGA( %s ): incomplete file\n", name)
+                common.Error("LoadTGA( %s ): incomplete file\n", name)
             }
         }
         columns = targa_header.width.toInt()
@@ -500,7 +507,7 @@ object Image_files {
                 pixbuf.position(row * columns * 4)
                 column = 0
                 while (column < columns) {
-                    var   /*unsigned char*/red: Byte
+                    var  /*unsigned char*/red: Byte
                     var green: Byte
                     var blue: Byte
                     var alphabyte: Byte
@@ -514,6 +521,7 @@ object Image_files {
                             pixbuf.put(blue)
                             pixbuf.put(255.toByte())
                         }
+
                         24 -> {
                             blue = buf_p.get()
                             green = buf_p.get()
@@ -523,6 +531,7 @@ object Image_files {
                             pixbuf.put(blue)
                             pixbuf.put(255.toByte())
                         }
+
                         32 -> {
                             blue = buf_p.get()
                             green = buf_p.get()
@@ -533,18 +542,15 @@ object Image_files {
                             pixbuf.put(blue)
                             pixbuf.put(alphabyte)
                         }
-                        else -> idLib.common.Error(
-                            "LoadTGA( %s ): illegal pixel_size '%d'\n",
-                            name,
-                            targa_header.pixel_size
-                        )
+
+                        else -> common.Error("LoadTGA( %s ): illegal pixel_size '%d'\n", name, targa_header.pixel_size)
                     }
                     column++
                 }
                 row--
             }
         } else if (targa_header.image_type.toInt() == 10) {   // Runlength encoded RGB images
-            var   /*unsigned char*/red: Byte
+            var  /*unsigned char*/red: Byte
             var green: Byte
             var blue: Byte
             var alphabyte: Byte
@@ -563,7 +569,7 @@ object Image_files {
                 while (column < columns) {
                     packetHeader = buf_p.get().toInt()
                     packetSize = 1 + (packetHeader and 0x7f)
-                    if (packetHeader and 0x80 != 0) {        // run-length packet
+                    if ((packetHeader and 0x80) != 0) {        // run-length packet
                         when (targa_header.pixel_size.toInt()) {
                             24 -> {
                                 blue = buf_p.get()
@@ -571,13 +577,15 @@ object Image_files {
                                 red = buf_p.get()
                                 alphabyte = 255.toByte()
                             }
+
                             32 -> {
                                 blue = buf_p.get()
                                 green = buf_p.get()
                                 red = buf_p.get()
                                 alphabyte = buf_p.get()
                             }
-                            else -> idLib.common.Error(
+
+                            else -> common.Error(
                                 "LoadTGA( %s ): illegal pixel_size '%d'\n",
                                 name,
                                 targa_header.pixel_size
@@ -615,6 +623,7 @@ object Image_files {
                                     pixbuf.put(blue)
                                     pixbuf.put(255.toByte())
                                 }
+
                                 32 -> {
                                     blue = buf_p.get()
                                     green = buf_p.get()
@@ -625,7 +634,8 @@ object Image_files {
                                     pixbuf.put(blue)
                                     pixbuf.put(alphabyte)
                                 }
-                                else -> idLib.common.Error(
+
+                                else -> common.Error(
                                     "LoadTGA( %s ): illegal pixel_size '%d'\n",
                                     name,
                                     targa_header.pixel_size
@@ -649,7 +659,7 @@ object Image_files {
                 row--
             }
         }
-        if (targa_header.attributes.toInt() and (1 shl 5) != 0) {            // image flp bit
+        if ((targa_header.attributes.toInt() and (1 shl 5)) != 0) {            // image flp bit
             Image_process.R_VerticalFlip(targa_rgba, width!![0], height!![0])
         }
 
@@ -681,9 +691,10 @@ object Image_files {
          */
 //  struct jpeg_error_mgr jerr;
         /* More stuff */
-        val   /*JSAMPARRAY*/buffer: BufferedImage? // Output row buffer
+        val  /*JSAMPARRAY*/buffer: BufferedImage // Output row buffer
         //  int row_stride;		// physical row width in output buffer
 //  unsigned char *out;
+        var fbuffer: ByteBuffer
         //  byte  *bbuf;
 
         /* In this example we want to open the input file before doing anything else,
@@ -696,32 +707,31 @@ object Image_files {
 //        if ( pic ) {
 //            *pic = NULL;		// until proven otherwise
 //        }
-        run {
-            var fbuffer: ByteBuffer
+        run({
             val len: Int
             val f: idFile?
-            f = FileSystem_h.fileSystem.OpenFileRead(filename)
-            if (null == f) {
+            f = fileSystem.OpenFileRead(filename)
+            if (f == null) {
                 return null
             }
             len = f.Length()
             if (timestamp != null) {
                 timestamp[0] = f.Timestamp()
             }
-            if (null == width || height == null || TempDump.NOT(width, height)) {
-                FileSystem_h.fileSystem.CloseFile(f)
+            if (NOT(width, height)) {
+                fileSystem.CloseFile(f)
                 return null // just getting timestamp
             }
             fbuffer = BufferUtils.createByteBuffer(len + 4096) //(byte *)Mem_ClearedAlloc( len + 4096 );
             f.Read(fbuffer /*, len*/)
-            FileSystem_h.fileSystem.CloseFile(f)
-            buffer = try {
-                ImageIO.read(ByteArrayInputStream(fbuffer.array()))
-            } catch (ex: IOException) {
-                Logger.getLogger(Image_files::class.java.name).log(Level.SEVERE, null, ex)
-                idLib.common.Error("Failed to load JPEG ", filename)
-                return null
-            }
+            fileSystem.CloseFile(f)
+        })
+        try {
+            buffer = ImageIO.read(ByteArrayInputStream(fbuffer.array()))
+        } catch (ex: IOException) {
+            Logger.getLogger(Image_files::class.java.getName()).log(Level.SEVERE, null, ex)
+            common.Error("Failed to load JPEG ", filename)
+            return null
         }
 
 //
@@ -778,9 +788,9 @@ object Image_files {
 //  }
 //  out = (byte *)R_StaticAlloc(cinfo.output_width*cinfo.output_height*4);
 //
-        val out = (buffer!!.raster.dataBuffer as DataBufferByte).data
-        width!![0] = buffer.width //cinfo.output_width;
-        height!![0] = buffer.height //cinfo.output_height;
+        val out: ByteArray = (buffer.getRaster().getDataBuffer() as DataBufferByte).getData()
+        width!![0] = buffer.getWidth() //cinfo.output_width;
+        height!![0] = buffer.getHeight() //cinfo.output_height;
         return ByteBuffer.wrap(out)
         //
 //  /* Step 6: while (scan lines remain to be read) */
@@ -864,13 +874,13 @@ object Image_files {
      =================
      */
     fun R_LoadImage(
-        cname: String,
+        cname: String?,
         width: IntArray?,
         height: IntArray?,
         timestamp: LongArray?,
         makePowerOf2: Boolean
     ): ByteBuffer? {
-        val name = idStr(cname)
+        val name: idStr = idStr((cname)!!)
         var pic: ByteBuffer? = null
         if (timestamp != null) {
             timestamp[0] = -0x1
@@ -886,26 +896,28 @@ object Image_files {
             return null
         }
         name.ToLower()
-        val ext = idStr()
+        val ext: idStr = idStr()
         name.ExtractFileExtension(ext)
-        if (ext.toString() == "tga") {
-            pic = Image_files.LoadTGA(name.toString(), width, height, timestamp) // try tga first
-            if (pic != null && pic.capacity() == 0 || timestamp != null && timestamp[0].toInt() == -1) {
+        if (ext.equals("tga")) {
+            pic = LoadTGA(name.toString(), width, height, timestamp) // try tga first
+            if ((pic != null && pic.capacity() == 0) || (timestamp != null && timestamp[0] == -1L)) {
                 name.StripFileExtension()
                 name.DefaultFileExtension(".jpg")
-                pic = Image_files.LoadJPG(name.toString(), width, height, timestamp)
+                pic = LoadJPG(name.toString(), width, height, timestamp)
             }
-        } else if (ext.toString() == "pcx") {
-            pic = Image_files.LoadPCX32(name.toString(), width, height, timestamp)
-        } else if (ext.toString() == "bmp") {
-            pic = Image_files.LoadBMP(name.toString(), width, height, timestamp)
-        } else if (ext.toString() == "jpg") {
-            pic = Image_files.LoadJPG(name.toString(), width, height, timestamp)
+        } else if (ext.equals("pcx")) {
+            pic = LoadPCX32(name.toString(), width, height, timestamp)
+        } else if (ext.equals("bmp")) {
+            pic = LoadBMP(name.toString(), width, height, timestamp)
+        } else if (ext.equals("jpg")) {
+            pic = LoadJPG(name.toString(), width, height, timestamp)
         }
-        if (width != null && width[0] < 1
-            || height != null && height[0] < 1
+        if (((width != null && width[0] < 1)
+                    || (height != null && height[0] < 1))
         ) {
-            pic?.clear()
+            if (pic != null) {
+                pic.clear() //R_StaticFree( *pic );
+            }
         }
 
         //
@@ -959,7 +971,7 @@ object Image_files {
      =======================
      */
     fun R_LoadCubeImages(
-        imgName: String,
+        imgName: String?,
         extensions: cubeFiles_t,
         pics: Array<ByteBuffer?>? /*[6]*/,
         outSize: IntArray?,  /*ID_TIME_T */
@@ -967,18 +979,18 @@ object Image_files {
     ): Boolean {
         var i: Int
         var j: Int
-        val cameraSides =
-            arrayOf<String>("_forward.tga", "_back.tga", "_left.tga", "_right.tga", "_up.tga", "_down.tga")
-        val axisSides = arrayOf<String>("_px.tga", "_nx.tga", "_py.tga", "_ny.tga", "_pz.tga", "_nz.tga")
+        val cameraSides: Array<String> =
+            arrayOf("_forward.tga", "_back.tga", "_left.tga", "_right.tga", "_up.tga", "_down.tga")
+        val axisSides: Array<String> = arrayOf("_px.tga", "_nx.tga", "_py.tga", "_ny.tga", "_pz.tga", "_nz.tga")
         val sides: Array<String>
-        val fullName = CharArray(Image.MAX_IMAGE_NAME)
-        val width = intArrayOf(0)
-        val height = intArrayOf(0)
-        var size = 0
-        sides = if (extensions == cubeFiles_t.CF_CAMERA) {
-            cameraSides
+        val fullName: CharArray = CharArray(Image.MAX_IMAGE_NAME)
+        val width: IntArray = intArrayOf(0)
+        val height: IntArray = intArrayOf(0)
+        var size: Int = 0
+        if (extensions == cubeFiles_t.CF_CAMERA) {
+            sides = cameraSides
         } else {
-            axisSides
+            sides = axisSides
         }
 
         // FIXME: precompressed cube map files
@@ -992,25 +1004,25 @@ object Image_files {
         }
         i = 0
         while (i < 6) {
-            idStr.Companion.snPrintf(fullName, fullName.size, "%s%s", imgName, sides[i])
-            val thisTime = LongArray(1)
+            snPrintf(fullName, fullName.size, "%s%s", (imgName)!!, sides[i])
+            val thisTime: LongArray = LongArray(1)
             if (null == pics) {
                 // just checking timestamps
-                R_LoadImageProgram(TempDump.ctos(fullName), width, height, thisTime)
+                R_LoadImageProgram(ctos(fullName), width, height, thisTime)
             } else {
-                pics[i] = R_LoadImageProgram(TempDump.ctos(fullName), width, height, thisTime)
+                pics[i] = R_LoadImageProgram(ctos(fullName), width, height, thisTime)
             }
-            if (thisTime[0] == FileSystem_h.FILE_NOT_FOUND_TIMESTAMP.toLong()) {
+            if (thisTime[0] == FILE_NOT_FOUND_TIMESTAMP.toLong()) {
                 break
             }
             if (i == 0) {
                 size = width[0]
             }
             if (width[0] != size || height[0] != size) {
-                idLib.common.Warning("Mismatched sizes on cube map '%s'", imgName)
+                common.Warning("Mismatched sizes on cube map '%s'", imgName)
                 break
             }
-            if (timestamp!![0].toInt() != 0) {
+            if (timestamp!![0] != 0L) {
                 if (thisTime[0] > timestamp[0]) {
                     timestamp[0] = thisTime[0]
                 }
@@ -1018,16 +1030,17 @@ object Image_files {
             if (pics != null && extensions == cubeFiles_t.CF_CAMERA) {
                 // convert from "camera" images to native cube map images
                 when (i) {
-                    0 -> Image_process.R_RotatePic(pics[i]!!, width[0])
+                    0 -> Image_process.R_RotatePic(pics[i], width[0])
                     1 -> {
-                        Image_process.R_RotatePic(pics[i]!!, width[0])
-                        Image_process.R_HorizontalFlip(pics[i]!!, width[0], height[0])
-                        Image_process.R_VerticalFlip(pics[i]!!, width[0], height[0])
+                        Image_process.R_RotatePic(pics[i], width[0])
+                        Image_process.R_HorizontalFlip(pics[i], width[0], height[0])
+                        Image_process.R_VerticalFlip(pics[i], width[0], height[0])
                     }
-                    2 -> Image_process.R_VerticalFlip(pics[i]!!, width[0], height[0])
-                    3 -> Image_process.R_HorizontalFlip(pics[i]!!, width[0], height[0])
-                    4 -> Image_process.R_RotatePic(pics[i]!!, width[0])
-                    5 -> Image_process.R_RotatePic(pics[i]!!, width[0])
+
+                    2 -> Image_process.R_VerticalFlip(pics[i], width[0], height[0])
+                    3 -> Image_process.R_HorizontalFlip(pics[i], width[0], height[0])
+                    4 -> Image_process.R_RotatePic(pics[i], width[0])
+                    5 -> Image_process.R_RotatePic(pics[i], width[0])
                 }
             }
             i++
@@ -1080,7 +1093,7 @@ object Image_files {
 
      ========================================================================
      */
-    class pcx_t constructor(byteBuffer: ByteBuffer?) {
+    private class pcx_t(byteBuffer: ByteBuffer?) {
         var bits_per_pixel: Char = 0.toChar()
 
         /*unsigned*/
@@ -1088,10 +1101,9 @@ object Image_files {
         var color_planes: Char = 0.toChar()
 
         //        unsigned char data;			// unbounded
-        var dataPosition // unbounded
-                = 0
+        var dataPosition: Int = 0 // unbounded
         var encoding: Char = 0.toChar()
-        var filler: CharArray? = CharArray(58)
+        var filler: CharArray = CharArray(58)
 
         /*unsigned*/
         var hres: Short = 0
@@ -1099,7 +1111,7 @@ object Image_files {
         var manufacturer: Char = 0.toChar()
 
         /*unsigned*/
-        var palette: CharArray? = CharArray(48)
+        var palette: CharArray = CharArray(48)
 
         /*unsigned*/
         var palette_type: Short = 0
@@ -1124,7 +1136,7 @@ object Image_files {
 
      ========================================================================
      */
-    private class TargaHeader {
+    private class TargaHeader() {
         /*unsigned*/
         var colormap_index: Short = 0
         var colormap_length: Short = 0
@@ -1148,7 +1160,7 @@ object Image_files {
         var height: Short = 0
     }
 
-    private class BMPHeader_t {
+    private class BMPHeader_t() {
         /*unsigned*/
         var bitmapDataOffset: Long = 0
 
@@ -1181,7 +1193,7 @@ object Image_files {
         var importantColors: Long = 0
 
         /*unsigned*/
-        var palette: Array<CharArray> = Array(256) { CharArray(4) }
+        var palette: Array<CharArray> = Array(256, { CharArray(4) })
 
         /*unsigned*/
         var planes: Short = 0

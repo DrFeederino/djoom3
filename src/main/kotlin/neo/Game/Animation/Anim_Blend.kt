@@ -1252,7 +1252,7 @@ object Anim_Blend {
                     joints.SetNum(num)
                     jointParents.SetNum(num)
                     channelJoints[0].SetNum(num)
-                    md5joints = modelHandle!!.GetJoints()!!
+                    md5joints = modelHandle!!.GetJoints()!! as Array<idMD5Joint>
                     md5joint = 0 //md5joints;
 
                     i = 0
@@ -1422,7 +1422,7 @@ object Anim_Blend {
         }
 
         fun GetDefaultPose(): Array<idJointQuat>? {
-            return if (modelHandle == null) null else modelHandle!!.GetDefaultPose()
+            return if (modelHandle == null) null else modelHandle!!.GetDefaultPose() as Array<idJointQuat>
         }
 
         fun SetupJoints(
@@ -1478,7 +1478,7 @@ object Anim_Blend {
             jointList[0] = list
 
             // get the bounds of the default pose
-            frameBounds.set(modelHandle!!.Bounds(null))
+            frameBounds.set(modelHandle!!.Bounds(null)!!)
         }
 
         fun ModelHandle(): idRenderModel? {
@@ -1563,10 +1563,10 @@ object Anim_Blend {
             if (null == modelHandle) {
                 return null
             }
-            joint = modelHandle!!.GetJoints()!!
+            joint = modelHandle!!.GetJoints() as Array<idMD5Joint>
             i = 0
             while (i < joints.Num()) {
-                if (TempDump.NOT(joint[i].name.Icmp(name).toDouble())) {
+                if (TempDump.NOT(joint[i].name!!.Icmp(name).toDouble())) {
                     return joints[i]
                 }
                 i++
@@ -1695,7 +1695,7 @@ object Anim_Blend {
             if (jointHandle < 0 || jointHandle > joints.Num()) {
                 idGameLocal.Error("idDeclModelDef::GetJointName : joint handle out of range")
             }
-            joint = modelHandle!!.GetJoints()!!
+            joint = modelHandle!!.GetJoints() as Array<idMD5Joint>
             return joint[jointHandle].name.toString()
         }
 
@@ -3101,7 +3101,7 @@ object Anim_Blend {
         }
 
         fun GetJoints(renderEntity: renderEntity_s): Int {
-            renderEntity.joints = joints
+            renderEntity.joints = joints as Array<idJointMat?>
             return numJoints._val
         }
 

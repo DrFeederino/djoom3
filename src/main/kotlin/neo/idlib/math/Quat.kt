@@ -23,6 +23,7 @@ class Quat {
      */
     class idQuat {
         //        public:
+        @JvmField
         var w = 0f
         var x //TODO:prime candidate to turn into an array.
                 = 0f

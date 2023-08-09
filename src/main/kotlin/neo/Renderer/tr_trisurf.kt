@@ -1,21 +1,22 @@
 package neo.Renderer
 
+import neo.Game.GameSys.SysCvar.Companion._DEBUG
 import neo.Renderer.Model.dominantTri_s
 import neo.Renderer.Model.shadowCache_s
 import neo.Renderer.Model.silEdge_t
 import neo.Renderer.Model.srfTriangles_s
 import neo.Renderer.tr_local.deformInfo_s
 import neo.Renderer.tr_local.frameData_t
-import neo.TempDump
-import neo.framework.BuildDefines
+import neo.TempDump.NOT
+import neo.TempDump.btoi
 import neo.framework.CmdSystem.cmdFunction_t
 import neo.framework.Common
 import neo.idlib.CmdArgs
 import neo.idlib.containers.HashIndex.idHashIndex
-import neo.idlib.containers.List
 import neo.idlib.containers.List.cmp_t
+import neo.idlib.containers.List.idList
 import neo.idlib.geometry.DrawVert.idDrawVert
-import neo.idlib.math.Math_h.idMath
+import neo.idlib.math.Math_h.idMath.RSqrt
 import neo.idlib.math.Plane.idPlane
 import neo.idlib.math.Simd.SIMDProcessor
 import neo.idlib.math.Vector.getVec3_origin
@@ -30,11 +31,11 @@ import kotlin.math.min
 object tr_trisurf {
     //
     // instead of using the texture T vector, cross the normal and S vector for an orthogonal axis
-    const val DERIVE_UNSMOOTHED_BITANGENT = true
+    val DERIVE_UNSMOOTHED_BITANGENT: Boolean = true
 
     //
-    const val MAX_SIL_EDGES = 0x10000
-    const val SILEDGE_HASH_SIZE = 1024
+    val MAX_SIL_EDGES: Int = 0x10000
+    val SILEDGE_HASH_SIZE: Int = 1024
 
     /*
      ==============================================================================
@@ -115,10 +116,10 @@ object tr_trisurf {
      ==============================================================================
      */
     // this shouldn't change anything, but previously renderbumped models seem to need it
-    const val USE_INVA = true
+    val USE_INVA: Boolean = true
 
     //
-    private const val ID_DEBUG_MEMORY = false
+    private val ID_DEBUG_MEMORY: Boolean = false
 
     /*
      =================
@@ -154,7 +155,7 @@ object tr_trisurf {
      this version only handles bilateral symetry
      =================
      */
-    var DEBUG_R_DeriveTangentsWithoutNormals = 0
+    var DEBUG_R_DeriveTangentsWithoutNormals: Int = 0
 
     /*
      =================
@@ -164,16 +165,16 @@ object tr_trisurf {
      can never create silhouette plains, and can be omited
      =================
      */
-    var c_coplanarSilEdges = 0
+    var c_coplanarSilEdges: Int = 0
 
     /*
      ===============
      R_DefineEdge
      ===============
      */
-    var c_duplicatedEdges = 0
-    var c_tripledEdges = 0
-    var c_totalSilEdges = 0
+    var c_duplicatedEdges: Int = 0
+    var c_tripledEdges: Int = 0
+    var c_totalSilEdges: Int = 0
 
     //
     //    static final idBlockAlloc<srfTriangles_s> srfTrianglesAllocator = new idBlockAlloc<>(1 << 8);
@@ -211,19 +212,19 @@ object tr_trisurf {
     ////            triDupVertAllocator = new idDynamicAlloc(1 << 16, 1 << 10);
     //        }
     //    }
-    var numPlanes = 0
+    var numPlanes: Int = 0
 
     //
-    var numSilEdges = 0
+    var numSilEdges: Int = 0
     var silEdgeHash: idHashIndex = idHashIndex(SILEDGE_HASH_SIZE, MAX_SIL_EDGES)
-    var silEdges: Array<silEdge_t> = silEdge_t.generateArray(MAX_SIL_EDGES)
+    var silEdges: Array<silEdge_t>? = null
 
     /*
      ==============
      R_AllocStaticTriSurf
      ==============
      */
-    private var DBG_R_AllocStaticTriSurf = 0
+    private var DBG_R_AllocStaticTriSurf: Int = 0
 
     /*
      =================
@@ -232,7 +233,7 @@ object tr_trisurf {
      FIXME: allow createFlat and createSmooth normals, as well as explicit
      =================
      */
-    private var DBG_R_CleanupTriangles = 0
+    private var DBG_R_CleanupTriangles: Int = 0
 
     /*
      ===============
@@ -240,7 +241,7 @@ object tr_trisurf {
      ===============
      */
     fun R_InitTriSurfData() {
-        silEdges = silEdge_t.generateArray(MAX_SIL_EDGES)
+        silEdges = silEdge_t.Companion.generateArray(MAX_SIL_EDGES)
 
 //
 //        // initialize allocators for triangle surfaces
@@ -272,7 +273,7 @@ object tr_trisurf {
      ===============
      */
     fun R_ShutdownTriSurfData() {
-        silEdges = silEdge_t.generateArray(0) //R_StaticFree(silEdges);
+        silEdges = null //R_StaticFree(silEdges);
         silEdgeHash.Free()
         //        srfTrianglesAllocator.Shutdown();
 //        triVertexAllocator.Shutdown();
@@ -315,7 +316,7 @@ object tr_trisurf {
      =================
      */
     fun R_TriSurfMemory(tri: srfTriangles_s?): Int {
-        var total = 0
+        var total: Int = 0
         if (null == tri) {
             return total
         }
@@ -328,7 +329,7 @@ object tr_trisurf {
             total += tri.numVerts //* sizeof( tri.shadowVertexes[0] );
         } else if (tri.verts != null) {
             if (tri.ambientSurface == null || tri.verts != tri.ambientSurface!!.verts) {
-                total += tri.numVerts // * sizeof( tri.verts!![0] );
+                total += tri.numVerts // * sizeof( tri.verts[0] );
             }
         }
         if (tri.facePlanes != null) {
@@ -336,11 +337,11 @@ object tr_trisurf {
         }
         if (tri.indexes != null) {
             if (tri.ambientSurface == null || tri.indexes != tri.ambientSurface!!.indexes) {
-                total += tri.numIndexes // * sizeof( tri.indexes!![0] );
+                total += tri.numIndexes // * sizeof( tri.indexes[0] );
             }
         }
         if (tri.silIndexes != null) {
-            total += tri.numIndexes //* sizeof( tri.silIndexes!![0] );
+            total += tri.numIndexes //* sizeof( tri.silIndexes[0] );
         }
         if (tri.silEdges != null) {
             total += tri.numSilEdges * 4
@@ -382,7 +383,7 @@ object tr_trisurf {
             VertexCache.vertexCache.Free(tri.indexCache)
             tri.indexCache = null
         }
-        if (tri.shadowCache != null && (tri.shadowVertexes != null || tri.verts != null)) {
+        if ((tri.shadowCache != null) && (tri.shadowVertexes != null || tri.verts != null)) {
             // if we don't have tri.shadowVertexes, these are a reference to a
             // shadowCache on the original surface, which a vertex program
             // will take care of making unique for each light
@@ -399,7 +400,10 @@ object tr_trisurf {
      ==============
      */
     fun R_ReallyFreeStaticTriSurf(tri: srfTriangles_s?) {
-        var tri = tri ?: return
+        var tri: srfTriangles_s? = tri
+        if (null == tri) {
+            return
+        }
         R_FreeStaticTriSurfVertexCaches(tri)
         //
 //        if (tri.verts != null) {
@@ -440,7 +444,7 @@ object tr_trisurf {
 //        if (tri.shadowVertexes != null) {
 //            triShadowVertexAllocator.Free(tri.shadowVertexes);
 //        }
-        if (BuildDefines._DEBUG) {
+        if (_DEBUG) {
 //            memset(tri, 0, sizeof(srfTriangles_t));
             tri = srfTriangles_s()
         }
@@ -519,7 +523,7 @@ object tr_trisurf {
             Common.common.Error("R_FreeStaticTriSurf: freed a freed triangle")
         }
         frame = tr_local.frameData
-        if (null == frame) {
+        if (NOT(frame)) {
             // command line utility, or rendering in editor preview mode ( force )
             R_ReallyFreeStaticTriSurf(tri)
         } else {
@@ -527,7 +531,7 @@ object tr_trisurf {
                 R_CheckStaticTriSurfMemory(tri)
             }
             tri.nextDeferredFree = null
-            if (frame.lastDeferredFreeTriSurf != null) {
+            if (frame!!.lastDeferredFreeTriSurf != null) {
                 frame.lastDeferredFreeTriSurf!!.nextDeferredFree = tri
             } else {
                 frame.firstDeferredFreeTriSurf = tri
@@ -556,14 +560,16 @@ object tr_trisurf {
      =================
      */
     fun R_CopyStaticTriSurf(tri: srfTriangles_s): srfTriangles_s {
-        val newTri: srfTriangles_s?
+        val newTri: srfTriangles_s
         newTri = R_AllocStaticTriSurf()
         R_AllocStaticTriSurfVerts(newTri, tri.numVerts)
         R_AllocStaticTriSurfIndexes(newTri, tri.numIndexes)
         newTri.numVerts = tri.numVerts
         newTri.numIndexes = tri.numIndexes
         //	memcpy( newTri.verts, tri.verts, tri.numVerts * sizeof( newTri.verts[0] ) );
-        System.arraycopy(tri.verts, 0, newTri.verts, 0, tri.numVerts)
+        for (i in 0 until tri.numVerts) {
+            newTri.verts!![i] = idDrawVert((tri.verts!![i])!!)
+        }
         //	memcpy( newTri.indexes, tri.indexes, tri.numIndexes * sizeof( newTri.indexes[0] ) );
         System.arraycopy(tri.indexes, 0, newTri.indexes, 0, tri.numIndexes)
         return newTri
@@ -575,9 +581,8 @@ object tr_trisurf {
      =================
      */
     fun R_AllocStaticTriSurfVerts(tri: srfTriangles_s, numVerts: Int) {
-        assert(tri.verts == null)
+        assert((tri.verts == null))
         tri.verts = arrayOfNulls(numVerts) //triVertexAllocator.Alloc(numVerts);
-
         for (a in tri.verts!!.indices) {
             tri.verts!![a] = idDrawVert()
         }
@@ -589,7 +594,7 @@ object tr_trisurf {
      =================
      */
     fun R_AllocStaticTriSurfIndexes(tri: srfTriangles_s, numIndexes: Int) {
-        assert(tri.indexes == null)
+        assert((tri.indexes == null))
         tri.indexes = IntArray(numIndexes) // triIndexAllocator.Alloc(numIndexes);
     }
 
@@ -599,8 +604,8 @@ object tr_trisurf {
      =================
      */
     fun R_AllocStaticTriSurfShadowVerts(tri: srfTriangles_s, numVerts: Int) {
-        assert(tri.shadowVertexes == null)
-        tri.shadowVertexes = shadowCache_s.generateArray(numVerts)
+        assert((tri.shadowVertexes == null))
+        tri.shadowVertexes = shadowCache_s.Companion.generateArray(numVerts) //triShadowVertexAllocator.Alloc(numVerts);
     }
 
     /*
@@ -609,7 +614,8 @@ object tr_trisurf {
      =================
      */
     fun R_AllocStaticTriSurfPlanes(tri: srfTriangles_s, numIndexes: Int) {
-        tri.facePlanes = idPlane.generateArray(numIndexes / 3) //triPlaneAllocator.Alloc(numIndexes / 3);
+        tri.facePlanes =
+            idPlane.generateArray(numIndexes / 3) as Array<idPlane?>//triPlaneAllocator.Alloc(numIndexes / 3);
     }
 
     /*
@@ -619,9 +625,9 @@ object tr_trisurf {
      */
     fun R_ResizeStaticTriSurfVerts(tri: srfTriangles_s, numVerts: Int) {
         if (tr_local.USE_TRI_DATA_ALLOCATOR) {
-            tri.verts =  /*triVertexAllocator.*/Resize(tri.verts as Array<idDrawVert>, numVerts) as Array<idDrawVert?>
+            tri.verts =  /*triVertexAllocator.*/Resize(tri.verts as Array<idDrawVert>, numVerts)
         } else {
-            assert(false)
+            assert((false))
         }
     }
 
@@ -634,7 +640,7 @@ object tr_trisurf {
         if (tr_local.USE_TRI_DATA_ALLOCATOR) {
             tri.indexes =  /*triIndexAllocator.*/Resize(tri.indexes, numIndexes)
         } else {
-            assert(false)
+            assert((false))
         }
     }
 
@@ -645,9 +651,10 @@ object tr_trisurf {
      */
     fun R_ResizeStaticTriSurfShadowVerts(tri: srfTriangles_s, numVerts: Int) {
         if (tr_local.USE_TRI_DATA_ALLOCATOR) {
-            tri.shadowVertexes =  /*triShadowVertexAllocator.*/Resize(tri.shadowVertexes!!, numVerts)
+            tri.shadowVertexes =  /*triShadowVertexAllocator.*/
+                Resize(tri.shadowVertexes as Array<idDrawVert>, numVerts) as Array<shadowCache_s>
         } else {
-            assert(false)
+            assert((false))
         }
     }
 
@@ -676,7 +683,7 @@ object tr_trisurf {
      */
     fun R_FreeStaticTriSurfSilIndexes(tri: srfTriangles_s) {
 //        triSilIndexAllocator.Free(tri.silIndexes);
-        tri.silIndexes = IntArray(0)
+        tri.silIndexes = null
     }
 
     /*
@@ -740,10 +747,10 @@ object tr_trisurf {
         var i: Int
         var j: Int
         var hashKey: Int
-        var v1: idDrawVert
-        var v2: idDrawVert
+        var v1: idDrawVert?
+        var v2: idDrawVert?
         remap = IntArray(tri.numVerts) // R_ClearedStaticAlloc(tri.numVerts);
-        if (!RenderSystem_init.r_useSilRemap.GetBool()) {
+        if (!RenderSystem_init.r_useSilRemap!!.GetBool()) {
             i = 0
             while (i < tri.numVerts) {
                 remap[i] = i
@@ -751,19 +758,22 @@ object tr_trisurf {
             }
             return remap
         }
-        val hash = idHashIndex(1024, tri.numVerts)
+        val hash: idHashIndex = idHashIndex(1024, tri.numVerts)
         c_removed = 0
         c_unique = 0
+        assert((tri.numVerts == tri.verts!!.size))
         i = 0
         while (i < tri.numVerts) {
-            v1 = tri.verts!![i]!!
+            v1 = tri.verts!![i]
 
             // see if there is an earlier vert that it can map to
-            hashKey = hash.GenerateKey(v1.xyz)
+            hashKey = hash.GenerateKey(v1!!.xyz)
             j = hash.First(hashKey)
             while (j >= 0) {
-                v2 = tri.verts!![j]!!
-                if (v2.xyz[0] == v1.xyz[0] && v2.xyz[1] == v1.xyz[1] && v2.xyz[2] == v1.xyz[2]
+                v2 = tri.verts!![j]
+                if ((v2!!.xyz[0] == v1.xyz[0]
+                            ) && (v2.xyz[1] == v1.xyz[1]
+                            ) && (v2.xyz[2] == v1.xyz[2])
                 ) {
                     c_removed++
                     remap[i] = j
@@ -792,19 +802,14 @@ object tr_trisurf {
     fun R_CreateSilIndexes(tri: srfTriangles_s) {
         var i: Int
         val remap: IntArray
-
         if (tri.silIndexes != null) {
 //            triSilIndexAllocator.Free(tri.silIndexes);
             tri.silIndexes = null
         }
-
         remap = R_CreateSilRemap(tri)
 
         // remap indexes to the first one
-
-        // remap indexes to the first one
         tri.silIndexes = IntArray(tri.numIndexes) //triSilIndexAllocator.Alloc(tri.numIndexes);
-
         i = 0
         while (i < tri.numIndexes) {
             tri.silIndexes!![i] = remap[tri.indexes!![i]]
@@ -819,9 +824,9 @@ object tr_trisurf {
      R_CreateDupVerts
      =====================
      */
-    open fun R_CreateDupVerts(tri: srfTriangles_s) {
+    fun R_CreateDupVerts(tri: srfTriangles_s) {
         var i: Int
-        val remap = IntArray(tri.numVerts)
+        val remap: IntArray = IntArray(tri.numVerts)
 
         // initialize vertex remap in case there are unused verts
         i = 0
@@ -838,7 +843,7 @@ object tr_trisurf {
         }
 
         // create duplicate vertex index based on the vertex remap
-        val tempDupVerts = IntArray(tri.numVerts * 2)
+        val tempDupVerts: IntArray = IntArray(tri.numVerts * 2)
         tri.numDupVerts = 0
         i = 0
         while (i < tri.numVerts) {
@@ -851,7 +856,7 @@ object tr_trisurf {
         }
         tri.dupVerts = IntArray(tri.numDupVerts * 2) // triDupVertAllocator.Alloc(tri.numDupVerts * 2);
         //	memcpy( tri.dupVerts, tempDupVerts, tri.numDupVerts * 2 * sizeof( tri.dupVerts[0] ) );
-        System.arraycopy(tempDupVerts, 0, tri.dupVerts!!, 0, tri.numDupVerts * 2)
+        System.arraycopy(tempDupVerts, 0, tri.dupVerts, 0, tri.numDupVerts * 2)
     }
 
     /*
@@ -861,15 +866,15 @@ object tr_trisurf {
      Writes the facePlanes values, overwriting existing ones if present
      =====================
      */
-    open fun R_DeriveFacePlanes(tri: srfTriangles_s) {
-        val planes: Array<idPlane>
+    fun R_DeriveFacePlanes(tri: srfTriangles_s) {
+        val planes: Array<idPlane?>?
         if (null == tri.facePlanes) {
             R_AllocStaticTriSurfPlanes(tri, tri.numIndexes)
         }
-        planes = tri.facePlanes!!
+        planes = tri.facePlanes
         if (true) {
             SIMDProcessor.DeriveTriPlanes(
-                planes,
+                planes as Array<idPlane>,
                 tri.verts as Array<idDrawVert>,
                 tri.numVerts,
                 tri.indexes!!,
@@ -891,7 +896,7 @@ object tr_trisurf {
         var i: Int
         var j: Int
         var p: Int
-        var plane: idPlane
+        var plane: idPlane?
         i = 0
         while (i < tri.numVerts) {
             tri.verts!![i]!!.normal.Zero()
@@ -903,14 +908,13 @@ object tr_trisurf {
         if (null == tri.silIndexes) {
             R_CreateSilIndexes(tri)
         }
-        p = 0
-        plane = tri.facePlanes!![p]
+        plane = tri.facePlanes!![0.also({ p = it })]
         i = 0
         while (i < tri.numIndexes) {
             j = 0
             while (j < 3) {
-                val index = tri.silIndexes!![i + j]
-                tri.verts!![index]!!.normal.plusAssign(plane.Normal())
+                val index: Int = tri.silIndexes!![i + j]
+                tri.verts!![index]!!.normal.plusAssign(plane!!.Normal())
                 j++
             }
             i += 3
@@ -938,21 +942,21 @@ object tr_trisurf {
         // search for a matching other side
         i = silEdgeHash.First(hashKey)
         while (i >= 0 && i < MAX_SIL_EDGES) {
-            if (silEdges[i].v1 == v1 && silEdges[i].v2 == v2) {
+            if (silEdges!![i].v1 == v1 && silEdges!![i].v2 == v2) {
                 c_duplicatedEdges++
                 i = silEdgeHash.Next(i)
                 // allow it to still create a new edge
                 continue
             }
-            if (silEdges[i].v2 == v1 && silEdges[i].v1 == v2) {
-                if (silEdges[i].p2 != numPlanes) {
+            if (silEdges!![i].v2 == v1 && silEdges!![i].v1 == v2) {
+                if (silEdges!![i].p2 != numPlanes) {
                     c_tripledEdges++
                     i = silEdgeHash.Next(i)
                     // allow it to still create a new edge
                     continue
                 }
                 // this is a matching back side
-                silEdges[i].p2 = planeNum
+                silEdges!![i].p2 = planeNum
                 return
             }
             i = silEdgeHash.Next(i)
@@ -964,15 +968,15 @@ object tr_trisurf {
             return
         }
         silEdgeHash.Add(hashKey, numSilEdges)
-        silEdges[numSilEdges].p1 = planeNum
-        silEdges[numSilEdges].p2 = numPlanes
-        silEdges[numSilEdges].v1 = v1
-        silEdges[numSilEdges].v2 = v2
+        silEdges!![numSilEdges].p1 = planeNum
+        silEdges!![numSilEdges].p2 = numPlanes
+        silEdges!![numSilEdges].v1 = v1
+        silEdges!![numSilEdges].v2 = v2
         numSilEdges++
     }
 
     fun R_IdentifySilEdges(tri: srfTriangles_s, omitCoplanarEdges: Boolean) {
-        var omitCoplanarEdges = omitCoplanarEdges
+        var omitCoplanarEdges: Boolean = omitCoplanarEdges
         var i: Int
         val numTris: Int
         var shared: Int
@@ -1022,22 +1026,22 @@ object tr_trisurf {
                 var i1: Int
                 var i2: Int
                 var i3: Int
-                val plane = idPlane()
+                val plane: idPlane = idPlane()
                 var base: Int
                 var j: Int
                 var d: Float
-                if (silEdges[i].p2 == numPlanes) {    // the fake dangling edge
+                if (silEdges!![i].p2 == numPlanes) {    // the fake dangling edge
                     i++
                     continue
                 }
-                base = silEdges[i].p1 * 3
+                base = silEdges!![i].p1 * 3
                 i1 = tri.silIndexes!![base + 0]
                 i2 = tri.silIndexes!![base + 1]
                 i3 = tri.silIndexes!![base + 2]
                 plane.FromPoints(tri.verts!![i1]!!.xyz, tri.verts!![i2]!!.xyz, tri.verts!![i3]!!.xyz)
 
                 // check to see if points of second triangle are not coplanar
-                base = silEdges[i].p2 * 3
+                base = silEdges!![i].p2 * 3
                 j = 0
                 while (j < 3) {
                     i1 = tri.silIndexes!![base + j]
@@ -1050,8 +1054,8 @@ object tr_trisurf {
                 if (j == 3) {
                     // we can cull this sil edge
 //				memmove( &silEdges[i], &silEdges[i+1], (numSilEdges-i-1) * sizeof( silEdges[i] ) );
-                    for (k in i until numSilEdges - i - 1) {
-                        silEdges[i] = silEdges[i + 1]
+                    for (k in i until (numSilEdges - i - 1)) {
+                        silEdges!![i] = silEdge_t(silEdges!![i + 1])
                     }
                     c_coplanarCulled++
                     numSilEdges--
@@ -1079,19 +1083,23 @@ object tr_trisurf {
         single = 0
         i = 0
         while (i < numSilEdges) {
-            if (silEdges[i].p2 == numPlanes) {
+            if (silEdges!![i].p2 == numPlanes) {
                 single++
             } else {
                 shared++
             }
             i++
         }
-        tri.perfectHull = single != 0
+        if (single != 0) {
+            tri.perfectHull = true
+        } else {
+            tri.perfectHull = false
+        }
         tri.numSilEdges = numSilEdges
-        tri.silEdges = Array(numSilEdges) { silEdge_t() }
+        tri.silEdges = arrayOfNulls(numSilEdges)
         i = 0
         while (i < tri.numSilEdges) {
-            tri.silEdges!![i] = silEdges[i]
+            tri.silEdges!![i] = silEdge_t(silEdges!![i])
             i++
         }
     }
@@ -1108,17 +1116,17 @@ object tr_trisurf {
         val b: idDrawVert?
         val c: idDrawVert?
         val area: Float
-        val d0 = FloatArray(5)
-        val d1 = FloatArray(5)
-        a = tri.verts!![tri.indexes!![firstIndex + 0]]!!
-        b = tri.verts!![tri.indexes!![firstIndex + 1]]!!
-        c = tri.verts!![tri.indexes!![firstIndex + 2]]!!
-        d0[3] = b.st[0] - a.st[0]
+        val d0: FloatArray = FloatArray(5)
+        val d1: FloatArray = FloatArray(5)
+        a = tri.verts!![tri.indexes!![firstIndex + 0]]
+        b = tri.verts!![tri.indexes!![firstIndex + 1]]
+        c = tri.verts!![tri.indexes!![firstIndex + 2]]
+        d0[3] = b!!.st[0] - a!!.st[0]
         d0[4] = b.st[1] - a.st[1]
-        d1[3] = c.st[0] - a.st[0]
+        d1[3] = c!!.st[0] - a.st[0]
         d1[4] = c.st[1] - a.st[1]
         area = d0[3] * d1[4] - d0[4] * d1[3]
-        return area < 0
+        return !(area >= 0)
     }
 
     fun R_DeriveFaceTangents(tri: srfTriangles_s, faceTangents: Array<faceTangents_t>) {
@@ -1126,7 +1134,7 @@ object tr_trisurf {
         var c_textureDegenerateFaces: Int
         var c_positive: Int
         var c_negative: Int
-        var ft: faceTangents_t?
+        var ft: faceTangents_t
         var a: idDrawVert?
         var b: idDrawVert?
         var c: idDrawVert?
@@ -1140,25 +1148,25 @@ object tr_trisurf {
         i = 0
         while (i < tri.numIndexes) {
             var area: Float
-            val temp = idVec3()
-            val d0 = FloatArray(5)
-            val d1 = FloatArray(5)
+            val temp: idVec3 = idVec3()
+            val d0: FloatArray = FloatArray(5)
+            val d1: FloatArray = FloatArray(5)
             ft = faceTangents[i / 3]
-            a = tri.verts!![tri.indexes!![i + 0]]!!
-            b = tri.verts!![tri.indexes!![i + 1]]!!
-            c = tri.verts!![tri.indexes!![i + 2]]!!
-            d0[0] = b.xyz[0] - a.xyz[0]
+            a = tri.verts!![tri.indexes!![i + 0]]
+            b = tri.verts!![tri.indexes!![i + 1]]
+            c = tri.verts!![tri.indexes!![i + 2]]
+            d0[0] = b!!.xyz[0] - a!!.xyz[0]
             d0[1] = b.xyz[1] - a.xyz[1]
             d0[2] = b.xyz[2] - a.xyz[2]
             d0[3] = b.st[0] - a.st[0]
             d0[4] = b.st[1] - a.st[1]
-            d1[0] = c.xyz[0] - a.xyz[0]
+            d1[0] = c!!.xyz[0] - a.xyz[0]
             d1[1] = c.xyz[1] - a.xyz[1]
             d1[2] = c.xyz[2] - a.xyz[2]
             d1[3] = c.st[0] - a.st[0]
             d1[4] = c.st[1] - a.st[1]
             area = d0[3] * d1[4] - d0[4] * d1[3]
-            if (abs(area) < 1e-20f) {
+            if (abs(area.toDouble()) < 1e-20f) {
                 ft.negativePolarity = false
                 ft.degenerate = true
                 ft.tangents[0].Zero()
@@ -1176,7 +1184,7 @@ object tr_trisurf {
             }
             ft.degenerate = false
             if (USE_INVA) {
-                val inva: Float = if (area < .0f) -1f else 1f // was = 1.0f / area;
+                val inva: Float = (if (area < .0f) -1 else 1).toFloat() // was = 1.0f / area;
                 temp.set(
                     idVec3(
                         (d0[0] * d1[4] - d0[4] * d1[0]) * inva,
@@ -1198,18 +1206,18 @@ object tr_trisurf {
             } else {
                 temp.set(
                     idVec3(
-                        d0[0] * d1[4] - d0[4] * d1[0],
-                        d0[1] * d1[4] - d0[4] * d1[1],
-                        d0[2] * d1[4] - d0[4] * d1[2]
+                        (d0[0] * d1[4] - d0[4] * d1[0]),
+                        (d0[1] * d1[4] - d0[4] * d1[1]),
+                        (d0[2] * d1[4] - d0[4] * d1[2])
                     )
                 )
                 temp.Normalize()
                 ft.tangents[0].set(temp)
                 temp.set(
                     idVec3(
-                        d0[3] * d1[0] - d0[0] * d1[3],
-                        d0[3] * d1[1] - d0[1] * d1[3],
-                        d0[3] * d1[2] - d0[2] * d1[3]
+                        (d0[3] * d1[0] - d0[0] * d1[3]),
+                        (d0[3] * d1[1] - d0[1] * d1[3]),
+                        (d0[3] * d1[2] - d0[2] * d1[3])
                     )
                 )
                 temp.Normalize()
@@ -1220,23 +1228,27 @@ object tr_trisurf {
     }
 
     fun R_DuplicateMirroredVertexes(tri: srfTriangles_s) {
-        val tVerts: Array<tangentVert_t>
+        val tVerts: Array<tangentVert_t?>
         var vert: tangentVert_t?
         var i: Int
         var j: Int
         var totalVerts: Int
         var numMirror: Int
-        tVerts = Array(tri.numVerts) { tangentVert_t() }
+        tVerts = arrayOfNulls(tri.numVerts)
+        for (t in tVerts.indices) {
+//	memset( tverts, 0, tri.numVerts * sizeof( *tverts ) );
+            tVerts[t] = tangentVert_t()
+        }
 
         // determine texture polarity of each surface
         // mark each vert with the polarities it uses
         i = 0
         while (i < tri.numIndexes) {
             var polarity: Int
-            polarity = TempDump.btoi(R_FaceNegativePolarity(tri, i))
+            polarity = btoi(R_FaceNegativePolarity(tri, i))
             j = 0
             while (j < 3) {
-                tVerts[tri.indexes!![i + j]].polarityUsed[polarity] = true
+                tVerts[tri.indexes!![i + j]]!!.polarityUsed[polarity] = true
                 j++
             }
             i += 3
@@ -1247,7 +1259,7 @@ object tr_trisurf {
         i = 0
         while (i < tri.numVerts) {
             vert = tVerts[i]
-            if (vert.polarityUsed[0] && vert.polarityUsed[1]) {
+            if (vert!!.polarityUsed[0] && vert.polarityUsed[1]) {
                 vert.negativeRemap = totalVerts
                 totalVerts++
             }
@@ -1262,13 +1274,16 @@ object tr_trisurf {
         }
         tri.mirroredVerts = IntArray(tri.numMirroredVerts) //triMirroredVertAllocator.Alloc(tri.numMirroredVerts);
         if (tr_local.USE_TRI_DATA_ALLOCATOR) {
-            tri.verts =  /*triVertexAllocator.*/Resize(tri.verts as Array<idDrawVert>, totalVerts) as Array<idDrawVert?>
+            tri.verts =  /*triVertexAllocator.*/Resize(tri.verts as Array<idDrawVert>, totalVerts)
         } else {
-            val oldVerts = tri.verts
+            val oldVerts: Array<idDrawVert?>? = tri.verts
             R_AllocStaticTriSurfVerts(tri, totalVerts)
-            //	memcpy( tri.verts, oldVerts, tri.numVerts * sizeof( tri.verts!![0] ) );
             //	memcpy( tri.verts, oldVerts, tri.numVerts * sizeof( tri.verts[0] ) );
-            System.arraycopy(oldVerts, 0, tri.verts, 0, tri.numVerts)
+            i = 0
+            while (i < tri.numVerts) {
+                tri.verts!![i] = idDrawVert((oldVerts!![i])!!)
+                i++
+            }
             //            triVertexAllocator.Free(oldVerts);
         }
 
@@ -1276,9 +1291,9 @@ object tr_trisurf {
         numMirror = 0
         i = 0
         while (i < tri.numVerts) {
-            j = tVerts[i].negativeRemap
+            j = tVerts[i]!!.negativeRemap
             if (j != 0) {
-                tri.verts!![j] = tri.verts!![i]
+                tri.verts!![j] = idDrawVert((tri.verts!![i])!!)
                 tri.mirroredVerts!![numMirror] = i
                 numMirror++
             }
@@ -1288,10 +1303,10 @@ object tr_trisurf {
         // change the indexes
         i = 0
         while (i < tri.numIndexes) {
-            if (tVerts[tri.indexes!![i]].negativeRemap != 0
-                && R_FaceNegativePolarity(tri, 3 * (i / 3))
+            if ((tVerts[tri.indexes!![i]]!!.negativeRemap != 0
+                        && R_FaceNegativePolarity(tri, 3 * (i / 3)))
             ) {
-                tri.indexes!![i] = tVerts[tri.indexes!![i]].negativeRemap
+                tri.indexes!![i] = tVerts[tri.indexes!![i]]!!.negativeRemap
             }
             i++
         }
@@ -1302,7 +1317,7 @@ object tr_trisurf {
         var i: Int
         var j: Int
         val faceTangents: Array<faceTangents_t>
-        var ft: faceTangents_t?
+        var ft: faceTangents_t
         var vert: idDrawVert?
         faceTangents = faceTangents_t.generateArray(tri.numIndexes / 3)
         R_DeriveFaceTangents(tri, faceTangents)
@@ -1324,12 +1339,12 @@ object tr_trisurf {
             j = 0
             while (j < 3) {
                 DEBUG_R_DeriveTangentsWithoutNormals++
-                vert = tri.verts!![tri.indexes!![i + j]]!!
+                vert = tri.verts!![tri.indexes!![i + j]]
 
 //                System.out.println("--" + System.identityHashCode(vert.tangents[0])
 //                        + "--" + i + j
-//                        + "--" + tri.indexes!![i + j]);
-                vert.tangents[0].plusAssign(ft.tangents[0])
+//                        + "--" + tri.indexes[i + j]);
+                vert!!.tangents[0].plusAssign(ft.tangents[0])
                 vert.tangents[1].plusAssign(ft.tangents[1])
                 j++
             }
@@ -1342,8 +1357,8 @@ object tr_trisurf {
 //	for ( i = 0 ; i < tri.numMirroredVerts ; i++ ) {
 //		idDrawVert	v1, v2;
 //
-//		v1 = tri.verts!![ tri.numVerts - tri.numMirroredVerts + i ];
-//		v2 = tri.verts!![ tri.mirroredVerts[i] ];
+//		v1 = tri.verts[ tri.numVerts - tri.numMirroredVerts + i ];
+//		v2 = tri.verts[ tri.mirroredVerts[i] ];
 //
 //		v1.tangents[0] -= v2.tangents[0];
 //		v1.tangents[1] += v2.tangents[1];
@@ -1358,11 +1373,11 @@ object tr_trisurf {
         // to the surface normal.
         i = 0
         while (i < tri.numVerts) {
-            vert = tri.verts!![i]!!
+            vert = tri.verts!![i]
             j = 0
             while (j < 2) {
                 var d: Float
-                d = vert.tangents[j].times(vert.normal)
+                d = vert!!.tangents[j].times(vert.normal)
                 vert.tangents[j] = vert.tangents[j].minus(vert.normal.times(d))
                 vert.tangents[j].Normalize()
                 j++
@@ -1374,7 +1389,7 @@ object tr_trisurf {
 
     fun  /*ID_INLINE*/VectorNormalizeFast2(v: idVec3, out: idVec3) {
         val length: Float
-        length = idMath.RSqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2])
+        length = RSqrt((v[0] * v[0]) + (v[1] * v[1]) + (v[2] * v[2]))
         out[0] = v[0] * length
         out[1] = v[1] * length
         out[2] = v[2] * length
@@ -1384,11 +1399,12 @@ object tr_trisurf {
         var i: Int
         var j: Int
         val dt: Array<dominantTri_s?>
-        val ind = Array<indexSort_t>(tri.numIndexes) { indexSort_t() } // R_StaticAlloc(tri.numIndexes);
+        val ind: Array<indexSort_t?> = arrayOfNulls(tri.numIndexes) // R_StaticAlloc(tri.numIndexes);
         i = 0
         while (i < tri.numIndexes) {
-            ind[i].vertexNum = tri.indexes!![i]
-            ind[i].faceNum = i / 3
+            ind[i] = indexSort_t()
+            ind[i]!!.vertexNum = tri.indexes!![i]
+            ind[i]!!.faceNum = i / 3
             i++
         }
         //        qsort(ind, tri.numIndexes, sizeof(ind[]), IndexSort);
@@ -1398,43 +1414,38 @@ object tr_trisurf {
         //	memset( dt, 0, tri.numVerts * sizeof( dt[0] ) );
         i = 0
         while (i < tri.numIndexes) {
-            var maxArea = 0f
-            val vertNum = ind[i].vertexNum
+            var maxArea: Float = 0f
+            val vertNum: Int = ind[i]!!.vertexNum
             j = 0
-            while (i + j < tri.numIndexes && ind[i + j].vertexNum == vertNum) {
-                val d0 = FloatArray(5)
-                val d1 = FloatArray(5)
-                var a: idDrawVert
-                var b: idDrawVert
-                var c: idDrawVert
-                val normal = idVec3()
-                val tangent = idVec3()
-                val bitangent = idVec3()
-                val i1 = tri.indexes!![ind[i + j].faceNum * 3 + 0]
-                val i2 = tri.indexes!![ind[i + j].faceNum * 3 + 1]
-                val i3 = tri.indexes!![ind[i + j].faceNum * 3 + 2]
-
-                a = tri.verts!![i1]!!
-                b = tri.verts!![i2]!!
-                c = tri.verts!![i3]!!
-
-                d0[0] = b.xyz[0] - a.xyz[0]
+            while (i + j < tri.numIndexes && ind[i + j]!!.vertexNum == vertNum) {
+                val d0: FloatArray = FloatArray(5)
+                val d1: FloatArray = FloatArray(5)
+                var a: idDrawVert?
+                var b: idDrawVert?
+                var c: idDrawVert?
+                val normal: idVec3 = idVec3()
+                val tangent: idVec3 = idVec3()
+                val bitangent: idVec3 = idVec3()
+                val i1: Int = tri.indexes!![ind[i + j]!!.faceNum * 3 + 0]
+                val i2: Int = tri.indexes!![ind[i + j]!!.faceNum * 3 + 1]
+                val i3: Int = tri.indexes!![ind[i + j]!!.faceNum * 3 + 2]
+                a = tri.verts!![i1]
+                b = tri.verts!![i2]
+                c = tri.verts!![i3]
+                d0[0] = b!!.xyz[0] - a!!.xyz[0]
                 d0[1] = b.xyz[1] - a.xyz[1]
                 d0[2] = b.xyz[2] - a.xyz[2]
                 d0[3] = b.st[0] - a.st[0]
                 d0[4] = b.st[1] - a.st[1]
-
-                d1[0] = c.xyz[0] - a.xyz[0]
+                d1[0] = c!!.xyz[0] - a.xyz[0]
                 d1[1] = c.xyz[1] - a.xyz[1]
                 d1[2] = c.xyz[2] - a.xyz[2]
                 d1[3] = c.st[0] - a.st[0]
                 d1[4] = c.st[1] - a.st[1]
-
-                normal[0] = d1[1] * d0[2] - d1[2] * d0[1]
-                normal[1] = d1[2] * d0[0] - d1[0] * d0[2]
-                normal[2] = d1[0] * d0[1] - d1[1] * d0[0]
-
-                var area = normal.Length()
+                normal[0] = (d1[1] * d0[2] - d1[2] * d0[1])
+                normal[1] = (d1[2] * d0[0] - d1[0] * d0[2])
+                normal[2] = (d1[0] * d0[1] - d1[1] * d0[0])
+                var area: Float = normal.Length()
 
                 // if this is smaller than what we already have, skip it
                 if (area < maxArea) {
@@ -1453,7 +1464,7 @@ object tr_trisurf {
                     dt[vertNum]!!.v2 = i1
                     dt[vertNum]!!.v3 = i2
                 }
-                var len = area
+                var len: Float = area
                 if (len < 0.001f) {
                     len = 0.001f
                 }
@@ -1461,17 +1472,17 @@ object tr_trisurf {
 
                 // texture area
                 area = d0[3] * d1[4] - d0[4] * d1[3]
-                tangent[0] = d0[0] * d1[4] - d0[4] * d1[0]
-                tangent[1] = d0[1] * d1[4] - d0[4] * d1[1]
-                tangent[2] = d0[2] * d1[4] - d0[4] * d1[2]
+                tangent[0] = (d0[0] * d1[4] - d0[4] * d1[0])
+                tangent[1] = (d0[1] * d1[4] - d0[4] * d1[1])
+                tangent[2] = (d0[2] * d1[4] - d0[4] * d1[2])
                 len = tangent.Length()
                 if (len < 0.001f) {
                     len = 0.001f
                 }
                 dt[vertNum]!!.normalizationScale[0] = (if (area > 0) 1 else -1) / len // tangents[0]
-                bitangent[0] = d0[3] * d1[0] - d0[0] * d1[3]
-                bitangent[1] = d0[3] * d1[1] - d0[1] * d1[3]
-                bitangent[2] = d0[3] * d1[2] - d0[2] * d1[3]
+                bitangent[0] = (d0[3] * d1[0] - d0[0] * d1[3])
+                bitangent[1] = (d0[3] * d1[1] - d0[1] * d1[3])
+                bitangent[2] = (d0[3] * d1[2] - d0[2] * d1[3])
                 len = bitangent.Length()
                 if (len < 0.001f) {
                     len = 0.001f
@@ -1502,8 +1513,8 @@ object tr_trisurf {
         }
         if (true) {
             SIMDProcessor.DeriveUnsmoothedTangents(
-                tri.verts!! as Array<idDrawVert>,
-                tri.dominantTris!! as Array<dominantTri_s>,
+                tri.verts as Array<idDrawVert>,
+                tri.dominantTris as Array<dominantTri_s>,
                 tri.numVerts
             )
         }
@@ -1522,7 +1533,7 @@ object tr_trisurf {
     @JvmOverloads
     fun R_DeriveTangents(tri: srfTriangles_s, allocFacePlanes: Boolean = true) {
         var i: Int
-        var planes: Array<idPlane>?
+        var planes: Array<idPlane?>?
         if (tri.dominantTris != null) {
             R_DeriveUnsmoothedTangents(tri)
             return
@@ -1530,19 +1541,18 @@ object tr_trisurf {
         if (tri.tangentsCalculated) {
             return
         }
-        tr_local.tr.pc.c_tangentIndexes += tri.numIndexes
+        tr_local.tr.pc!!.c_tangentIndexes += tri.numIndexes
         if (null == tri.facePlanes && allocFacePlanes) {
             R_AllocStaticTriSurfPlanes(tri, tri.numIndexes)
         }
         planes = tri.facePlanes
         if (true) {
             if (null == planes) {
-                planes = idPlane.generateArray(tri.numIndexes / 3)
+                planes = idPlane.generateArray(tri.numIndexes / 3) as Array<idPlane?>
             }
-
             SIMDProcessor.DeriveTangents(
-                planes,
-                tri.verts!! as Array<idDrawVert>,
+                planes as Array<idPlane>,
+                tri.verts as Array<idDrawVert>,
                 tri.numVerts,
                 tri.indexes!!,
                 tri.numIndexes
@@ -1551,9 +1561,9 @@ object tr_trisurf {
 //}else{
 //
 //	for ( i = 0; i < tri.numVerts; i++ ) {
-//		tri.verts!![i].normal.Zero();
-//		tri.verts!![i].tangents[0].Zero();
-//		tri.verts!![i].tangents[1].Zero();
+//		tri.verts[i].normal.Zero();
+//		tri.verts[i].tangents[0].Zero();
+//		tri.verts[i].tangents[1].Zero();
 //	}
 //
 //	for ( i = 0; i < tri.numIndexes; i += 3 ) {
@@ -1562,9 +1572,9 @@ object tr_trisurf {
 //		idDrawVert	*a, *b, *c;
 //		idVec3		temp, normal, tangents[2];
 //
-//		a = tri.verts + tri.indexes!![i + 0];
-//		b = tri.verts + tri.indexes!![i + 1];
-//		c = tri.verts + tri.indexes!![i + 2];
+//		a = tri.verts + tri.indexes[i + 0];
+//		b = tri.verts + tri.indexes[i + 1];
+//		c = tri.verts + tri.indexes[i + 2];
 //
 //		d0[0] = b.xyz[0] - a.xyz[0];
 //		d0[1] = b.xyz[1] - a.xyz[1];
@@ -1611,7 +1621,7 @@ object tr_trisurf {
 //
 //		// sum up the tangents and normals for each vertex on this face
 //		for ( int j = 0 ; j < 3 ; j++ ) {
-//			vert = &tri.verts!![tri.indexes!![i+j]];
+//			vert = &tri.verts[tri.indexes[i+j]];
 //			vert.normal += normal;
 //			vert.tangents[0] += tangents[0];
 //			vert.tangents[1] += tangents[1];
@@ -1629,20 +1639,20 @@ object tr_trisurf {
 //
 //	if ( tri.silIndexes != null ) {
 //		for ( i = 0; i < tri.numVerts; i++ ) {
-//			tri.verts!![i].normal.Zero();
+//			tri.verts[i].normal.Zero();
 //		}
 //		for ( i = 0; i < tri.numIndexes; i++ ) {
-//			tri.verts!![tri.silIndexes!![i]].normal += planes[i/3].Normal();
+//			tri.verts[tri.silIndexes[i]].normal += planes[i/3].Normal();
 //		}
 //		for ( i = 0 ; i < tri.numIndexes ; i++ ) {
-//			tri.verts!![tri.indexes!![i]].normal = tri.verts!![tri.silIndexes!![i]].normal;
+//			tri.verts[tri.indexes[i]].normal = tri.verts[tri.silIndexes[i]].normal;
 //		}
 //	}
 //
 //}else
-        run {
-            val dupVerts = tri.dupVerts
-            val verts = tri.verts
+        run({
+            val dupVerts: IntArray? = tri.dupVerts
+            val verts: Array<idDrawVert?>? = tri.verts
 
             // add the normal of a duplicated vertex to the normal of the first vertex with the same XYZ
             i = 0
@@ -1657,7 +1667,7 @@ object tr_trisurf {
                 verts!![dupVerts!![i * 2 + 1]]!!.normal.set(verts[dupVerts[i * 2 + 0]]!!.normal)
                 i++
             }
-        }
+        })
 
 //if (false){
 //	// sum up both sides of the mirrored verts
@@ -1665,8 +1675,8 @@ object tr_trisurf {
 //	for ( i = 0 ; i < tri.numMirroredVerts ; i++ ) {
 //		idDrawVert	*v1, *v2;
 //
-//		v1 = &tri.verts!![ tri.numVerts - tri.numMirroredVerts + i ];
-//		v2 = &tri.verts!![ tri.mirroredVerts[i] ];
+//		v1 = &tri.verts[ tri.numVerts - tri.numMirroredVerts + i ];
+//		v2 = &tri.verts[ tri.mirroredVerts[i] ];
 //
 //		v1.tangents[0] -= v2.tangents[0];
 //		v1.tangents[1] += v2.tangents[1];
@@ -1680,12 +1690,12 @@ object tr_trisurf {
         // be orthogonal to each other, but they will be orthogonal
         // to the surface normal.
         if (true) {
-            SIMDProcessor.NormalizeTangents(tri.verts!! as Array<idDrawVert>, tri.numVerts)
+            SIMDProcessor.NormalizeTangents(tri.verts as Array<idDrawVert>, tri.numVerts)
 
 //}else{
 //
 //	for ( i = 0 ; i < tri.numVerts ; i++ ) {
-//		idDrawVert *vert = &tri.verts!![i];
+//		idDrawVert *vert = &tri.verts[i];
 //
 //		VectorNormalizeFast2( vert.normal, vert.normal );
 //
@@ -1726,11 +1736,11 @@ object tr_trisurf {
                 c = tri.silIndexes!![i + (r + 2) % 3]
                 j = i + 3
                 while (j < tri.numIndexes) {
-                    if (tri.silIndexes!![j] == a && tri.silIndexes!![j + 1] == b && tri.silIndexes!![j + 2] == c) {
+                    if ((tri.silIndexes!![j] == a) && (tri.silIndexes!![j + 1] == b) && (tri.silIndexes!![j + 2] == c)) {
                         c_removed++
-                        //					memmove( tri.indexes + j, tri.indexes + j + 3, ( tri.numIndexes - j - 3 ) * sizeof( tri.indexes!![0] ) );
+                        //					memmove( tri.indexes + j, tri.indexes + j + 3, ( tri.numIndexes - j - 3 ) * sizeof( tri.indexes[0] ) );
                         System.arraycopy(tri.indexes, j + 3, tri.indexes, j, tri.numIndexes - j - 3)
-                        //					memmove( tri.silIndexes + j, tri.silIndexes + j + 3, ( tri.numIndexes - j - 3 ) * sizeof( tri.silIndexes!![0] ) );
+                        //					memmove( tri.silIndexes + j, tri.silIndexes + j + 3, ( tri.numIndexes - j - 3 ) * sizeof( tri.silIndexes[0] ) );
                         System.arraycopy(tri.silIndexes, j + 3, tri.silIndexes, j, tri.numIndexes - j - 3)
                         tri.numIndexes -= 3
                         j -= 3
@@ -1767,12 +1777,12 @@ object tr_trisurf {
             a = tri.silIndexes!![i]
             b = tri.silIndexes!![i + 1]
             c = tri.silIndexes!![i + 2]
-            if (a == b || a == c || b == c) {
+            if ((a == b) || (a == c) || (b == c)) {
                 c_removed++
-                //			memmove( tri.indexes + i, tri.indexes + i + 3, ( tri.numIndexes - i - 3 ) * sizeof( tri.indexes!![0] ) );
+                //			memmove( tri.indexes + i, tri.indexes + i + 3, ( tri.numIndexes - i - 3 ) * sizeof( tri.indexes[0] ) );
                 System.arraycopy(tri.indexes, i + 3, tri.indexes, i, tri.numIndexes - i - 3)
                 if (tri.silIndexes != null) {
-//				memmove( tri.silIndexes + i, tri.silIndexes + i + 3, ( tri.numIndexes - i - 3 ) * sizeof( tri.silIndexes!![0] ) );
+//				memmove( tri.silIndexes + i, tri.silIndexes + i + 3, ( tri.numIndexes - i - 3 ) * sizeof( tri.silIndexes[0] ) );
                     System.arraycopy(tri.silIndexes, i + 3, tri.silIndexes, i, tri.numIndexes - i - 3)
                 }
                 tri.numIndexes -= 3
@@ -1800,10 +1810,10 @@ object tr_trisurf {
         c_degenerate = 0
         i = 0
         while (i < tri.numIndexes) {
-            val a = tri.verts!![tri.indexes!![i + 0]]!!
-            val b = tri.verts!![tri.indexes!![i + 1]]!!
-            val c = tri.verts!![tri.indexes!![i + 2]]!!
-            if (a.st === b.st || b.st === c.st || c.st === a.st) {
+            val a: idDrawVert? = tri.verts!![tri.indexes!![i + 0]]
+            val b: idDrawVert? = tri.verts!![tri.indexes!![i + 1]]
+            val c: idDrawVert? = tri.verts!![tri.indexes!![i + 2]]
+            if ((a!!.st == b!!.st) || (b.st == c!!.st) || (c.st == a.st)) {
                 c_degenerate++
             }
             i += 3
@@ -1912,7 +1922,13 @@ object tr_trisurf {
         while (i < numSurfaces) {
             tri = surfaces[i]
             //		memcpy( newTri.verts + totalVerts, tri.verts, tri.numVerts * sizeof( *tri.verts ) );
-            System.arraycopy(tri.verts, 0, newTri.verts, totalVerts, tri.numVerts)
+            var k: Int = 0
+            var tv: Int = totalVerts
+            while (k < tri.numVerts) {
+                newTri.verts!![tv] = idDrawVert((tri.verts!![k])!!)
+                k++
+                tv++
+            }
             j = 0
             while (j < tri.numIndexes) {
                 newTri.indexes!![totalIndexes + j] = totalVerts + tri.indexes!![j]
@@ -1943,9 +1959,11 @@ object tr_trisurf {
      Does NOT perform a cleanup triangles, so there may be duplicated verts in the result.
      =================
      */
-    fun R_MergeTriangles(tri1: srfTriangles_s, tri2: srfTriangles_s): srfTriangles_s {
-        val tris = arrayOf<srfTriangles_s>(tri1, tri2)
-        return R_MergeSurfaceList(tris, 2)
+    fun R_MergeTriangles(tri1: srfTriangles_s?, tri2: srfTriangles_s?): srfTriangles_s {
+        val tris: Array<srfTriangles_s?> = arrayOfNulls(2)
+        tris[0] = tri1
+        tris[1] = tri2
+        return R_MergeSurfaceList(tris as Array<srfTriangles_s>, 2)
     }
 
     /*
@@ -1974,7 +1992,7 @@ object tr_trisurf {
         // flip the index order to make them back sided
         i = 0
         while (i < tri.numIndexes) {
-            var   /*glIndex_t*/temp: Int
+            var  /*glIndex_t*/temp: Int
             temp = tri.indexes!![i + 0]
             tri.indexes!![i + 0] = tri.indexes!![i + 1]
             tri.indexes!![i + 1] = temp
@@ -2026,18 +2044,18 @@ object tr_trisurf {
      */
     fun R_BuildDeformInfo(
         numVerts: Int,
-        verts: idDrawVert,
+        verts: idDrawVert?,
         numIndexes: Int,
         indexes: IntArray,
         useUnsmoothedTangents: Boolean
-    ): deformInfo_s? {
+    ): deformInfo_s {
         val deform: deformInfo_s
         val tri: srfTriangles_s
         var i: Int
         tri = srfTriangles_s()
         tri.numVerts = numVerts
         R_AllocStaticTriSurfVerts(tri, tri.numVerts)
-        SIMDProcessor.Memcpy(tri.verts!!, verts, tri.numVerts)
+        SIMDProcessor.Memcpy(tri.verts as Array<idDrawVert>, verts as Array<idDrawVert>, tri.numVerts)
         tri.numIndexes = numIndexes
         R_AllocStaticTriSurfIndexes(tri, tri.numIndexes)
 
@@ -2065,15 +2083,15 @@ object tr_trisurf {
         deform.numSourceVerts = numVerts
         deform.numOutputVerts = tri.numVerts
         deform.numIndexes = numIndexes
-        deform.indexes = tri.indexes
-        deform.silIndexes = tri.silIndexes
+        deform.indexes = tri.indexes!!
+        deform.silIndexes = tri.silIndexes!!
         deform.numSilEdges = tri.numSilEdges
-        deform.silEdges = tri.silEdges
-        deform.dominantTris = tri.dominantTris
+        deform.silEdges = tri.silEdges as Array<silEdge_t>
+        deform.dominantTris = tri.dominantTris as Array<dominantTri_s>
         deform.numMirroredVerts = tri.numMirroredVerts
-        deform.mirroredVerts = tri.mirroredVerts
+        deform.mirroredVerts = tri.mirroredVerts!!
         deform.numDupVerts = tri.numDupVerts
-        deform.dupVerts = tri.dupVerts
+        deform.dupVerts = tri.dupVerts!!
         if (tri.verts != null) {
 //            triVertexAllocator.Free(tri.verts);
             tri.verts = null
@@ -2089,7 +2107,7 @@ object tr_trisurf {
         numVerts: Int,
         verts: Array<idDrawVert?>?,
         numIndexes: Int,
-        indexes: List.idList<Int>,
+        indexes: idList<Int>,
         useUnsmoothedTangents: Boolean
     ): deformInfo_s {
         val deform: deformInfo_s
@@ -2098,8 +2116,7 @@ object tr_trisurf {
         tri = srfTriangles_s() //memset( &tri, 0, sizeof( tri ) );
         tri.numVerts = numVerts
         R_AllocStaticTriSurfVerts(tri, tri.numVerts)
-        tri.verts =
-            verts //TODO: Make sure it replaces the call to Simd.SIMDProcessor.Memcpy(tri.verts, verts, tri.numVerts)
+        SIMDProcessor.Memcpy(tri.verts as Array<idDrawVert>, verts as Array<idDrawVert>, tri.numVerts)
         tri.numIndexes = numIndexes
         R_AllocStaticTriSurfIndexes(tri, tri.numIndexes)
 
@@ -2130,8 +2147,8 @@ object tr_trisurf {
         deform.indexes = tri.indexes
         deform.silIndexes = tri.silIndexes
         deform.numSilEdges = tri.numSilEdges
-        deform.silEdges = tri.silEdges
-        deform.dominantTris = tri.dominantTris
+        deform.silEdges = tri.silEdges as Array<silEdge_t>?
+        deform.dominantTris = tri.dominantTris as Array<dominantTri_s>?
         deform.numMirroredVerts = tri.numMirroredVerts
         deform.mirroredVerts = tri.mirroredVerts
         deform.numDupVerts = tri.numDupVerts
@@ -2180,7 +2197,7 @@ object tr_trisurf {
      ===================
      */
     fun R_DeformInfoMemoryUsed(deformInfo: deformInfo_s): Int {
-        var total = 0
+        var total: Int = 0
         if (deformInfo.indexes != null) {
             total += deformInfo.numIndexes // * sizeof( deformInfo.indexes[0] );
         }
@@ -2204,18 +2221,18 @@ object tr_trisurf {
     }
 
     private fun Resize(verts: Array<idDrawVert>, totalVerts: Int): Array<idDrawVert?> {
-        val newVerts = arrayOfNulls<idDrawVert>(totalVerts)
-
-        System.arraycopy(verts, 0, newVerts, 0, verts.size)
-
+        val newVerts: Array<idDrawVert?> = arrayOfNulls(totalVerts)
+        for (i in verts.indices) {
+            newVerts[i] = idDrawVert(verts[i])
+        }
         return newVerts
     }
 
-    private fun Resize(shadowVertexes: Array<shadowCache_s>, numVerts: Int): Array<shadowCache_s> {
-        val newArray = arrayOfNulls<shadowCache_s?>(numVerts)
-        val length = min(shadowVertexes.size, numVerts)
+    private fun Resize(shadowVertexes: Array<shadowCache_s>, numVerts: Int): Array<shadowCache_s?> {
+        val newArray: Array<shadowCache_s?> = arrayOfNulls(numVerts)
+        val length: Int = min(shadowVertexes.size.toDouble(), numVerts.toDouble()).toInt()
         System.arraycopy(shadowVertexes, 0, newArray, 0, length)
-        return newArray as Array<shadowCache_s>
+        return newArray
     }
 
     /*
@@ -2225,15 +2242,15 @@ object tr_trisurf {
 
      ===================================================================================
      */
-    private fun Resize(indexes: IntArray?, numIndexes: Int): IntArray {
+    private fun Resize(indexes: IntArray?, numIndexes: Int): IntArray? {
         if (indexes == null) {
             return IntArray(numIndexes)
         }
         if (numIndexes <= 0) {
-            return IntArray(0)
+            return null
         }
-        val size = if (numIndexes > indexes.size) indexes.size else numIndexes
-        val newIndexes = IntArray(numIndexes)
+        val size: Int = if (numIndexes > indexes.size) indexes.size else numIndexes
+        val newIndexes: IntArray = IntArray(numIndexes)
         System.arraycopy(indexes, 0, newIndexes, 0, size)
         return newIndexes
     }
@@ -2245,7 +2262,7 @@ object tr_trisurf {
      */
     @Deprecated("")
     class R_ShowTriSurfMemory_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        public override fun run(args: CmdArgs.idCmdArgs?) {
 //            common.Printf("%6d kB in %d triangle surfaces\n",
 //                    (srfTrianglesAllocator.GetAllocCount() /* sizeof( srfTriangles_t )*/) >> 10,
 //                    srfTrianglesAllocator.GetAllocCount());
@@ -2299,10 +2316,7 @@ object tr_trisurf {
         }
 
         companion object {
-            private val instance: cmdFunction_t = R_ShowTriSurfMemory_f()
-            fun getInstance(): cmdFunction_t {
-                return instance
-            }
+            val instance: cmdFunction_t = R_ShowTriSurfMemory_f()
         }
     }
 
@@ -2311,9 +2325,9 @@ object tr_trisurf {
      SilEdgeSort
      =================
      */
-    class SilEdgeSort : cmp_t<silEdge_t> {
-        override fun compare(a: silEdge_t, b: silEdge_t): Int {
-            if (a.p1 < b.p1) {
+    class SilEdgeSort() : cmp_t<silEdge_t?> {
+        public override fun compare(a: silEdge_t?, b: silEdge_t?): Int {
+            if (a!!.p1 < b!!.p1) {
                 return -1
             }
             if (a.p1 > b.p1) {
@@ -2322,9 +2336,10 @@ object tr_trisurf {
             if (a.p2 < b.p2) {
                 return -1 //TODO:returning 1 is like true, 0 false...what is -1 then?
             }
-            return if (a.p2 > b.p2) {
-                1
-            } else 0
+            if (a.p2 > b.p2) {
+                return 1
+            }
+            return 0
         }
     }
 
@@ -2333,9 +2348,9 @@ object tr_trisurf {
      R_DeriveFaceTangents
      ==================
      */
-    class faceTangents_t {
-        var degenerate = false
-        var negativePolarity = false
+    class faceTangents_t() {
+        var degenerate: Boolean = false
+        var negativePolarity: Boolean = false
         val tangents: Array<idVec3> = idVec3.generateArray(2)
 
         companion object {
@@ -2363,9 +2378,9 @@ object tr_trisurf {
 
      ===================
      */
-    internal class tangentVert_t {
+    internal class tangentVert_t() {
         val polarityUsed: BooleanArray = BooleanArray(2)
-        var negativeRemap = 0
+        var negativeRemap: Int = 0
     }
 
     /*
@@ -2375,19 +2390,20 @@ object tr_trisurf {
      Find the largest triangle that uses each vertex
      ===================
      */
-    internal class indexSort_t {
-        var faceNum = 0
-        var vertexNum = 0
+    internal class indexSort_t() {
+        var faceNum: Int = 0
+        var vertexNum: Int = 0
     }
 
-    internal class IndexSort : cmp_t<indexSort_t> {
-        override fun compare(a: indexSort_t, b: indexSort_t): Int {
-            if (a.vertexNum < b.vertexNum) {
+    internal class IndexSort() : cmp_t<indexSort_t?> {
+        public override fun compare(a: indexSort_t?, b: indexSort_t?): Int {
+            if (a!!.vertexNum < b!!.vertexNum) {
                 return -1
             }
-            return if (a.vertexNum > b.vertexNum) {
-                1
-            } else 0
+            if (a.vertexNum > b.vertexNum) {
+                return 1
+            }
+            return 0
         }
     }
 }

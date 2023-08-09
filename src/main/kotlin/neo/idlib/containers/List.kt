@@ -17,6 +17,7 @@ import java.util.logging.Logger
  *
  */
 object List {
+    @JvmStatic
     fun <T> idSwap(a1: Array<T>, a2: Array<T>, p1: Int, p2: Int) {
         val c = a1[p1]
         a1[p1] = a2[p2]
@@ -52,12 +53,14 @@ object List {
         b.set(c)
     }
 
+    @JvmStatic
     fun idSwap(a1: FloatArray, a2: FloatArray, p1: Int, p2: Int) {
         val c = a1[p1]
         a1[p1] = a2[p2]
         a2[p2] = c
     }
 
+    @JvmStatic
     fun idSwap(a: FloatArray, b: FloatArray) {
         val length = a.size
         val c = FloatArray(length)
@@ -66,6 +69,7 @@ object List {
         System.arraycopy(c, 0, b, 0, length)
     }
 
+    @JvmStatic
     fun idSwap(a: Array<Float>, b: Array<Float>) {
         val length = a.size
         val c = FloatArray(length)
@@ -254,7 +258,7 @@ object List {
 
         //public	T &			operator[]( int index );
         //
-        //        public T oSet(int index, T value) {
+        //        public T set(int index, T value) {
         //            assert (index >= 0);
         //            assert (index < num);
         //

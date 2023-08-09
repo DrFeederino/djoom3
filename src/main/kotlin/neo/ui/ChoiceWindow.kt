@@ -1,16 +1,27 @@
 package neo.ui
 
-import neo.TempDump
-import neo.framework.CVarSystem
+import neo.TempDump.NOT
+import neo.TempDump.etoi
+import neo.framework.CVarSystem.cvarSystem
 import neo.framework.CVarSystem.idCVar
 import neo.framework.Common
-import neo.framework.KeyInput
+import neo.framework.KeyInput.K_KP_LEFTARROW
+import neo.framework.KeyInput.K_KP_RIGHTARROW
+import neo.framework.KeyInput.K_LEFTARROW
+import neo.framework.KeyInput.K_MOUSE1
+import neo.framework.KeyInput.K_MOUSE2
+import neo.framework.KeyInput.K_RIGHTARROW
 import neo.idlib.Lib
-import neo.idlib.Text.Lexer
+import neo.idlib.Text.Lexer.LEXFL_ALLOWBACKSLASHSTRINGCONCAT
+import neo.idlib.Text.Lexer.LEXFL_ALLOWMULTICHARLITERALS
+import neo.idlib.Text.Lexer.LEXFL_ALLOWPATHNAMES
+import neo.idlib.Text.Lexer.LEXFL_NOFATALERRORS
 import neo.idlib.Text.Lexer.idLexer
 import neo.idlib.Text.Parser.idParser
-import neo.idlib.Text.Str
 import neo.idlib.Text.Str.idStr
+import neo.idlib.Text.Str.idStr.Companion.Cmpn
+import neo.idlib.Text.Str.idStr.Companion.Icmp
+import neo.idlib.Text.Str.va
 import neo.idlib.Text.Token.idToken
 import neo.idlib.containers.CBool
 import neo.idlib.containers.idStrList
@@ -21,10 +32,6 @@ import neo.ui.Rectangle.idRectangle
 import neo.ui.SimpleWindow.drawWin_t
 import neo.ui.UserInterfaceLocal.idUserInterfaceLocal
 import neo.ui.Window.idWindow
-import neo.ui.Winvar.idMultiWinVar
-import neo.ui.Winvar.idWinBool
-import neo.ui.Winvar.idWinStr
-import neo.ui.Winvar.idWinVar
 
 /**
  *
@@ -32,23 +39,23 @@ import neo.ui.Winvar.idWinVar
 class ChoiceWindow {
     class idChoiceWindow : idWindow {
         private var choiceType = 0
-        private val choiceVals: idWinStr = idWinStr()
-        private val choices: idStrList = idStrList()
-        private val choicesStr: idWinStr = idWinStr()
+        private val choiceVals = Winvar.idWinStr()
+        private val choices = idStrList()
+        private val choicesStr = Winvar.idWinStr()
         private var currentChoice = 0
         private var cvar: idCVar? = null
-        private val cvarStr: idWinStr = idWinStr()
+        private val cvarStr = Winvar.idWinStr()
 
         //
-        private val guiStr: idWinStr = idWinStr()
-        private val latchedChoices: idStr = idStr()
-        private val latchedVals: idStr = idStr()
+        private val guiStr = Winvar.idWinStr()
+        private val latchedChoices = idStr()
+        private val latchedVals = idStr()
 
         //
-        private val liveUpdate: idWinBool = idWinBool()
-        private val updateGroup: idWinStr = idWinStr()
-        private val updateStr: idMultiWinVar = idMultiWinVar()
-        private val values: idStrList = idStrList()
+        private val liveUpdate = Winvar.idWinBool()
+        private val updateGroup = Winvar.idWinStr()
+        private val updateStr = Winvar.idMultiWinVar()
+        private val values = idStrList()
 
         //
         //
@@ -57,7 +64,7 @@ class ChoiceWindow {
             CommonInit()
         }
 
-        constructor(dc: idDeviceContext, gui: idUserInterfaceLocal) : super(dc, gui) {
+        constructor(dc: idDeviceContext?, gui: idUserInterfaceLocal?) : super(dc, gui) {
             this.dc = dc
             this.gui = gui
             CommonInit()
@@ -65,16 +72,16 @@ class ChoiceWindow {
 
         //	virtual				~idChoiceWindow();
         //
-        override fun HandleEvent(event: sysEvent_s, updateVisuals: CBool): String {
+        override fun HandleEvent(event: sysEvent_s, updateVisuals: CBool?): String? {
             val key: Int
             var runAction = false
             var runAction2 = false
-            if (event.evType == sysEventType_t.SE_KEY) {
+            if (event.evType === sysEventType_t.SE_KEY) {
                 key = event.evValue
-                if (key == KeyInput.K_RIGHTARROW || key == KeyInput.K_KP_RIGHTARROW || key == KeyInput.K_MOUSE1) {
+                if (key == K_RIGHTARROW || key == K_KP_RIGHTARROW || key == K_MOUSE1) {
                     // never affects the state, but we want to execute script handlers anyway
                     if (0 == event.evValue2) {
-                        RunScript(TempDump.etoi(ON.ON_ACTIONRELEASE))
+                        RunScript(etoi(ON.ON_ACTIONRELEASE))
                         return cmd.toString()
                     }
                     currentChoice++
@@ -83,10 +90,10 @@ class ChoiceWindow {
                     }
                     runAction = true
                 }
-                if (key == KeyInput.K_LEFTARROW || key == KeyInput.K_KP_LEFTARROW || key == KeyInput.K_MOUSE2) {
+                if (key == K_LEFTARROW || key == K_KP_LEFTARROW || key == K_MOUSE2) {
                     // never affects the state, but we want to execute script handlers anyway
                     if (0 == event.evValue2) {
-                        RunScript(TempDump.etoi(ON.ON_ACTIONRELEASE))
+                        RunScript(etoi(ON.ON_ACTIONRELEASE))
                         return cmd.toString()
                     }
                     currentChoice--
@@ -99,11 +106,11 @@ class ChoiceWindow {
                     // is a key release with no action catch
                     return ""
                 }
-            } else if (event.evType == sysEventType_t.SE_CHAR) {
+            } else if (event.evType === sysEventType_t.SE_CHAR) {
                 key = event.evValue
                 var potentialChoice = -1
                 for (i in 0 until choices.size()) {
-                    if (Char(key).uppercaseChar() == choices[i][0].uppercaseChar()) {
+                    if (key.toChar().uppercaseChar() == choices[i][0].uppercaseChar()) {
                         if (i < currentChoice && potentialChoice < 0) {
                             potentialChoice = i
                         } else if (i > currentChoice) {
@@ -122,18 +129,18 @@ class ChoiceWindow {
                 return ""
             }
             if (runAction) {
-                RunScript(TempDump.etoi(ON.ON_ACTION))
+                RunScript(etoi(ON.ON_ACTION))
             }
             if (choiceType == 0) {
-                cvarStr.set(Str.va("%d", currentChoice))
+                cvarStr.Set(va("%d", currentChoice))
             } else if (values.size() != 0) {
-                cvarStr.set(values[currentChoice])
+                cvarStr.Set(values[currentChoice])
             } else {
-                cvarStr.set(choices[currentChoice])
+                cvarStr.Set(choices[currentChoice])
             }
             UpdateVars(false)
             if (runAction2) {
-                RunScript(TempDump.etoi(ON.ON_ACTIONRELEASE))
+                RunScript(etoi(ON.ON_ACTIONRELEASE))
             }
             return cmd.toString()
         }
@@ -162,7 +169,7 @@ class ChoiceWindow {
                 shadowRect.y += textShadow.code.toFloat()
                 dc!!.DrawText(shadowText, textScale.data, textAlign.code, Lib.colorBlack, shadowRect, false, -1)
             }
-            if (hover && TempDump.NOT(noEvents) && Contains(gui!!.CursorX(), gui!!.CursorY())) {
+            if (hover && NOT(noEvents) && Contains(gui!!.CursorX(), gui!!.CursorY())) {
                 color = hoverColor.oCastIdVec4()
             } else {
                 hover = false
@@ -181,55 +188,59 @@ class ChoiceWindow {
             }
         }
 
+        override fun  /*size_t*/Allocated(): Int {
+            return super.Allocated()
+        }
+
         override fun GetWinVarByName(
-            _name: String,
+            _name: String?,
             winLookup: Boolean /*= false*/,
             owner: Array<drawWin_t?>? /*= NULL*/
-        ): idWinVar? {
-            if (idStr.Icmp(_name, "choices") == 0) {
+        ): Winvar.idWinVar? {
+            if (Icmp(_name!!, "choices") == 0) {
                 return choicesStr
             }
-            if (idStr.Icmp(_name, "values") == 0) {
+            if (Icmp(_name, "values") == 0) {
                 return choiceVals
             }
-            if (idStr.Icmp(_name, "cvar") == 0) {
+            if (Icmp(_name, "cvar") == 0) {
                 return cvarStr
             }
-            if (idStr.Icmp(_name, "gui") == 0) {
+            if (Icmp(_name, "gui") == 0) {
                 return guiStr
             }
-            if (idStr.Icmp(_name, "liveUpdate") == 0) {
+            if (Icmp(_name, "liveUpdate") == 0) {
                 return liveUpdate
             }
-            return if (idStr.Icmp(_name, "updateGroup") == 0) {
+            return if (Icmp(_name, "updateGroup") == 0) {
                 updateGroup
             } else super.GetWinVarByName(_name, winLookup, owner)
         }
 
-        override fun RunNamedEvent(eventName: String) {
+        override fun RunNamedEvent(eventName: String?) {
             val event: idStr
-            val group: idStr?
-            if (0 == idStr.Cmpn(eventName, "cvar read ", 10)) {
+            val group: idStr
+            if (0 == Cmpn(eventName!!, "cvar read ", 10)) {
                 event = idStr(eventName)
                 group = event.Mid(10, event.Length() - 10)
-                if (0 == group.Cmp(updateGroup.data)) {
+                if (0 == group.Cmp(updateGroup.data!!)) {
                     UpdateVars(true, true)
                 }
-            } else if (0 == idStr.Cmpn(eventName, "cvar write ", 11)) {
+            } else if (0 == Cmpn(eventName, "cvar write ", 11)) {
                 event = idStr(eventName)
                 group = event.Mid(11, event.Length() - 11)
-                if (0 == group.Cmp(updateGroup.data)) {
+                if (0 == group.Cmp(updateGroup.data!!)) {
                     UpdateVars(false, true)
                 }
             }
         }
 
-        override fun ParseInternalVar(_name: String, src: idParser): Boolean {
-            if (idStr.Icmp(_name, "choicetype") == 0) {
+        override fun ParseInternalVar(_name: String?, src: idParser): Boolean {
+            if (Icmp(_name!!, "choicetype") == 0) {
                 choiceType = src.ParseInt()
                 return true
             }
-            if (idStr.Icmp(_name, "currentchoice") == 0) {
+            if (Icmp(_name, "currentchoice") == 0) {
                 currentChoice = src.ParseInt()
                 return true
             }
@@ -253,9 +264,9 @@ class ChoiceWindow {
             if (choiceType == 0) {
                 // ChoiceType 0 stores current as an integer in either cvar or gui
                 // If both cvar and gui are defined then cvar wins, but they are both updated
-                if (updateStr[0].NeedsUpdate()) {
+                if (updateStr[0]!!.NeedsUpdate()) {
                     currentChoice = try {
-                        updateStr[0].c_str().toInt()
+                        updateStr[0]!!.c_str()!!.toInt()
                     } catch (e: NumberFormatException) {
                         0
                     }
@@ -267,11 +278,7 @@ class ChoiceWindow {
                 var i: Int
                 i = 0
                 while (i < c) {
-                    if (idStr.Icmp(
-                            cvarStr.c_str(),
-                            (if (values.size() != 0) values[i] else choices[i]).toString()
-                        ) == 0
-                    ) {
+                    if (Icmp(cvarStr.c_str()!!, (if (values.size() != 0) values[i] else choices[i]).toString()) == 0) {
                         break
                     }
                     i++
@@ -295,13 +302,13 @@ class ChoiceWindow {
 
         private fun InitVars() {
             if (cvarStr.Length() != 0) {
-                cvar = CVarSystem.cvarSystem.Find(cvarStr.c_str())
+                cvar = cvarSystem.Find(cvarStr.c_str()!!)
                 if (null == cvar) {
                     Common.common.Warning(
                         "idChoiceWindow::InitVars: gui '%s' window '%s' references undefined cvar '%s'",
                         gui!!.GetSourceFile(),
-                        name,
-                        cvarStr.c_str()
+                        name!!,
+                        cvarStr.c_str()!!
                     )
                     return
                 }
@@ -321,13 +328,13 @@ class ChoiceWindow {
             if (force || liveUpdate.data) {
                 if (cvar != null && cvarStr.NeedsUpdate()) {
                     if (read) {
-                        cvarStr.set(cvar!!.GetString()!!)
+                        cvarStr.Set(cvar!!.GetString())
                     } else {
                         cvar!!.SetString(cvarStr.c_str())
                     }
                 }
                 if (!read && guiStr.NeedsUpdate()) {
-                    guiStr.set(Str.va("%d", currentChoice))
+                    guiStr.Set(va("%d", currentChoice))
                 }
             }
         }
@@ -337,14 +344,14 @@ class ChoiceWindow {
             val str2 = idStr()
             val str3 = idStr()
             val src = idLexer()
-            if (latchedChoices.Icmp(choicesStr.data) != 0) {
+            if (latchedChoices.Icmp(choicesStr.data!!) != 0) {
                 choices.clear()
                 src.FreeSource()
-                src.SetFlags(Lexer.LEXFL_NOFATALERRORS or Lexer.LEXFL_ALLOWPATHNAMES or Lexer.LEXFL_ALLOWMULTICHARLITERALS or Lexer.LEXFL_ALLOWBACKSLASHSTRINGCONCAT)
-                src.LoadMemory(choicesStr.data, choicesStr.Length(), "<ChoiceList>")
+                src.SetFlags(LEXFL_NOFATALERRORS or LEXFL_ALLOWPATHNAMES or LEXFL_ALLOWMULTICHARLITERALS or LEXFL_ALLOWBACKSLASHSTRINGCONCAT)
+                src.LoadMemory(choicesStr.data!!, choicesStr.Length(), "<ChoiceList>")
                 if (src.IsLoaded()) {
                     while (src.ReadToken(token)) {
-                        if (token.toString() == ";") {
+                        if (token.equals(";")) {
                             if (str2.Length() != 0) {
                                 str2.StripTrailingWhitespace()
                                 str2.set(Common.common.GetLanguageDict().GetString(str2))
@@ -363,20 +370,20 @@ class ChoiceWindow {
                 }
                 latchedChoices.set(choicesStr.c_str())
             }
-            if (choiceVals.Length() != 0 && latchedVals.Icmp(choiceVals.data) != 0) {
+            if (choiceVals.Length() != 0 && latchedVals.Icmp(choiceVals.data!!) != 0) {
                 values.clear()
                 src.FreeSource()
-                src.SetFlags(Lexer.LEXFL_ALLOWPATHNAMES or Lexer.LEXFL_ALLOWMULTICHARLITERALS or Lexer.LEXFL_ALLOWBACKSLASHSTRINGCONCAT)
-                src.LoadMemory(choiceVals.data, choiceVals.Length(), "<ChoiceVals>")
+                src.SetFlags(LEXFL_ALLOWPATHNAMES or LEXFL_ALLOWMULTICHARLITERALS or LEXFL_ALLOWBACKSLASHSTRINGCONCAT)
+                src.LoadMemory(choiceVals.data!!, choiceVals.Length(), "<ChoiceVals>")
                 str2.set("")
                 var negNum = false
                 if (src.IsLoaded()) {
                     while (src.ReadToken(token)) {
-                        if (token.toString() == "-") {
+                        if (token.equals("-")) {
                             negNum = true
                             continue
                         }
-                        if (token.toString() == ";") {
+                        if (token.equals(";")) {
                             if (str2.Length() != 0) {
                                 str2.StripTrailingWhitespace()
                                 values.add(str2)
@@ -400,7 +407,7 @@ class ChoiceWindow {
                     Common.common.Warning(
                         "idChoiceWindow:: gui '%s' window '%s' has value count unequal to choices count",
                         gui!!.GetSourceFile(),
-                        name
+                        name!!
                     )
                 }
                 latchedVals.set(choiceVals.c_str())

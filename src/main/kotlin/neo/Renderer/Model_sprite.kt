@@ -5,11 +5,15 @@ import neo.Renderer.Model.idRenderModel
 import neo.Renderer.Model.modelSurface_s
 import neo.Renderer.Model.srfTriangles_s
 import neo.Renderer.Model_local.idRenderModelStatic
+import neo.Renderer.RenderSystem_init
+import neo.Renderer.RenderWorld
 import neo.Renderer.RenderWorld.renderEntity_s
+import neo.Renderer.tr_local
 import neo.Renderer.tr_local.viewDef_s
+import neo.Renderer.tr_trisurf
 import neo.idlib.BV.Bounds.idBounds
-import neo.idlib.Lib
-import neo.idlib.math.Math_h.idMath
+import neo.idlib.Lib.Companion.Max
+import neo.idlib.math.Math_h.idMath.FtoiFast
 import neo.idlib.math.Vector.idVec3
 
 /**
@@ -30,25 +34,25 @@ object Model_sprite {
 
      ================================================================================
      */
-    class idRenderModelSprite : idRenderModelStatic() {
-        override fun IsDynamicModel(): dynamicModel_t {
+    class idRenderModelSprite() : idRenderModelStatic() {
+        public override fun IsDynamicModel(): dynamicModel_t {
             return dynamicModel_t.DM_CONTINUOUS
         }
 
-        override fun IsLoaded(): Boolean {
+        public override fun IsLoaded(): Boolean {
             return true
         }
 
-        override fun InstantiateDynamicModel(
-            renderEntity: renderEntity_s,
+        public override fun InstantiateDynamicModel(
+            renderEntity: renderEntity_s?,
             viewDef: viewDef_s?,
             cachedModel: idRenderModel?
         ): idRenderModel? {
-            var cachedModel = cachedModel
+            var cachedModel: idRenderModel? = cachedModel
             val staticModel: idRenderModelStatic
-            val tri: srfTriangles_s
-            var surf: modelSurface_s = modelSurface_s()
-            if (cachedModel != null && !RenderSystem_init.r_useCachedDynamicModels.GetBool()) {
+            val tri: srfTriangles_s?
+            var surf: modelSurface_s? = modelSurface_s()
+            if (cachedModel != null && !RenderSystem_init.r_useCachedDynamicModels!!.GetBool()) {
 //		delete cachedModel;
                 cachedModel = null
             }
@@ -62,10 +66,10 @@ object Model_sprite {
 //		assert( idStr.Icmp( cachedModel.Name(), sprite_SnapshotName ) == 0 );
                 staticModel = cachedModel as idRenderModelStatic
                 surf = staticModel.Surface(0)
-                tri = surf.geometry!!
+                tri = surf!!.geometry
             } else {
                 staticModel = idRenderModelStatic()
-                staticModel.InitEmpty(Model_sprite.sprite_SnapshotName)
+                staticModel.InitEmpty(sprite_SnapshotName)
                 tri = tr_trisurf.R_AllocStaticTriSurf()
                 tr_trisurf.R_AllocStaticTriSurfVerts(tri, 4)
                 tr_trisurf.R_AllocStaticTriSurfIndexes(tri, 6)
@@ -101,18 +105,20 @@ object Model_sprite {
                 tri.indexes!![5] = 3
                 tri.numVerts = 4
                 tri.numIndexes = 6
-                surf.geometry = tri
+                surf!!.geometry = tri
                 surf.id = 0
                 surf.shader = tr_local.tr.defaultMaterial
                 staticModel.AddSurface(surf)
             }
-            val red = idMath.FtoiFast(renderEntity.shaderParms[RenderWorld.SHADERPARM_RED] * 255.0f).toByte()
-            val green = idMath.FtoiFast(renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN] * 255.0f).toByte()
-            val blue = idMath.FtoiFast(renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE] * 255.0f).toByte()
-            val alpha = idMath.FtoiFast(renderEntity.shaderParms[RenderWorld.SHADERPARM_ALPHA] * 255.0f).toByte()
-            val right = idVec3(0.0f, renderEntity.shaderParms[RenderWorld.SHADERPARM_SPRITE_WIDTH] * 0.5f, 0.0f)
-            val up = idVec3(0.0f, 0.0f, renderEntity.shaderParms[RenderWorld.SHADERPARM_SPRITE_HEIGHT] * 0.5f)
-            tri.verts!![0]!!.xyz.set(up.plus(right))
+            val red: Byte = FtoiFast(renderEntity.shaderParms[RenderWorld.SHADERPARM_RED] * 255.0f).toByte()
+            val green: Byte = FtoiFast(renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN] * 255.0f).toByte()
+            val blue: Byte = FtoiFast(renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE] * 255.0f).toByte()
+            val alpha: Byte = FtoiFast(renderEntity.shaderParms[RenderWorld.SHADERPARM_ALPHA] * 255.0f).toByte()
+            val right: idVec3 =
+                idVec3(0.0f, renderEntity.shaderParms[RenderWorld.SHADERPARM_SPRITE_WIDTH] * 0.5f, 0.0f)
+            val up: idVec3 =
+                idVec3(0.0f, 0.0f, renderEntity.shaderParms[RenderWorld.SHADERPARM_SPRITE_HEIGHT] * 0.5f)
+            tri!!.verts!![0]!!.xyz.set(up.plus(right))
             tri.verts!![0]!!.color[0] = red
             tri.verts!![0]!!.color[1] = green
             tri.verts!![0]!!.color[2] = blue
@@ -137,14 +143,14 @@ object Model_sprite {
             return staticModel
         }
 
-        override fun Bounds(renderEntity: renderEntity_s?): idBounds {
-            val b = idBounds()
+        public override fun Bounds(renderEntity: renderEntity_s?): idBounds {
+            val b: idBounds = idBounds()
             b.Zero()
             if (renderEntity == null) {
                 b.ExpandSelf(8.0f)
             } else {
                 b.ExpandSelf(
-                    Lib.Companion.Max(
+                    Max(
                         renderEntity.shaderParms[RenderWorld.SHADERPARM_SPRITE_WIDTH],
                         renderEntity.shaderParms[RenderWorld.SHADERPARM_SPRITE_HEIGHT]
                     ) * 0.5f

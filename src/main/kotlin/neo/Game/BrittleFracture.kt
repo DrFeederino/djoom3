@@ -20,7 +20,7 @@ import neo.Renderer.Model.modelSurface_s
 import neo.Renderer.Model.srfTriangles_s
 import neo.Renderer.ModelManager
 import neo.Renderer.RenderWorld
-import neo.Renderer.RenderWorld.*
+import neo.Renderer.RenderWorld.deferredEntityCallback_t
 import neo.Sound.snd_shader.idSoundShader
 import neo.TempDump
 import neo.framework.DeclEntityDef.idDeclEntityDef
@@ -204,12 +204,12 @@ object BrittleFracture {
             var i: Int
             var j: Int
             val num = CInt()
-            renderEntity.hModel = ModelManager.renderModelManager.AllocModel()
-            renderEntity.hModel!!.InitEmpty(brittleFracture_SnapshotName)
-            renderEntity.callback = ModelCallback.getInstance()
-            renderEntity.noShadow = true
-            renderEntity.noSelfShadow = true
-            renderEntity.noDynamicInteractions = false
+            renderEntity!!.hModel = ModelManager.renderModelManager.AllocModel()
+            renderEntity!!.hModel!!.InitEmpty(brittleFracture_SnapshotName)
+            renderEntity!!.callback = ModelCallback.getInstance()
+            renderEntity!!.noShadow = true
+            renderEntity!!.noSelfShadow = true
+            renderEntity!!.noDynamicInteractions = false
             health = savefile.ReadInt()
             savefile.Read(fl)
             Lib.LittleBitField(fl)
@@ -316,14 +316,14 @@ object BrittleFracture {
 
             // FIXME: set "bleed" so idProjectile calls AddDamageEffect
             spawnArgs.SetBool("bleed", true)
-            CreateFractures(renderEntity.hModel)
+            CreateFractures(renderEntity!!.hModel)
             FindNeighbours()
-            renderEntity.hModel = ModelManager.renderModelManager.AllocModel()
-            renderEntity.hModel!!.InitEmpty(brittleFracture_SnapshotName)
-            renderEntity.callback = ModelCallback.getInstance()
-            renderEntity.noShadow = true
-            renderEntity.noSelfShadow = true
-            renderEntity.noDynamicInteractions = false
+            renderEntity!!.hModel = ModelManager.renderModelManager.AllocModel()
+            renderEntity!!.hModel!!.InitEmpty(brittleFracture_SnapshotName)
+            renderEntity!!.callback = ModelCallback.getInstance()
+            renderEntity!!.noShadow = true
+            renderEntity!!.noSelfShadow = true
+            renderEntity!!.noDynamicInteractions = false
         }
 
         override fun Present() {
@@ -333,18 +333,18 @@ object BrittleFracture {
                 return
             }
             BecomeInactive(Entity.TH_UPDATEVISUALS)
-            renderEntity.bounds.set(bounds)
-            renderEntity.origin.Zero()
-            renderEntity.axis.Identity()
+            renderEntity!!.bounds.set(bounds)
+            renderEntity!!.origin.Zero()
+            renderEntity!!.axis.Identity()
 
             // force an update because the bounds/origin/axis may stay the same while the model changes
-            renderEntity.forceUpdate = 1 //true;
+            renderEntity!!.forceUpdate = 1 //true;
 
             // add to refresh list
             if (modelDefHandle == -1) {
-                modelDefHandle = Game_local.gameRenderWorld.AddEntityDef(renderEntity)
+                modelDefHandle = Game_local.gameRenderWorld.AddEntityDef(renderEntity!!)
             } else {
-                Game_local.gameRenderWorld.UpdateEntityDef(modelDefHandle, renderEntity)
+                Game_local.gameRenderWorld.UpdateEntityDef(modelDefHandle, renderEntity!!)
             }
             changed = true
         }
@@ -593,7 +593,10 @@ object BrittleFracture {
             //            return false;
         }
 
-        override fun UpdateRenderEntity(renderEntity: renderEntity_s, renderView: renderView_s?): Boolean {
+        override fun UpdateRenderEntity(
+            renderEntity: RenderWorld.renderEntity_s,
+            renderView: RenderWorld.renderView_s?
+        ): Boolean {
             var i: Int
             var j: Int
             var k: Int
@@ -642,14 +645,14 @@ object BrittleFracture {
             }
 
             // FIXME: re-use model surfaces
-            renderEntity.hModel!!.InitEmpty(brittleFracture_SnapshotName)
+            renderEntity!!.hModel!!.InitEmpty(brittleFracture_SnapshotName)
 
             // allocate triangle surfaces for the fractures and decals
-            tris = renderEntity.hModel!!.AllocSurfaceTriangles(
+            tris = renderEntity!!.hModel!!.AllocSurfaceTriangles(
                 numTris * 3,
                 if (material!!.ShouldCreateBackSides()) numTris * 6 else numTris * 3
             )
-            decalTris = renderEntity.hModel!!.AllocSurfaceTriangles(
+            decalTris = renderEntity!!.hModel!!.AllocSurfaceTriangles(
                 numDecalTris * 3,
                 if (decalMaterial!!.ShouldCreateBackSides()) numDecalTris * 6 else numDecalTris * 3
             )
@@ -667,9 +670,9 @@ object BrittleFracture {
                 }
                 packedColor = Lib.PackColor(
                     idVec4(
-                        renderEntity.shaderParms[RenderWorld.SHADERPARM_RED] * fade,
-                        renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN] * fade,
-                        renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE] * fade,
+                        renderEntity!!.shaderParms[RenderWorld.SHADERPARM_RED] * fade,
+                        renderEntity!!.shaderParms[RenderWorld.SHADERPARM_GREEN] * fade,
+                        renderEntity!!.shaderParms[RenderWorld.SHADERPARM_BLUE] * fade,
                         fade
                     )
                 ).toInt()
@@ -720,7 +723,7 @@ object BrittleFracture {
                     val decalWinding: idWinding = shards[i]!!.decals[k]
                     j = 2
                     while (j < decalWinding.GetNumPoints()) {
-                        v = decalTris.verts!![decalTris.numVerts++]!!
+                        v = decalTris!!.verts!![decalTris.numVerts++]!!
                         v.Clear()
                         v.xyz.set(origin.plus(decalWinding[0].ToVec3().times(axis)))
                         v.st[0] = decalWinding[0].s
@@ -762,7 +765,7 @@ object BrittleFracture {
                 i++
             }
             tris.tangentsCalculated = true
-            decalTris.tangentsCalculated = true
+            decalTris!!.tangentsCalculated = true
             Simd.SIMDProcessor.MinMax(tris.bounds[0], tris.bounds[1], tris.verts!! as Array<idDrawVert>, tris.numVerts)
             Simd.SIMDProcessor.MinMax(
                 decalTris.bounds[0],
@@ -776,14 +779,14 @@ object BrittleFracture {
             surface.shader = material
             surface.id = 0
             surface.geometry = tris
-            renderEntity.hModel!!.AddSurface(surface)
+            renderEntity!!.hModel!!.AddSurface(surface)
 
 //	memset( &surface, 0, sizeof( surface ) );
             surface = modelSurface_s()
             surface.shader = decalMaterial
             surface.id = 1
             surface.geometry = decalTris
-            renderEntity.hModel!!.AddSurface(surface)
+            renderEntity!!.hModel!!.AddSurface(surface)
             return true
         }
 
@@ -1094,7 +1097,7 @@ object BrittleFracture {
             i = 0
             while (i < 1 /*renderModel.NumSurfaces()*/) {
                 surf = renderModel.Surface(i)
-                material = surf.shader
+                material = surf!!.shader
                 j = 0
                 while (j < surf.geometry!!.numIndexes) {
                     w.Clear()
@@ -1254,18 +1257,18 @@ object BrittleFracture {
 
             // make sure the render entity is freed before the model is freed
             FreeModelDef()
-            ModelManager.renderModelManager.FreeModel(renderEntity.hModel!!)
+            ModelManager.renderModelManager.FreeModel(renderEntity!!.hModel!!)
             super._deconstructor()
         }
 
         class ModelCallback private constructor() : deferredEntityCallback_t() {
-            override fun run(e: renderEntity_s, v: renderView_s?): Boolean {
+            override fun run(e: RenderWorld.renderEntity_s?, v: RenderWorld.renderView_s?): Boolean {
                 val ent: idBrittleFracture?
-                ent = Game_local.gameLocal.entities[e.entityNum] as idBrittleFracture?
+                ent = Game_local.gameLocal.entities[e!!.entityNum] as idBrittleFracture?
                 if (null == ent) {
                     idGameLocal.Error("idBrittleFracture::ModelCallback: callback with NULL game entity")
                 }
-                return ent!!.UpdateRenderEntity(e, v)
+                return ent!!.UpdateRenderEntity(e!!, v)
             }
 
             override fun AllocBuffer(): ByteBuffer {

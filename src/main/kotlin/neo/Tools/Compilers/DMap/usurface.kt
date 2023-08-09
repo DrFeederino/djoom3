@@ -629,7 +629,7 @@ object usurface {
                 i = 0
                 while (i < model.NumSurfaces()) {
                     val surface = model.Surface(i)
-                    val tri2 = surface.geometry
+                    val tri2 = surface!!.geometry
                     val mapTri = mapTri_s()
                     //				memset( &mapTri, 0, sizeof( mapTri ) );
                     mapTri.material = surface.shader

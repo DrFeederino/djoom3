@@ -1,18 +1,20 @@
 package neo.Renderer
 
 import neo.Renderer.Model.srfTriangles_s
+import neo.Renderer.tr_polytope
+import neo.Renderer.tr_trisurf
 import neo.framework.Common
 import neo.idlib.Lib.idException
 import neo.idlib.geometry.Winding.idFixedWinding
 import neo.idlib.geometry.Winding.idWinding
-import neo.idlib.math.Plane
+import neo.idlib.math.Plane.ON_EPSILON
 import neo.idlib.math.Plane.idPlane
 
 /**
  *
  */
 object tr_polytope {
-    const val MAX_POLYTOPE_PLANES = 6
+    val MAX_POLYTOPE_PLANES: Int = 6
 
     /*
      =====================
@@ -23,32 +25,32 @@ object tr_polytope {
      =====================
      */
     @Throws(idException::class)
-    fun R_PolytopeSurface(numPlanes: Int, planes: Array<idPlane>, windings: Array<idWinding>?): srfTriangles_s? {
+    fun R_PolytopeSurface(numPlanes: Int, planes: Array<idPlane>, windings: Array<idWinding?>?): srfTriangles_s {
         var i: Int
         var j: Int
         val tri: srfTriangles_s
-        val planeWindings = Array(MAX_POLYTOPE_PLANES) { idFixedWinding() }
+        val planeWindings: Array<idFixedWinding?> = arrayOfNulls(tr_polytope.MAX_POLYTOPE_PLANES)
         var numVerts: Int
         var numIndexes: Int
-        if (numPlanes > MAX_POLYTOPE_PLANES) {
-            Common.common.Error("R_PolytopeSurface: more than %d planes", MAX_POLYTOPE_PLANES)
+        if (numPlanes > tr_polytope.MAX_POLYTOPE_PLANES) {
+            Common.common.Error("R_PolytopeSurface: more than %d planes", tr_polytope.MAX_POLYTOPE_PLANES)
         }
         numVerts = 0
         numIndexes = 0
         i = 0
         while (i < numPlanes) {
-            val plane = planes[i]
+            val plane: idPlane = planes[i]
             planeWindings[i] = idFixedWinding()
-            val w = planeWindings[i]
-            w.BaseForPlane(plane)
+            val w: idFixedWinding? = planeWindings[i]
+            w!!.BaseForPlane(plane)
             j = 0
             while (j < numPlanes) {
-                val plane2 = planes[j]
+                val plane2: idPlane = planes[j]
                 if (j == i) {
                     j++
                     continue
                 }
-                if (!w.ClipInPlace(plane2.unaryMinus(), Plane.ON_EPSILON)) {
+                if (!w.ClipInPlace(plane2.unaryMinus(), ON_EPSILON)) {
                     break
                 }
                 j++
@@ -70,8 +72,8 @@ object tr_polytope {
         // copy the data from the windings
         i = 0
         while (i < numPlanes) {
-            val w = planeWindings[i]
-            if (0 == w.GetNumPoints()) {
+            val w: idFixedWinding? = planeWindings[i]
+            if (0 == w!!.GetNumPoints()) {
                 i++
                 continue
             }
@@ -93,7 +95,7 @@ object tr_polytope {
 
             // optionally save the winding
             if (windings != null) {
-                windings[i] = idWinding(w)
+                windings[i] = idWinding((w))
             }
             i++
         }

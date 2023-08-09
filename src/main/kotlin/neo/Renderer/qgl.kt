@@ -13,10 +13,14 @@ import java.nio.IntBuffer
  * all the qwgl stuff to gl and such.
  */
 object qgl {
-    const val qGL_FALSE = false
-    const val qGL_TRUE = true
-    private const val GL_DEBUG = false
-    var bla = 0
+    val qGL_FALSE: Boolean = false
+    val qGL_TRUE: Boolean = true
+    private val GL_DEBUG: Boolean = false
+    var bla: Int = 0
+
+    init {
+        if (GL_DEBUG) qglEnable(GL43.GL_DEBUG_OUTPUT)
+    }
 
     //
     //    // multitexture
@@ -37,7 +41,7 @@ object qgl {
     }
 
     //extern PFNGLDELETEBUFFERSARBPROC qglDeleteBuffersARB;
-    fun qglGenBuffersARB(n: Int, buffers: Array<IntBuffer>) {
+    fun qglGenBuffersARB(n: Int, buffers: Array<IntBuffer?>) {
         DEBUG_printName("glGenBuffersARB")
         ARBVertexBufferObject.glGenBuffersARB(BufferUtils.createIntBuffer(n).also { buffers[0] = it })
     }
@@ -48,13 +52,13 @@ object qgl {
     }
 
     //extern PFNGLISBUFFERARBPROC qglIsBufferARB;
-    fun qglBufferDataARB(target: Int, size: Int, data: ByteBuffer, usage: Int) {
+    fun qglBufferDataARB(target: Int, size: Int, data: ByteBuffer?, usage: Int) {
         DEBUG_printName("glBufferDataARB")
         //        GL15.glBufferData(target, data, usage);//TODO:!!!!!!!!!!!!!!!!!!!!!!!!!
         ARBVertexBufferObject.glBufferDataARB(target, data, usage)
     }
 
-    fun  /*PFNGLBUFFERSUBDATAARBPROC*/qglBufferSubDataARB(target: Int, offset: Long, size: Long, data: ByteBuffer) {
+    fun  /*PFNGLBUFFERSUBDATAARBPROC*/qglBufferSubDataARB(target: Int, offset: Long, size: Long, data: ByteBuffer?) {
         DEBUG_printName("glBufferSubDataARB")
         ARBVertexBufferObject.glBufferSubDataARB(target, offset, data)
     }
@@ -67,7 +71,7 @@ object qgl {
     //
     //
     // NV_register_combiners
-    fun qglCombinerParameterfvNV(pName: Int, params: FloatArray) {
+    fun qglCombinerParameterfvNV(pName: Int, params: FloatArray?) {
         throw UnsupportedOperationException()
     }
 
@@ -75,11 +79,13 @@ object qgl {
     //extern	void ( APIENTRY *qglCombinerParameterfNV )( GLenum pName, const GLfloat param );
     fun qglCombinerParameteriNV(pName: Int, param: Int) {
         DEBUG_printName("glCombinerParameteriNV")
+        //        NVRegisterCombiners.glCombinerParameteriNV(pName, param);
         throw UnsupportedOperationException()
     }
 
     fun qglCombinerInputNV(stage: Int, portion: Int, variable: Int, input: Int, mapping: Int, componentUsage: Int) {
         DEBUG_printName("glCombinerInputNV")
+        //        NVRegisterCombiners.glCombinerInputNV(stage, portion, variable, input, mapping, componentUsage);
         throw UnsupportedOperationException()
     }
 
@@ -88,11 +94,13 @@ object qgl {
         abDotProduct: Boolean, cdDotProduct: Boolean, muxSum: Boolean
     ) {
         DEBUG_printName("glCombinerOutputNV")
+        //        NVRegisterCombiners.glCombinerOutputNV(stage, portion, abOutput, cdOutput, sumOutput, scale, bias, abDotProduct, cdDotProduct, muxSum);
         throw UnsupportedOperationException()
     }
 
     fun qglFinalCombinerInputNV(variable: Int, input: Int, mapping: Int, componentUsage: Int) {
         DEBUG_printName("glFinalCombinerInputNV")
+        //        NVRegisterCombiners.glFinalCombinerInputNV(variable, input, mapping, componentUsage);
         throw UnsupportedOperationException()
     }
 
@@ -107,7 +115,7 @@ object qgl {
         GLint4: Int,
         GLenum2: Int,
         GLenum3: Int,
-        GLvoid: ByteBuffer
+        GLvoid: ByteBuffer?
     ) {
         DEBUG_printName("glTexImage3D")
         GL12.glTexImage3D(GLenum1, GLint1, GLint2, GLsizei1, GLsizei2, GLsizei3, GLint4, GLenum2, GLenum3, GLvoid)
@@ -115,7 +123,7 @@ object qgl {
 
     //
     // shared texture palette
-    fun qglColorTableEXT(target: Int, internalFormat: Int, width: Int, format: Int, type: Int, data: ByteArray) {
+    fun qglColorTableEXT(target: Int, internalFormat: Int, width: Int, format: Int, type: Int, data: ByteArray?) {
         DEBUG_printName("glColorTableEXT")
         ARBImaging.glColorTable(target, internalFormat, width, format, type, ByteBuffer.wrap(data))
     }
@@ -131,7 +139,7 @@ object qgl {
     // ARB_texture_compression
     fun  /*PFNGLCOMPRESSEDTEXIMAGE2DARBPROC*/qglCompressedTexImage2DARB(
         target: Int, level: Int, internalformat: Int,
-        width: Int, height: Int, border: Int, imageSize: Int, data: ByteBuffer
+        width: Int, height: Int, border: Int, imageSize: Int, data: ByteBuffer?
     ) {
         DEBUG_printName("glCompressedTexImage2DARB")
         //        ARBTextureCompression.glCompressedTexImage2DARB(target, level, internalformat, width, height, border, data);
@@ -162,7 +170,7 @@ object qgl {
         throw UnsupportedOperationException()
     }
 
-    fun  /*PFNGLGETCOMPRESSEDTEXIMAGEARBPROC*/qglGetCompressedTexImageARB(target: Int, index: Int, img: ByteBuffer) {
+    fun  /*PFNGLGETCOMPRESSEDTEXIMAGEARBPROC*/qglGetCompressedTexImageARB(target: Int, index: Int, img: ByteBuffer?) {
         DEBUG_printName("glGetCompressedTexImageARB")
         ARBTextureCompression.glGetCompressedTexImageARB(target, index, img)
     }
@@ -176,7 +184,7 @@ object qgl {
         type: Int,
         normalized: Boolean,
         stride: Int,
-        pointer: FloatArray
+        pointer: FloatArray?
     ) {
 //        GL20.glVertexAttribPointer(index, size, normalized, stride, FloatBuffer.wrap(pointer));
         throw UnsupportedOperationException("Not supported yet.")
@@ -197,7 +205,7 @@ object qgl {
         ARBVertexShader.glDisableVertexAttribArrayARB(index)
     }
 
-    fun  /*PFNGLPROGRAMSTRINGARBPROC*/qglProgramStringARB(target: Int, format: Int, len: Int, string: ByteBuffer) {
+    fun  /*PFNGLPROGRAMSTRINGARBPROC*/qglProgramStringARB(target: Int, format: Int, len: Int, string: ByteBuffer?) {
         DEBUG_printName("glProgramStringARB")
         ARBVertexProgram.glProgramStringARB(target, format, string)
     }
@@ -217,7 +225,7 @@ object qgl {
     fun  /*PFNGLPROGRAMENVPARAMETER4FVARBPROC*/qglProgramEnvParameter4fvARB(
         target: Int,
         index: Enum<*>,
-        params: FloatBuffer
+        params: FloatBuffer?
     ) {
         DEBUG_printName("glProgramEnvParameter4fvARB")
         ARBVertexProgram.glProgramEnvParameter4fvARB(target, index.ordinal, params)
@@ -227,7 +235,7 @@ object qgl {
     fun  /*PFNGLPROGRAMENVPARAMETER4FVARBPROC*/qglProgramEnvParameter4fvARB(
         target: Int,
         index: Enum<*>,
-        params: FloatArray
+        params: FloatArray?
     ) {
         DEBUG_printName("glProgramEnvParameter4fvARB") //TODO:convert calls to floatbuffer
         qglProgramEnvParameter4fvARB(target, index.ordinal, params)
@@ -237,7 +245,7 @@ object qgl {
     fun  /*PFNGLPROGRAMENVPARAMETER4FVARBPROC*/qglProgramEnvParameter4fvARB(
         target: Int,
         index: Int,
-        params: FloatArray
+        params: FloatArray?
     ) {
         DEBUG_printName("glProgramEnvParameter4fvARB") //TODO:convert calls to floatbuffer
         ARBVertexProgram.glProgramEnvParameter4fvARB(target, index, params)
@@ -247,7 +255,7 @@ object qgl {
     fun  /*PFNGLPROGRAMENVPARAMETER4FVARBPROC*/qglProgramEnvParameter4fvARB(
         target: Int,
         index: Int,
-        params: FloatBuffer
+        params: FloatBuffer?
     ) {
         DEBUG_printName("glProgramEnvParameter4fvARB")
         ARBVertexProgram.glProgramEnvParameter4fvARB(target, index, params)
@@ -256,7 +264,7 @@ object qgl {
     fun  /*PFNGLPROGRAMLOCALPARAMETER4FVARBPROC*/qglProgramLocalParameter4fvARB(
         target: Int,
         index: Int,
-        params: FloatBuffer
+        params: FloatBuffer?
     ) {
         DEBUG_printName("glProgramLocalParameter4fvARB")
         ARBVertexProgram.glProgramLocalParameter4fvARB(target, index, params)
@@ -375,9 +383,9 @@ object qgl {
         GL14.glAlphaFunc(func, ref)
     }
 
-    fun qglAreTexturesResident(n: Int, textures: IntBuffer, residences: ByteBuffer): Boolean {
+    fun qglAreTexturesResident(n: Int, textures: IntBuffer?, residences: ByteBuffer?): Boolean {
         DEBUG_printName("glAreTexturesResident")
-        return GL14.glAreTexturesResident(textures, residences) //TODO:is n really necessary
+        return GL14.glAreTexturesResident(textures, residences) //TODO:is n really necessary?
     }
 
     fun qglArrayElement(i: Int) {
@@ -403,7 +411,7 @@ object qgl {
         yorig: Float,
         xmove: Float,
         ymove: Float,
-        bitmap: ByteBuffer
+        bitmap: ByteBuffer?
     ) {
         DEBUG_printName("glBitmap")
         GL14.glBitmap(width, height, xorig, yorig, xmove, ymove, bitmap)
@@ -420,7 +428,7 @@ object qgl {
         GL14.glCallList(list)
     }
 
-    fun qglCallLists(n: Int, type: Int, lists: Any) {
+    fun qglCallLists(n: Int, type: Int, lists: Any?) {
 //        GL14.glCallLists(lists);
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -454,7 +462,7 @@ object qgl {
         GL14.glClearStencil(s)
     }
 
-    fun qglClipPlane(plane: Int, equation: DoubleBuffer) {
+    fun qglClipPlane(plane: Int, equation: DoubleBuffer?) {
         DEBUG_printName("glClipPlane")
         GL14.glClipPlane(plane, equation)
     }
@@ -464,7 +472,7 @@ object qgl {
         GL14.glColor3b(red, green, blue)
     }
 
-    fun qglColor3bv(v: ByteArray) {
+    fun qglColor3bv(v: ByteArray?) {
         DEBUG_printName("glColor3bv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -474,7 +482,7 @@ object qgl {
         GL14.glColor3d(red, green, blue)
     }
 
-    fun qglColor3dv(v: DoubleArray) {
+    fun qglColor3dv(v: DoubleArray?) {
         DEBUG_printName("glColor3dv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -494,7 +502,7 @@ object qgl {
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglColor3iv(v: IntArray) {
+    fun qglColor3iv(v: IntArray?) {
         DEBUG_printName("glColor3iv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -504,7 +512,7 @@ object qgl {
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglColor3sv(v: ShortArray) {
+    fun qglColor3sv(v: ShortArray?) {
         DEBUG_printName("glColor3sv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -514,7 +522,7 @@ object qgl {
         GL14.glColor3ub(red, green, blue)
     }
 
-    fun qglColor3ubv(v: ByteArray) {
+    fun qglColor3ubv(v: ByteArray?) {
         DEBUG_printName("glColor3ubv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -524,7 +532,7 @@ object qgl {
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglColor3uiv(v: IntArray) {
+    fun qglColor3uiv(v: IntArray?) {
         DEBUG_printName("glColor3uiv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -534,7 +542,7 @@ object qgl {
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglColor3usv(v: ShortArray) {
+    fun qglColor3usv(v: ShortArray?) {
         DEBUG_printName("glColor3usv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -544,7 +552,7 @@ object qgl {
         GL14.glColor4b(red, green, blue, alpha)
     }
 
-    fun qglColor4bv(v: ByteArray) {
+    fun qglColor4bv(v: ByteArray?) {
         DEBUG_printName("glColor4bv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -554,7 +562,7 @@ object qgl {
         GL14.glColor4d(red, green, blue, alpha)
     }
 
-    fun qglColor4dv(v: DoubleArray) {
+    fun qglColor4dv(v: DoubleArray?) {
         DEBUG_printName("glColor4dv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -574,7 +582,7 @@ object qgl {
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglColor4iv(v: IntArray) {
+    fun qglColor4iv(v: IntArray?) {
         DEBUG_printName("glColor4iv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -584,7 +592,7 @@ object qgl {
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglColor4sv(v: ShortArray) {
+    fun qglColor4sv(v: ShortArray?) {
         DEBUG_printName("glColor4sv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -604,12 +612,12 @@ object qgl {
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglColor4uiv(v: IntArray) {
+    fun qglColor4uiv(v: IntArray?) {
         DEBUG_printName("glColor4uiv")
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglColor4usv(v: ShortArray) {
+    fun qglColor4usv(v: ShortArray?) {
         DEBUG_printName("glColor4usv")
         GL14.glColor4usv(v)
     }
@@ -636,6 +644,13 @@ object qgl {
     fun qglColorPointer(size: Int, type: Int, stride: Int, pointer: Long) {
         DEBUG_printName("glColorPointer")
         GL14.glColorPointer(size, type, stride, pointer)
+    }
+
+    @Deprecated("")
+    fun qglColorPointer(size: Int, type: Int, stride: Int, pointer: Any?) {
+        DEBUG_printName("glColorPointer")
+        //        GL14.glColorPointer(size, type, stride, );
+        throw UnsupportedOperationException("Not supported yet.")
     }
 
     fun qglCopyPixels(x: Int, y: Int, width: Int, height: Int, type: Int) {
@@ -696,8 +711,9 @@ object qgl {
         GL14.glDeleteTextures(texture)
     }
 
-    fun qglDeleteTextures(n: Int, textures: IntArray) {
+    fun qglDeleteTextures(n: Int, textures: IntArray?) {
         DEBUG_printName("glDeleteTextures")
+        //        GL14.glDeleteTextures();
         throw UnsupportedOperationException("Not supported yet.")
     }
 
@@ -736,22 +752,22 @@ object qgl {
         GL14.glDrawBuffer(mode)
     }
 
-    fun qglDrawElements(mode: Int, count: Int, type: Int, indices: ByteBuffer) {
+    fun qglDrawElements(mode: Int, count: Int, type: Int, indices: ByteBuffer?) {
         DEBUG_printName("glDrawElements1")
         GL14.glDrawElements(mode, type, indices)
     }
 
-    fun qglDrawElements(mode: Int, count: Int, type: Int, indices: IntArray) {
+    fun qglDrawElements(mode: Int, count: Int, type: Int, indices: IntArray?) {
         DEBUG_printName("glDrawElements2")
-        GL14.glDrawElements(mode, wrap(indices).position(count).flip()) //TODO:subarray
+        GL14.glDrawElements(mode, wrap(indices!!).position(count).flip()) //TODO:subarray
     }
 
-    fun qglDrawPixels(width: Int, height: Int, format: Int, type: Int, pixels: ByteBuffer) {
+    fun qglDrawPixels(width: Int, height: Int, format: Int, type: Int, pixels: ByteBuffer?) {
         DEBUG_printName("glDrawPixels")
         GL14.glDrawPixels(width, height, format, type, pixels)
     }
 
-    fun qglDrawPixels(width: Int, height: Int, format: Int, type: Int, pixels: Array<Array<ByteArray>>) {
+    fun qglDrawPixels(width: Int, height: Int, format: Int, type: Int, pixels: Array<Array<ByteArray?>?>?) {
         DEBUG_printName("glDrawPixels")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -761,8 +777,9 @@ object qgl {
         GL14.glEdgeFlag(flag)
     }
 
-    fun qglEdgeFlagPointer(stride: Int, pointer: Any) {
+    fun qglEdgeFlagPointer(stride: Int, pointer: Any?) {
         DEBUG_printName("glEdgeFlagPointer")
+        //        GL14.glEdgeFlagPointer(stride, );
         throw UnsupportedOperationException("Not supported yet.")
     }
 
@@ -797,7 +814,7 @@ object qgl {
         GL14.glEvalCoord1d(u)
     }
 
-    fun qglEvalCoord1dv(u: DoubleArray) {
+    fun qglEvalCoord1dv(u: DoubleArray?) {
         DEBUG_printName("glEvalCoord1dv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -807,7 +824,7 @@ object qgl {
         GL14.glEvalCoord1f(u)
     }
 
-    fun qglEvalCoord1fv(u: FloatArray) {
+    fun qglEvalCoord1fv(u: FloatArray?) {
         DEBUG_printName("glEvalCoord1fv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -817,7 +834,7 @@ object qgl {
         GL14.glEvalCoord2d(u, v)
     }
 
-    fun qglEvalCoord2dv(u: DoubleArray) {
+    fun qglEvalCoord2dv(u: DoubleArray?) {
         DEBUG_printName("glEvalCoord2dv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -827,7 +844,7 @@ object qgl {
         GL14.glEvalCoord2f(u, v)
     }
 
-    fun qglEvalCoord2fv(u: FloatArray) {
+    fun qglEvalCoord2fv(u: FloatArray?) {
         DEBUG_printName("glEvalCoord2fv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -852,7 +869,7 @@ object qgl {
         GL14.glEvalPoint2(i, j)
     }
 
-    fun qglFeedbackBuffer(size: Int, type: Int, buffer: FloatBuffer) {
+    fun qglFeedbackBuffer(size: Int, type: Int, buffer: FloatBuffer?) {
         DEBUG_printName("glFeedbackBuffer")
         GL14.glFeedbackBuffer(type, buffer)
     }
@@ -872,7 +889,7 @@ object qgl {
         GL14.glFogf(pName, param)
     }
 
-    fun qglFogfv(pName: Int, params: FloatArray) {
+    fun qglFogfv(pName: Int, params: FloatArray?) {
         DEBUG_printName("glFogfv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -882,7 +899,7 @@ object qgl {
         GL14.glFogi(pName, param)
     }
 
-    fun qglFogiv(pName: Int, params: IntArray) {
+    fun qglFogiv(pName: Int, params: IntArray?) {
         DEBUG_printName("glFogiv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -913,31 +930,32 @@ object qgl {
         return GL14.glGenTextures()
     }
 
-    fun qglGenTextures(n: Int, textures: IntArray) {
+    fun qglGenTextures(n: Int, textures: IntArray?) {
         DEBUG_printName("glGenTextures")
         GL14.glGenTextures()
     }
 
-    fun qglGetBooleanv(pName: Int, params: BooleanArray) {
+    fun qglGetBooleanv(pName: Int, params: BooleanArray?) {
         DEBUG_printName("glGetBooleanv")
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglGetClipPlane(plane: Int, equation: DoubleBuffer) {
+    fun qglGetClipPlane(plane: Int, equation: DoubleBuffer?) {
         DEBUG_printName("glGetClipPlane")
         GL14.glGetClipPlane(plane, equation)
     }
 
-    fun qglGetDoublev(pName: Int, params: DoubleArray) {
+    fun qglGetDoublev(pName: Int, params: DoubleArray?) {
         DEBUG_printName("glGetDoublev")
         throw UnsupportedOperationException("Not supported yet.")
     }
 
     fun qglGetError(): Int { //DEBUG_printName("glGetError");
+        checkGLError()
         return GL14.glGetError()
     }
 
-    fun qglGetFloatv(pName: Int, params: FloatBuffer) {
+    fun qglGetFloatv(pName: Int, params: FloatBuffer?) {
         DEBUG_printName("glGetFloatv")
         GL14.glGetFloatv(pName, params)
     }
@@ -947,74 +965,78 @@ object qgl {
         return GL14.glGetInteger(pName)
     }
 
-    fun qglGetIntegerv(pName: Int, params: IntBuffer) {
+    fun qglGetIntegerv(pName: Int, params: IntBuffer?) {
         DEBUG_printName("glGetIntegerv")
         GL14.glGetIntegerv(pName, params)
     }
 
-    fun qglGetLightfv(light: Int, pName: Int, params: FloatArray) {
+    fun qglGetLightfv(light: Int, pName: Int, params: FloatArray?) {
         DEBUG_printName("glGetLightfv")
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglGetLightiv(light: Int, pName: Int, params: IntArray) {
+    fun qglGetLightiv(light: Int, pName: Int, params: IntArray?) {
         DEBUG_printName("glGetLightiv")
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglGetMapdv(target: Int, query: Int, v: DoubleArray) {
+    fun qglGetMapdv(target: Int, query: Int, v: DoubleArray?) {
         DEBUG_printName("glGetMapdv")
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglGetMapfv(target: Int, query: Int, v: FloatArray) {
+    fun qglGetMapfv(target: Int, query: Int, v: FloatArray?) {
         DEBUG_printName("glGetMapfv")
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglGetMapiv(target: Int, query: Int, v: IntArray) {
+    fun qglGetMapiv(target: Int, query: Int, v: IntArray?) {
         DEBUG_printName("glGetMapiv")
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglGetMaterialfv(face: Int, pName: Int, params: FloatArray) {
+    fun qglGetMaterialfv(face: Int, pName: Int, params: FloatArray?) {
         DEBUG_printName("glGetMaterialfv")
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglGetMaterialiv(face: Int, pName: Int, params: IntArray) {
+    fun qglGetMaterialiv(face: Int, pName: Int, params: IntArray?) {
         DEBUG_printName("glGetMaterialiv")
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglGetPixelMapfv(map: Int, values: FloatArray) {
+    fun qglGetPixelMapfv(map: Int, values: FloatArray?) {
         DEBUG_printName("glGetPixelMapfv")
+        //        GL14.glGetPixelMapfv(map, );
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglGetPixelMapuiv(map: Int, values: IntArray) {
+    fun qglGetPixelMapuiv(map: Int, values: IntArray?) {
         DEBUG_printName("glGetPixelMapuiv")
+        //        GL14.glGetPixelMapuiv(map, );
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglGetPixelMapusv(map: Int, values: ShortArray) {
+    fun qglGetPixelMapusv(map: Int, values: ShortArray?) {
         DEBUG_printName("glGetPixelMapusv")
+        //        GL14.glGetPixelMapusv(map, );
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglGetPointerv(pName: Int, params: Array<Any>) {
+    fun qglGetPointerv(pName: Int, params: Array<Any?>?) {
         DEBUG_printName("glGetPointerv")
         throw UnsupportedOperationException("Not supported yet.")
     }
 
     fun qglGetPolygonStipple(mask: Byte) {
         DEBUG_printName("glGetPolygonStipple")
+        //        GL14.glGetPolygonStipple();
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglGetString(name: Int): String {
+    fun qglGetString(name: Int): String? {
         DEBUG_printName("glGetString")
-        return GL14.glGetString(name)!!
+        return GL14.glGetString(name)
     }
 
     fun qglGetStringi(name: Int, index: Int): String? {
@@ -1022,52 +1044,52 @@ object qgl {
         return GL14.glGetString(name)
     }
 
-    fun qglGetTexEnvfv(target: Int, pName: Int, params: FloatArray) {
+    fun qglGetTexEnvfv(target: Int, pName: Int, params: FloatArray?) {
         DEBUG_printName("glGetTexEnvfv")
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglGetTexEnviv(target: Int, pName: Int, params: IntArray) {
+    fun qglGetTexEnviv(target: Int, pName: Int, params: IntArray?) {
         DEBUG_printName("glGetTexEnviv")
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglGetTexGendv(coord: Int, pName: Int, params: DoubleArray) {
+    fun qglGetTexGendv(coord: Int, pName: Int, params: DoubleArray?) {
         DEBUG_printName("glGetTexGendv")
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglGetTexGenfv(coord: Int, pName: Int, params: FloatArray) {
+    fun qglGetTexGenfv(coord: Int, pName: Int, params: FloatArray?) {
         DEBUG_printName("glGetTexGenfv")
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglGetTexGeniv(coord: Int, pName: Int, params: IntArray) {
+    fun qglGetTexGeniv(coord: Int, pName: Int, params: IntArray?) {
         DEBUG_printName("glGetTexGeniv")
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglGetTexImage(target: Int, level: Int, format: Int, type: Int, pixels: ByteBuffer) {
+    fun qglGetTexImage(target: Int, level: Int, format: Int, type: Int, pixels: ByteBuffer?) {
         DEBUG_printName("glGetTexImage")
         GL14.glGetTexImage(target, level, format, type, pixels)
     }
 
-    fun qglGetTexLevelParameterfv(target: Int, level: Int, pName: Int, params: FloatArray) {
+    fun qglGetTexLevelParameterfv(target: Int, level: Int, pName: Int, params: FloatArray?) {
         DEBUG_printName("glGetTexLevelParameterfv")
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglGetTexLevelParameteriv(target: Int, level: Int, pName: Int, params: IntArray) {
+    fun qglGetTexLevelParameteriv(target: Int, level: Int, pName: Int, params: IntArray?) {
         DEBUG_printName("glGetTexLevelParameteriv")
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglGetTexParameterfv(target: Int, pName: Int, params: FloatArray) {
+    fun qglGetTexParameterfv(target: Int, pName: Int, params: FloatArray?) {
         DEBUG_printName("glGetTexParameterfv")
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglGetTexParameteriv(target: Int, pName: Int, params: IntArray) {
+    fun qglGetTexParameteriv(target: Int, pName: Int, params: IntArray?) {
         DEBUG_printName("glGetTexParameteriv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1082,7 +1104,7 @@ object qgl {
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglIndexPointer(type: Int, stride: Int, pointer: Any) {
+    fun qglIndexPointer(type: Int, stride: Int, pointer: Any?) {
         DEBUG_printName("glIndexPointer")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1092,7 +1114,7 @@ object qgl {
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglIndexdv(c: DoubleArray) {
+    fun qglIndexdv(c: DoubleArray?) {
         DEBUG_printName("glIndexdv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1102,7 +1124,7 @@ object qgl {
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglIndexfv(c: FloatArray) {
+    fun qglIndexfv(c: FloatArray?) {
         DEBUG_printName("glIndexfv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1112,7 +1134,7 @@ object qgl {
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglIndexiv(c: IntArray) {
+    fun qglIndexiv(c: IntArray?) {
         DEBUG_printName("glIndexiv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1122,7 +1144,7 @@ object qgl {
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglIndexsv(c: ShortArray) {
+    fun qglIndexsv(c: ShortArray?) {
         DEBUG_printName("glIndexsv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1132,7 +1154,7 @@ object qgl {
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglIndexubv(c: ByteArray) {
+    fun qglIndexubv(c: ByteArray?) {
         DEBUG_printName("glIndexubv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1142,7 +1164,7 @@ object qgl {
         GL14.glInitNames()
     }
 
-    fun qglInterleavedArrays(format: Int, stride: Int, pointer: ByteBuffer) {
+    fun qglInterleavedArrays(format: Int, stride: Int, pointer: ByteBuffer?) {
         DEBUG_printName("glInterleavedArrays")
         GL14.glInterleavedArrays(format, stride, pointer)
         throw UnsupportedOperationException("Not supported yet.")
@@ -1168,7 +1190,7 @@ object qgl {
         GL14.glLightModelf(pName, param)
     }
 
-    fun qglLightModelfv(pName: Int, params: FloatBuffer) {
+    fun qglLightModelfv(pName: Int, params: FloatBuffer?) {
         DEBUG_printName("glLightModelfv")
         GL14.glLightModelfv(pName, params)
     }
@@ -1178,7 +1200,7 @@ object qgl {
         GL14.glLightModeli(pName, param)
     }
 
-    fun qglLightModeliv(pName: Int, params: IntBuffer) {
+    fun qglLightModeliv(pName: Int, params: IntBuffer?) {
         DEBUG_printName("glLightModeliv")
         GL14.glLightModeliv(pName, params)
     }
@@ -1188,7 +1210,7 @@ object qgl {
         GL14.glLightf(light, pName, param)
     }
 
-    fun qglLightfv(light: Int, pName: Int, params: FloatBuffer) {
+    fun qglLightfv(light: Int, pName: Int, params: FloatBuffer?) {
         DEBUG_printName("glLightfv")
         GL14.glLightfv(light, pName, params)
     }
@@ -1198,7 +1220,7 @@ object qgl {
         GL14.glLighti(light, pName, param)
     }
 
-    fun qglLightiv(light: Int, pName: Int, params: IntBuffer) {
+    fun qglLightiv(light: Int, pName: Int, params: IntBuffer?) {
         DEBUG_printName("glLightiv")
         GL14.glLightiv(light, pName, params)
     }
@@ -1223,12 +1245,12 @@ object qgl {
         GL14.glLoadIdentity()
     }
 
-    fun qglLoadMatrixd(m: DoubleBuffer) {
+    fun qglLoadMatrixd(m: DoubleBuffer?) {
         DEBUG_printName("glLoadMatrixd")
         GL14.glLoadMatrixd(m)
     }
 
-    fun qglLoadMatrixf(m: FloatArray) {
+    fun qglLoadMatrixf(m: FloatArray?) {
         DEBUG_printName("glLoadMatrixf") //TODO:convert to FloatBuffer.
         GL14.glLoadMatrixf(m)
     }
@@ -1243,12 +1265,12 @@ object qgl {
         GL14.glLogicOp(opcode)
     }
 
-    fun qglMap1d(target: Int, u1: Double, u2: Double, stride: Int, order: Int, points: DoubleBuffer) {
+    fun qglMap1d(target: Int, u1: Double, u2: Double, stride: Int, order: Int, points: DoubleBuffer?) {
         DEBUG_printName("glMap1d")
         GL14.glMap1d(target, u1, u2, stride, order, points)
     }
 
-    fun qglMap1f(target: Int, u1: Float, u2: Float, stride: Int, order: Int, points: FloatBuffer) {
+    fun qglMap1f(target: Int, u1: Float, u2: Float, stride: Int, order: Int, points: FloatBuffer?) {
         DEBUG_printName("glMap1f")
         GL14.glMap1f(target, u1, u2, stride, order, points)
     }
@@ -1263,7 +1285,7 @@ object qgl {
         v2: Double,
         vstride: Int,
         vorder: Int,
-        points: DoubleBuffer
+        points: DoubleBuffer?
     ) {
         DEBUG_printName("glMap2d")
         GL14.glMap2d(target, u1, u2, ustride, uorder, v1, v2, vstride, vorder, points)
@@ -1279,7 +1301,7 @@ object qgl {
         v2: Float,
         vstride: Int,
         vorder: Int,
-        points: FloatBuffer
+        points: FloatBuffer?
     ) {
         DEBUG_printName("glMap2f")
         GL14.glMap2f(target, u1, u2, ustride, uorder, v1, v2, vstride, vorder, points)
@@ -1310,7 +1332,7 @@ object qgl {
         GL14.glMaterialf(face, pName, param)
     }
 
-    fun qglMaterialfv(face: Int, pName: Int, params: FloatArray) {
+    fun qglMaterialfv(face: Int, pName: Int, params: FloatArray?) {
         DEBUG_printName("glMaterialfv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1320,7 +1342,7 @@ object qgl {
         GL14.glMateriali(face, pName, param)
     }
 
-    fun qglMaterialiv(face: Int, pName: Int, params: IntArray) {
+    fun qglMaterialiv(face: Int, pName: Int, params: IntArray?) {
         DEBUG_printName("glMaterialiv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1330,12 +1352,12 @@ object qgl {
         GL14.glMatrixMode(mode)
     }
 
-    fun qglMultMatrixd(m: DoubleArray) {
+    fun qglMultMatrixd(m: DoubleArray?) {
         DEBUG_printName("glMultMatrixd")
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglMultMatrixf(m: FloatArray) {
+    fun qglMultMatrixf(m: FloatArray?) {
         DEBUG_printName("glMultMatrixf")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1350,7 +1372,7 @@ object qgl {
         GL14.glNormal3b(nx, ny, nz)
     }
 
-    fun qglNormal3bv(v: ByteArray) {
+    fun qglNormal3bv(v: ByteArray?) {
         DEBUG_printName("glNormal3bv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1360,7 +1382,7 @@ object qgl {
         GL14.glNormal3d(nx, ny, nz)
     }
 
-    fun qglNormal3dv(v: DoubleArray) {
+    fun qglNormal3dv(v: DoubleArray?) {
         DEBUG_printName("glNormal3dv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1370,7 +1392,7 @@ object qgl {
         GL14.glNormal3f(nx, ny, nz)
     }
 
-    fun qglNormal3fv(v: FloatArray) {
+    fun qglNormal3fv(v: FloatArray?) {
         DEBUG_printName("glNormal3fv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1380,7 +1402,7 @@ object qgl {
         GL14.glNormal3i(nx, ny, nz)
     }
 
-    fun qglNormal3iv(v: IntArray) {
+    fun qglNormal3iv(v: IntArray?) {
         DEBUG_printName("glNormal3iv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1390,7 +1412,7 @@ object qgl {
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglNormal3sv(v: ShortArray) {
+    fun qglNormal3sv(v: ShortArray?) {
         DEBUG_printName("glNormal3sv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1410,17 +1432,17 @@ object qgl {
         GL14.glPassThrough(token)
     }
 
-    fun qglPixelMapfv(map: Int, mapsize: Int, values: FloatArray) {
+    fun qglPixelMapfv(map: Int, mapsize: Int, values: FloatArray?) {
         DEBUG_printName("glPixelMapfv")
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglPixelMapuiv(map: Int, mapsize: Int, values: IntArray) {
+    fun qglPixelMapuiv(map: Int, mapsize: Int, values: IntArray?) {
         DEBUG_printName("glPixelMapuiv")
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglPixelMapusv(map: Int, mapsize: Int, values: ShortArray) {
+    fun qglPixelMapusv(map: Int, mapsize: Int, values: ShortArray?) {
         DEBUG_printName("glPixelMapusv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1465,7 +1487,7 @@ object qgl {
         GL14.glPolygonOffset(factor, units)
     }
 
-    fun qglPolygonStipple(mask: ByteBuffer) {
+    fun qglPolygonStipple(mask: ByteBuffer?) {
         DEBUG_printName("glPolygonStipple")
         GL14.glPolygonStipple(mask)
     }
@@ -1495,7 +1517,7 @@ object qgl {
         throw TODO_Exception()
     }
 
-    fun qglPrioritizeTextures(n: Int, textures: IntBuffer, priorities: FloatBuffer) {
+    fun qglPrioritizeTextures(n: Int, textures: IntBuffer?, priorities: FloatBuffer?) {
         DEBUG_printName("glPrioritizeTextures")
         GL14.glPrioritizeTextures(textures, priorities)
     }
@@ -1525,7 +1547,7 @@ object qgl {
         GL14.glRasterPos2d(x, y)
     }
 
-    fun qglRasterPos2dv(v: DoubleArray) {
+    fun qglRasterPos2dv(v: DoubleArray?) {
         DEBUG_printName("glRasterPos2dv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1535,7 +1557,7 @@ object qgl {
         GL14.glRasterPos2f(x, y)
     }
 
-    fun qglRasterPos2fv(v: FloatArray) {
+    fun qglRasterPos2fv(v: FloatArray?) {
         DEBUG_printName("glRasterPos2fv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1545,7 +1567,7 @@ object qgl {
         GL14.glRasterPos2i(x, y)
     }
 
-    fun qglRasterPos2iv(v: IntArray) {
+    fun qglRasterPos2iv(v: IntArray?) {
         DEBUG_printName("glRasterPos2iv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1555,7 +1577,7 @@ object qgl {
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglRasterPos2sv(v: ShortArray) {
+    fun qglRasterPos2sv(v: ShortArray?) {
         DEBUG_printName("glRasterPos2sv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1565,7 +1587,7 @@ object qgl {
         GL14.glRasterPos3d(x, y, z)
     }
 
-    fun qglRasterPos3dv(v: DoubleArray) {
+    fun qglRasterPos3dv(v: DoubleArray?) {
         DEBUG_printName("glRasterPos3dv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1575,7 +1597,7 @@ object qgl {
         GL14.glRasterPos3f(x, y, z)
     }
 
-    fun qglRasterPos3fv(v: FloatArray) {
+    fun qglRasterPos3fv(v: FloatArray?) {
         DEBUG_printName("glRasterPos3fv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1585,7 +1607,7 @@ object qgl {
         GL14.glRasterPos3i(x, y, z)
     }
 
-    fun qglRasterPos3iv(v: IntArray) {
+    fun qglRasterPos3iv(v: IntArray?) {
         DEBUG_printName("glRasterPos3iv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1595,7 +1617,7 @@ object qgl {
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglRasterPos3sv(v: ShortArray) {
+    fun qglRasterPos3sv(v: ShortArray?) {
         DEBUG_printName("glRasterPos3sv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1605,7 +1627,7 @@ object qgl {
         GL14.glRasterPos4d(x, y, z, w)
     }
 
-    fun qglRasterPos4dv(v: DoubleArray) {
+    fun qglRasterPos4dv(v: DoubleArray?) {
         DEBUG_printName("glRasterPos4dv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1615,7 +1637,7 @@ object qgl {
         GL14.glRasterPos4f(x, y, z, w)
     }
 
-    fun qglRasterPos4fv(v: FloatArray) {
+    fun qglRasterPos4fv(v: FloatArray?) {
         DEBUG_printName("glRasterPos4fv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1625,7 +1647,7 @@ object qgl {
         GL14.glRasterPos4i(x, y, z, w)
     }
 
-    fun qglRasterPos4iv(v: IntArray) {
+    fun qglRasterPos4iv(v: IntArray?) {
         DEBUG_printName("glRasterPos4iv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1635,7 +1657,7 @@ object qgl {
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglRasterPos4sv(v: ShortArray) {
+    fun qglRasterPos4sv(v: ShortArray?) {
         DEBUG_printName("glRasterPos4sv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1645,7 +1667,7 @@ object qgl {
         GL14.glReadBuffer(mode)
     }
 
-    fun qglReadPixels(x: Int, y: Int, width: Int, height: Int, format: Int, type: Int, pixels: ByteBuffer) {
+    fun qglReadPixels(x: Int, y: Int, width: Int, height: Int, format: Int, type: Int, pixels: ByteBuffer?) {
         DEBUG_printName("glReadPixels")
         GL14.glReadPixels(x, y, width, height, format, type, pixels)
     }
@@ -1655,7 +1677,7 @@ object qgl {
         GL14.glRectd(x1, y1, x2, y2)
     }
 
-    fun qglRectdv(v1: DoubleArray, v2: DoubleArray) {
+    fun qglRectdv(v1: DoubleArray?, v2: DoubleArray?) {
         DEBUG_printName("glRectdv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1665,7 +1687,7 @@ object qgl {
         GL14.glRectf(x1, y1, x2, y2)
     }
 
-    fun qglRectfv(v1: FloatArray, v2: FloatArray) {
+    fun qglRectfv(v1: FloatArray?, v2: FloatArray?) {
         DEBUG_printName("glRectfv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1675,7 +1697,7 @@ object qgl {
         GL14.glRecti(x1, y1, x2, y2)
     }
 
-    fun qglRectiv(v1: IntArray, v2: IntArray) {
+    fun qglRectiv(v1: IntArray?, v2: IntArray?) {
         DEBUG_printName("glRectiv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1685,7 +1707,7 @@ object qgl {
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglRectsv(v1: ShortArray, v2: ShortArray) {
+    fun qglRectsv(v1: ShortArray?, v2: ShortArray?) {
         DEBUG_printName("glRectsv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1720,7 +1742,7 @@ object qgl {
         GL14.glScissor(x, y, width, height)
     }
 
-    fun qglSelectBuffer(size: Int, buffer: IntBuffer) {
+    fun qglSelectBuffer(size: Int, buffer: IntBuffer?) {
         DEBUG_printName("glSelectBuffer")
         GL14.glSelectBuffer(buffer)
     }
@@ -1750,7 +1772,7 @@ object qgl {
         GL14.glTexCoord1d(s)
     }
 
-    fun qglTexCoord1dv(v: DoubleArray) {
+    fun qglTexCoord1dv(v: DoubleArray?) {
         DEBUG_printName("glTexCoord1dv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1760,7 +1782,7 @@ object qgl {
         GL14.glTexCoord1f(s)
     }
 
-    fun qglTexCoord1fv(v: FloatArray) {
+    fun qglTexCoord1fv(v: FloatArray?) {
         DEBUG_printName("glTexCoord1fv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1770,7 +1792,7 @@ object qgl {
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglTexCoord1iv(v: IntArray) {
+    fun qglTexCoord1iv(v: IntArray?) {
         DEBUG_printName("glTexCoord1iv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1780,7 +1802,7 @@ object qgl {
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglTexCoord1sv(v: ShortArray) {
+    fun qglTexCoord1sv(v: ShortArray?) {
         DEBUG_printName("glTexCoord1sv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1790,7 +1812,7 @@ object qgl {
         GL14.glTexCoord2d(s, t)
     }
 
-    fun qglTexCoord2dv(v: DoubleArray) {
+    fun qglTexCoord2dv(v: DoubleArray?) {
         DEBUG_printName("glTexCoord2dv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1810,7 +1832,7 @@ object qgl {
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglTexCoord2iv(v: IntArray) {
+    fun qglTexCoord2iv(v: IntArray?) {
         DEBUG_printName("glTexCoord2iv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1820,7 +1842,7 @@ object qgl {
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglTexCoord2sv(v: ShortArray) {
+    fun qglTexCoord2sv(v: ShortArray?) {
         DEBUG_printName("glTexCoord2sv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1830,7 +1852,7 @@ object qgl {
         GL14.glTexCoord3d(s, t, r)
     }
 
-    fun qglTexCoord3dv(v: DoubleArray) {
+    fun qglTexCoord3dv(v: DoubleArray?) {
         DEBUG_printName("glTexCoord3dv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1840,7 +1862,7 @@ object qgl {
         GL14.glTexCoord3f(s, t, r)
     }
 
-    fun qglTexCoord3fv(v: FloatArray) {
+    fun qglTexCoord3fv(v: FloatArray?) {
         DEBUG_printName("glTexCoord3fv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1850,7 +1872,7 @@ object qgl {
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglTexCoord3iv(v: IntArray) {
+    fun qglTexCoord3iv(v: IntArray?) {
         DEBUG_printName("glTexCoord3iv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1860,7 +1882,7 @@ object qgl {
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglTexCoord3sv(v: ShortArray) {
+    fun qglTexCoord3sv(v: ShortArray?) {
         DEBUG_printName("glTexCoord3sv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1870,7 +1892,7 @@ object qgl {
         GL14.glTexCoord4d(s, t, r, q)
     }
 
-    fun qglTexCoord4dv(v: DoubleArray) {
+    fun qglTexCoord4dv(v: DoubleArray?) {
         DEBUG_printName("glTexCoord4dv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1880,7 +1902,7 @@ object qgl {
         GL14.glTexCoord4f(s, t, r, q)
     }
 
-    fun qglTexCoord4fv(v: FloatArray) {
+    fun qglTexCoord4fv(v: FloatArray?) {
         DEBUG_printName("glTexCoord4fv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1890,7 +1912,7 @@ object qgl {
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglTexCoord4iv(v: IntArray) {
+    fun qglTexCoord4iv(v: IntArray?) {
         DEBUG_printName("glTexCoord4iv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1900,7 +1922,7 @@ object qgl {
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglTexCoord4sv(v: ShortArray) {
+    fun qglTexCoord4sv(v: ShortArray?) {
         DEBUG_printName("glTexCoord4sv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1911,12 +1933,13 @@ object qgl {
     }
 
     @Deprecated("")
-    fun qglTexCoordPointer(size: Int, type: Int, stride: Int, pointer: FloatArray) {
+    fun qglTexCoordPointer(size: Int, type: Int, stride: Int, pointer: FloatArray?) {
         DEBUG_printName("glTexCoordPointer")
+        //        GL14.glTexCoordPointer(size, stride, FloatBuffer.wrap(pointer));
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglTexCoordPointer(size: Int, type: Int, stride: Int, pointer: ByteBuffer) {
+    fun qglTexCoordPointer(size: Int, type: Int, stride: Int, pointer: ByteBuffer?) {
         DEBUG_printName("glTexCoordPointer")
         GL14.glTexCoordPointer(size, type, stride, pointer)
     }
@@ -1926,7 +1949,7 @@ object qgl {
         GL14.glTexEnvf(target, pName, param)
     }
 
-    fun qglTexEnvfv(target: Int, pName: Int, params: FloatBuffer) {
+    fun qglTexEnvfv(target: Int, pName: Int, params: FloatBuffer?) {
         DEBUG_printName("glTexEnvfv")
         GL14.glTexEnvfv(target, pName, params)
     }
@@ -1936,7 +1959,7 @@ object qgl {
         GL14.glTexEnvi(target, pName, param)
     }
 
-    fun qglTexEnviv(target: Int, pName: Int, params: IntArray) {
+    fun qglTexEnviv(target: Int, pName: Int, params: IntArray?) {
         DEBUG_printName("glTexEnviv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1946,7 +1969,7 @@ object qgl {
         GL14.glTexGend(coord, pName, param)
     }
 
-    fun qglTexGendv(coord: Int, pName: Int, params: DoubleArray) {
+    fun qglTexGendv(coord: Int, pName: Int, params: DoubleArray?) {
         DEBUG_printName("glTexGendv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1956,7 +1979,7 @@ object qgl {
         GL14.glTexGenf(coord, pName, param)
     }
 
-    fun qglTexGenfv(coord: Int, pName: Int, params: FloatArray) {
+    fun qglTexGenfv(coord: Int, pName: Int, params: FloatArray?) {
         DEBUG_printName("glTexGenfv")
         GL14.glTexGenfv(coord, pName, params)
     }
@@ -1966,7 +1989,7 @@ object qgl {
         GL14.glTexGeni(coord, pName, param)
     }
 
-    fun qglTexGeniv(coord: Int, pName: Int, params: IntArray) {
+    fun qglTexGeniv(coord: Int, pName: Int, params: IntArray?) {
         DEBUG_printName("glTexGeniv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -1979,7 +2002,7 @@ object qgl {
         border: Int,
         format: Int,
         type: Int,
-        pixels: ByteBuffer
+        pixels: ByteBuffer?
     ) {
         DEBUG_printName("glTexImage1D")
         GL14.glTexImage1D(target, level, internalformat, width, border, format, type, pixels)
@@ -1995,10 +2018,10 @@ object qgl {
         border: Int,
         format: Int,
         type: Int,
-        pixels: ByteArray
+        pixels: ByteArray?
     ) {
         DEBUG_printName("glTexImage2D")
-        qglTexImage2D(target, level, internalformat, width, height, border, format, type, wrap(pixels))
+        qglTexImage2D(target, level, internalformat, width, height, border, format, type, wrap(pixels!!))
         throw UnsupportedOperationException()
     }
 
@@ -2011,7 +2034,7 @@ object qgl {
         border: Int,
         format: Int,
         type: Int,
-        pixels: ByteBuffer
+        pixels: ByteBuffer?
     ) {
         DEBUG_printName("glTexImage2D")
         GL14.glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels)
@@ -2022,7 +2045,7 @@ object qgl {
         GL14.glTexParameterf(target, pName, param)
     }
 
-    fun qglTexParameterfv(target: Int, pName: Int, params: FloatBuffer) {
+    fun qglTexParameterfv(target: Int, pName: Int, params: FloatBuffer?) {
         DEBUG_printName("glTexParameterfv")
         GL14.glTexParameterfv(target, pName, params)
     }
@@ -2032,7 +2055,7 @@ object qgl {
         GL14.glTexParameteri(target, pName, param)
     }
 
-    fun qglTexParameteriv(target: Int, pName: Int, params: IntArray) {
+    fun qglTexParameteriv(target: Int, pName: Int, params: IntArray?) {
         DEBUG_printName("glTexParameteriv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -2044,7 +2067,7 @@ object qgl {
         width: Int,
         format: Int,
         type: Int,
-        pixels: ByteBuffer
+        pixels: ByteBuffer?
     ) {
         DEBUG_printName("glTexSubImage1D")
         GL14.glTexSubImage1D(target, level, xoffset, width, format, type, pixels)
@@ -2059,7 +2082,7 @@ object qgl {
         height: Int,
         format: Int,
         type: Int,
-        pixels: ByteBuffer
+        pixels: ByteBuffer?
     ) {
         DEBUG_printName("glTexSubImage2D")
         GL14.glTexSubImage2D(target, level, xoffset, yoffset, width, height, format, type, pixels)
@@ -2080,7 +2103,7 @@ object qgl {
         GL14.glVertex2d(x, y)
     }
 
-    fun qglVertex2dv(v: DoubleArray) {
+    fun qglVertex2dv(v: DoubleArray?) {
         DEBUG_printName("glVertex2dv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -2090,7 +2113,7 @@ object qgl {
         GL14.glVertex2f(x, y)
     }
 
-    fun qglVertex2fv(v: FloatArray) {
+    fun qglVertex2fv(v: FloatArray?) {
         DEBUG_printName("glVertex2fv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -2100,7 +2123,7 @@ object qgl {
         GL14.glVertex2i(x, y)
     }
 
-    fun qglVertex2iv(v: IntArray) {
+    fun qglVertex2iv(v: IntArray?) {
         DEBUG_printName("glVertex2iv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -2110,7 +2133,7 @@ object qgl {
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglVertex2sv(v: ShortArray) {
+    fun qglVertex2sv(v: ShortArray?) {
         DEBUG_printName("glVertex2sv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -2120,7 +2143,7 @@ object qgl {
         GL14.glVertex3d(x, y, z)
     }
 
-    fun qglVertex3dv(v: DoubleArray) {
+    fun qglVertex3dv(v: DoubleArray?) {
         DEBUG_printName("glVertex3dv")
         throw UnsupportedOperationException("Not supported yet.")
     }
@@ -2140,7 +2163,7 @@ object qgl {
         GL14.glVertex3i(x, y, z)
     }
 
-    fun qglVertex3iv(v: IntArray) {
+    fun qglVertex3iv(v: IntArray?) {
         throw UnsupportedOperationException("Not supported yet.")
     }
 
@@ -2148,7 +2171,7 @@ object qgl {
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglVertex3sv(v: ShortArray) {
+    fun qglVertex3sv(v: ShortArray?) {
         throw UnsupportedOperationException("Not supported yet.")
     }
 
@@ -2157,7 +2180,7 @@ object qgl {
         GL14.glVertex4d(x, y, z, w)
     }
 
-    fun qglVertex4dv(v: DoubleArray) {
+    fun qglVertex4dv(v: DoubleArray?) {
         throw UnsupportedOperationException("Not supported yet.")
     }
 
@@ -2166,7 +2189,7 @@ object qgl {
         GL14.glVertex4f(x, y, z, w)
     }
 
-    fun qglVertex4fv(v: FloatArray) {
+    fun qglVertex4fv(v: FloatArray?) {
         throw UnsupportedOperationException("Not supported yet.")
     }
 
@@ -2175,7 +2198,7 @@ object qgl {
         GL14.glVertex4i(x, y, z, w)
     }
 
-    fun qglVertex4iv(v: IntArray) {
+    fun qglVertex4iv(v: IntArray?) {
         throw UnsupportedOperationException("Not supported yet.")
     }
 
@@ -2183,7 +2206,7 @@ object qgl {
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglVertex4sv(v: ShortArray) {
+    fun qglVertex4sv(v: ShortArray?) {
         throw UnsupportedOperationException("Not supported yet.")
     }
 
@@ -2193,13 +2216,13 @@ object qgl {
     }
 
     @Deprecated("")
-    fun qglVertexPointer(size: Int, type: Int, stride: Int, pointer: FloatArray) {
+    fun qglVertexPointer(size: Int, type: Int, stride: Int, pointer: FloatArray?) {
 //        GL14.glVertexPointer(size, type, stride, 0);
 //        GL14.glVertexPointer(size, stride, wrap(pointer));//TODO:use FloatBuffer.
         throw UnsupportedOperationException("Not supported yet.")
     }
 
-    fun qglVertexPointer(size: Int, type: Int, stride: Int, pointer: ByteBuffer) {
+    fun qglVertexPointer(size: Int, type: Int, stride: Int, pointer: ByteBuffer?) {
         DEBUG_printName("glVertexPointer")
         GL14.glVertexPointer(size, type, stride, pointer)
     }
@@ -2214,6 +2237,7 @@ object qgl {
 //            System.out.println(functionName);
         }
     }
+
     //
     //    
     //    
@@ -2245,6 +2269,16 @@ object qgl {
     //                                                COLORREF *);
     //extern BOOL ( WINAPI * qwglRealizeLayerPalette)(HDC, int, BOOL);
     //extern BOOL ( WINAPI * qwglSwapLayerBuffers)(HDC, UINT);
+    private fun checkGLError() {
+        if (GL_DEBUG) {
+            val messageLog: ByteBuffer = BufferUtils.createByteBuffer(1000)
+            //            while (GL43.glGetDebugMessageLog(1, null, null, null, null, null, messageLog) > 0) {
+//                System.out.println(TempDump.bbtoa(messageLog));
+//                messageLog.clear();
+//            }
+//            Util.checkGLError();
+        }
+    }
 
     @Deprecated("the calling functions should send ByteBuffers instead.")
     private fun wrap(byteArray: ByteArray): ByteBuffer {
@@ -2351,10 +2385,6 @@ object qgl {
         ) {
         }
 
-        fun  /*PFNGLSETFRAGMENTSHADERCONSTANTATIPROC*/qglSetFragmentShaderConstantATI(dst: Int, value: FloatArray) {}
-    }
-
-    init {
-        if (GL_DEBUG) qglEnable(GL43.GL_DEBUG_OUTPUT)
+        fun  /*PFNGLSETFRAGMENTSHADERCONSTANTATIPROC*/qglSetFragmentShaderConstantATI(dst: Int, value: FloatArray?) {}
     }
 }

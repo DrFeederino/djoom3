@@ -3308,7 +3308,7 @@ object MultiplayerGame {
             }
         }
 
-        private fun MessageMode(args: CmdArgs.idCmdArgs) {
+        private fun MessageMode(args: CmdArgs.idCmdArgs?) {
             val mode: String?
             val imode: Int
             if (!Game_local.gameLocal.isMultiplayer) {
@@ -3319,7 +3319,7 @@ object MultiplayerGame {
                 Common.common.Printf("no local client\n")
                 return
             }
-            mode = args.Argv(1)
+            mode = args!!.Argv(1)
             imode = if (!mode.isEmpty()) {
                 0
             } else {
@@ -3490,7 +3490,7 @@ object MultiplayerGame {
         }
 
         class ForceReady_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs) {
+            override fun run(args: CmdArgs.idCmdArgs?) {
                 if (!Game_local.gameLocal.isMultiplayer || Game_local.gameLocal.isClient) {
                     Common.common.Printf("forceReady: multiplayer server only\n")
                     return
@@ -3508,7 +3508,7 @@ object MultiplayerGame {
 
         // scores in TDM
         class DropWeapon_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs) {
+            override fun run(args: CmdArgs.idCmdArgs?) {
                 if (!Game_local.gameLocal.isMultiplayer) {
                     Common.common.Printf("clientDropWeapon: only valid in multiplayer\n")
                     return
@@ -3529,7 +3529,7 @@ object MultiplayerGame {
         }
 
         class MessageMode_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs) {
+            override fun run(args: CmdArgs.idCmdArgs?) {
                 Game_local.gameLocal.mpGame.MessageMode(args)
             }
 
@@ -3542,8 +3542,8 @@ object MultiplayerGame {
         }
 
         class VoiceChat_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs) {
-                Game_local.gameLocal.mpGame.VoiceChat(args, false)
+            override fun run(args: CmdArgs.idCmdArgs?) {
+                Game_local.gameLocal.mpGame.VoiceChat(args!!, false)
             }
 
             companion object {
@@ -3555,8 +3555,8 @@ object MultiplayerGame {
         }
 
         class VoiceChatTeam_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs) {
-                Game_local.gameLocal.mpGame.VoiceChat(args, true)
+            override fun run(args: CmdArgs.idCmdArgs?) {
+                Game_local.gameLocal.mpGame.VoiceChat(args!!, true)
             }
 
             companion object {
@@ -3632,7 +3632,7 @@ object MultiplayerGame {
          FIXME: voting from console
          ================
          */
-            fun Vote_f(args: CmdArgs.idCmdArgs) {}
+            fun Vote_f(args: CmdArgs.idCmdArgs?) {}
 
             /*
          ================
@@ -3640,7 +3640,7 @@ object MultiplayerGame {
          FIXME: voting from console
          ================
          */
-            fun CallVote_f(args: CmdArgs.idCmdArgs) {}
+            fun CallVote_f(args: CmdArgs.idCmdArgs?) {}
         }
 
         init {

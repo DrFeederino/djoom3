@@ -637,7 +637,6 @@ object Winding {
             var j: Int
             i = 0
             while (i < numPoints) {
-                println((p[i].ToVec3() - p[(i + numPoints - 1) % numPoints].ToVec3()).LengthSqr())
                 if ((p[i].ToVec3() - p[(i + numPoints - 1) % numPoints].ToVec3()).LengthSqr() >= Square(epsilon)
                 ) {
                     i++
@@ -1572,6 +1571,8 @@ object Winding {
 
             //
             private const val WCONVEX_EPSILON = 0.2f
+
+            @JvmStatic
             fun TriangleArea(a: idVec3, b: idVec3, c: idVec3): Float {
                 val v1 = idVec3()
                 val v2 = idVec3()

@@ -10,10 +10,13 @@ import neo.Renderer.tr_local.viewDef_s
 import neo.framework.DeclManager
 import neo.framework.DeclManager.declType_t
 import neo.framework.DeclParticle.idDeclParticle
+import neo.framework.DeclParticle.idParticleStage
 import neo.framework.DeclParticle.particleGen_t
 import neo.idlib.BV.Bounds.idBounds
 import neo.idlib.Text.Str.idStr
+import neo.idlib.Text.Str.idStr.Companion.Icmp
 import neo.idlib.containers.CInt
+import neo.idlib.geometry.DrawVert.idDrawVert
 import neo.idlib.math.Random.idRandom
 import java.util.*
 
@@ -30,31 +33,31 @@ object Model_prt {
 
      ===============================================================================
      */
-    class idRenderModelPrt : idRenderModelStatic() {
+    class idRenderModelPrt() : idRenderModelStatic() {
         //
-        private lateinit var particleSystem: idDeclParticle
-        override fun InitFromFile(fileName: String) {
-            name = idStr(fileName)
-            particleSystem = DeclManager.declManager.FindType(declType_t.DECL_PARTICLE, fileName) as idDeclParticle
+        private var particleSystem: idDeclParticle? = null
+        public override fun InitFromFile(fileName: String?) {
+            name = idStr((fileName)!!)
+            particleSystem = DeclManager.declManager.FindType(declType_t.DECL_PARTICLE, (fileName)!!) as idDeclParticle?
         }
 
-        override fun TouchData() {
+        public override fun TouchData() {
             // Ensure our particle system is added to the list of referenced decls
-            particleSystem = DeclManager.declManager.FindType(declType_t.DECL_PARTICLE, name) as idDeclParticle
+            particleSystem = DeclManager.declManager.FindType(declType_t.DECL_PARTICLE, name) as idDeclParticle?
         }
 
-        override fun IsDynamicModel(): dynamicModel_t {
+        public override fun IsDynamicModel(): dynamicModel_t {
             return dynamicModel_t.DM_CONTINUOUS
         }
 
-        override fun InstantiateDynamicModel(
-            renderEntity: renderEntity_s,
+        public override fun InstantiateDynamicModel(
+            renderEntity: renderEntity_s?,
             viewDef: viewDef_s?,
             cachedModel: idRenderModel?
         ): idRenderModel? {
-            var cachedModel = cachedModel
+            var cachedModel: idRenderModel? = cachedModel
             val staticModel: idRenderModelStatic
-            if (cachedModel != null && !RenderSystem_init.r_useCachedDynamicModels.GetBool()) {
+            if (cachedModel != null && !RenderSystem_init.r_useCachedDynamicModels!!.GetBool()) {
 //		delete cachedModel;
                 cachedModel = null
             }
@@ -64,7 +67,7 @@ object Model_prt {
 //		delete cachedModel;
                 return null
             }
-            if (RenderSystem_init.r_skipParticles.GetBool()) {
+            if (RenderSystem_init.r_skipParticles!!.GetBool()) {
 //		delete cachedModel;
                 return null
             }
@@ -76,20 +79,20 @@ object Model_prt {
              return null;
              }
              */if (cachedModel != null) {
-                assert(cachedModel is idRenderModelStatic)
-                assert(idStr.Icmp(cachedModel.Name(), parametricParticle_SnapshotName) == 0)
+                assert((cachedModel is idRenderModelStatic))
+                assert((Icmp(cachedModel.Name(), parametricParticle_SnapshotName) == 0))
                 staticModel = cachedModel as idRenderModelStatic
             } else {
                 staticModel = idRenderModelStatic()
                 staticModel.InitEmpty(parametricParticle_SnapshotName)
             }
-            val g = particleGen_t()
+            val g: particleGen_t = particleGen_t()
             g.renderEnt = renderEntity
             g.renderView = viewDef.renderView
             g.origin.Zero()
             g.axis.Identity()
-            for (stageNum in 0 until particleSystem.stages.Num()) {
-                val stage = particleSystem.stages.get(stageNum)
+            for (stageNum in 0 until particleSystem!!.stages.Num()) {
+                val stage: idParticleStage = particleSystem!!.stages[stageNum]
                 if (null == stage.material) {
                     continue
                 }
@@ -100,33 +103,38 @@ object Model_prt {
                     staticModel.DeleteSurfaceWithId(stageNum)
                     continue
                 }
-                val steppingRandom = idRandom()
-                val steppingRandom2 = idRandom()
-                val stageAge =
+                val steppingRandom: idRandom = idRandom()
+                val steppingRandom2: idRandom = idRandom()
+                val stageAge: Int =
                     (g.renderView.time + renderEntity.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] * 1000 - stage.timeOffset * 1000).toInt()
-                val stageCycle = stageAge / stage.cycleMsec
+                val stageCycle: Int = stageAge / stage.cycleMsec
                 //                int inCycleTime = stageAge - stageCycle * stage.cycleMsec;
 
                 // some particles will be in this cycle, some will be in the previous cycle
-                steppingRandom.SetSeed(stageCycle shl 10 and idRandom.MAX_RAND xor (renderEntity.shaderParms[RenderWorld.SHADERPARM_DIVERSITY] * idRandom.MAX_RAND).toInt())
-                steppingRandom2.SetSeed(stageCycle - 1 shl 10 and idRandom.MAX_RAND xor (renderEntity.shaderParms[RenderWorld.SHADERPARM_DIVERSITY] * idRandom.MAX_RAND).toInt())
-                val count = stage.totalParticles * stage.NumQuadsPerParticle()
-                val surfaceNum = CInt()
-                var surf: modelSurface_s
+                steppingRandom.SetSeed(
+                    ((stageCycle shl 10) and idRandom.MAX_RAND) xor (renderEntity.shaderParms[RenderWorld.SHADERPARM_DIVERSITY] * idRandom.MAX_RAND).toInt()
+                )
+                steppingRandom2.SetSeed(
+                    (((stageCycle - 1) shl 10) and idRandom.MAX_RAND) xor (renderEntity.shaderParms[RenderWorld.SHADERPARM_DIVERSITY] * idRandom.MAX_RAND).toInt()
+                )
+                val count: Int = stage.totalParticles * stage.NumQuadsPerParticle()
+                val surfaceNum: CInt = CInt()
+                var surf: modelSurface_s?
                 if (staticModel.FindSurfaceWithId(stageNum, surfaceNum)) {
-                    surf = staticModel.surfaces.get(surfaceNum._val)
-                    tr_trisurf.R_FreeStaticTriSurfVertexCaches(surf.geometry!!)
+                    surf = staticModel.surfaces[surfaceNum._val]
+                    tr_trisurf.R_FreeStaticTriSurfVertexCaches(surf!!.geometry!!)
                 } else {
-                    surf = staticModel.surfaces.Alloc()!!
-                    surf.id = stageNum
+                    surf = modelSurface_s()
+                    staticModel.surfaces.Append(surf)
+                    surf!!.id = stageNum
                     surf.shader = stage.material
                     surf.geometry = srfTriangles_s() //R_AllocStaticTriSurf();
                     tr_trisurf.R_AllocStaticTriSurfVerts(surf.geometry!!, 4 * count)
                     tr_trisurf.R_AllocStaticTriSurfIndexes(surf.geometry!!, 6 * count)
                     tr_trisurf.R_AllocStaticTriSurfPlanes(surf.geometry!!, 6 * count)
                 }
-                var numVerts = 0
-                val verts = surf.geometry!!.verts
+                var numVerts: Int = 0
+                val verts: Array<idDrawVert?>? = surf.geometry!!.verts
                 for (index in 0 until stage.totalParticles) {
                     g.index = index
 
@@ -135,10 +143,10 @@ object Model_prt {
                     steppingRandom2.RandomInt()
 
                     // calculate local age for this index
-                    val bunchOffset =
+                    val bunchOffset: Int =
                         (stage.particleLife * 1000 * stage.spawnBunching * index / stage.totalParticles).toInt()
-                    val particleAge = stageAge - bunchOffset
-                    val particleCycle = particleAge / stage.cycleMsec
+                    val particleAge: Int = stageAge - bunchOffset
+                    val particleCycle: Int = particleAge / stage.cycleMsec
                     if (particleCycle < 0) {
                         // before the particleSystem spawned
                         continue
@@ -152,9 +160,9 @@ object Model_prt {
                     } else {
                         g.random = idRandom(steppingRandom2)
                     }
-                    val inCycleTime = particleAge - particleCycle * stage.cycleMsec
-                    if (renderEntity.shaderParms[RenderWorld.SHADERPARM_PARTICLE_STOPTIME] != 0f
-                        && g.renderView.time - inCycleTime >= renderEntity.shaderParms[RenderWorld.SHADERPARM_PARTICLE_STOPTIME] * 1000
+                    val inCycleTime: Int = particleAge - particleCycle * stage.cycleMsec
+                    if ((renderEntity.shaderParms[RenderWorld.SHADERPARM_PARTICLE_STOPTIME] != 0f
+                                && g.renderView.time - inCycleTime >= renderEntity.shaderParms[RenderWorld.SHADERPARM_PARTICLE_STOPTIME] * 1000)
                     ) {
                         // don't fire any more particles
                         continue
@@ -176,17 +184,17 @@ object Model_prt {
                     g.age = g.frac * stage.particleLife
 
                     // if the particle doesn't get drawn because it is faded out or beyond a kill region, don't increment the verts
-                    numVerts += stage.CreateParticle(g, Arrays.copyOfRange(verts, numVerts, verts!!.size))
+                    numVerts += stage.CreateParticle(g, Arrays.copyOfRange<idDrawVert?>(verts, numVerts, verts!!.size))
                 }
-                assert(numVerts and 3 == 0 && numVerts <= 4 * count)
+                assert(((numVerts and 3) == 0 && numVerts <= 4 * count))
 
                 // build the indexes
-                var numIndexes = 0
+                var numIndexes: Int = 0
                 /*glIndex_t*/
-                val indexes = surf.geometry!!.indexes!!
-                var i = 0
+                val indexes: IntArray? = surf.geometry!!.indexes
+                var i: Int = 0
                 while (i < numVerts) {
-                    indexes[numIndexes + 0] = i
+                    indexes!![numIndexes + 0] = i
                     indexes[numIndexes + 1] = i + 2
                     indexes[numIndexes + 2] = i + 3
                     indexes[numIndexes + 3] = i
@@ -200,21 +208,21 @@ object Model_prt {
                 surf.geometry!!.numVerts = numVerts
                 surf.geometry!!.numIndexes = numIndexes
                 surf.geometry!!.bounds.set(stage.bounds) // just always draw the particles
-                val a = 0
+                val a: Int = 0
             }
             return staticModel
         }
 
-        override fun Bounds(ent: renderEntity_s?): idBounds {
-            return particleSystem.bounds
+        public override fun Bounds(ent: renderEntity_s?): idBounds {
+            return particleSystem!!.bounds
         }
 
-        override fun DepthHack(): Float {
-            return particleSystem.depthHack
+        public override fun DepthHack(): Float {
+            return particleSystem!!.depthHack
         }
 
-        override fun Memory(): Int {
-            var total = 0
+        public override fun Memory(): Int {
+            var total: Int = 0
             total += super.Memory()
             return total
         }

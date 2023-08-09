@@ -646,7 +646,7 @@ object tritjunction {
                 i = 0
                 while (i < model.NumSurfaces()) {
                     val surface = model.Surface(i)
-                    val tri = surface.geometry!!
+                    val tri = surface!!.geometry!!
                     val mapTri = mapTri_s()
                     //				memset( &mapTri, 0, sizeof( mapTri ) );
                     mapTri.material = surface.shader

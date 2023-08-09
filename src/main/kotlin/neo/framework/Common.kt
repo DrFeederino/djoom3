@@ -70,6 +70,8 @@ class Common {
 
     class MemInfo_t {
         var assetTotals = 0
+
+        @JvmField
         val filebase: idStr = idStr()
 
         //
@@ -78,11 +80,14 @@ class Common {
 
         //
         // asset totals
+        @JvmField
         var imageAssetsTotal = 0
 
         //
         // memory manager totals
         var memoryManagerTotal = 0
+
+        @JvmField
         var modelAssetsTotal = 0
         var renderSubsystemTotal = 0
         var soundAssetsTotal = 0
@@ -2206,7 +2211,7 @@ class Common {
      ==================
      */
     internal class Com_Editor_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             edit_public.RadiantInit()
         }
 
@@ -2225,7 +2230,7 @@ class Common {
      */
     internal class Com_ScriptDebugger_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             // Make sure it wasnt on the command line
             if (0 == com_editors and EDITOR_DEBUGGER) {
                 common.Printf("Script debugger is currently disabled\n")
@@ -2247,7 +2252,7 @@ class Common {
      =============
      */
     internal class Com_EditGUIs_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             edit_public.GUIEditorInit()
         }
 
@@ -2265,7 +2270,7 @@ class Common {
      =============
      */
     internal class Com_MaterialEditor_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             // Turn off sounds
             snd_system.soundSystem.SetMute(true)
             edit_public.MaterialEditorInit()
@@ -2288,7 +2293,7 @@ class Common {
      */
     internal class PrintMemInfo_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             val mi = MemInfo_t() //memset( &mi, 0, sizeof( mi ) );
             mi.filebase.set(Session.session.GetCurrentMapName())
             RenderSystem.renderSystem.PrintMemInfo(mi) // textures and models
@@ -2332,7 +2337,7 @@ class Common {
      ==================
      */
     internal class Com_EditLights_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             edit_public.LightEditorInit(idDict())
             CVarSystem.cvarSystem.SetCVarInteger("g_editEntityMode", 1)
         }
@@ -2351,7 +2356,7 @@ class Common {
      ==================
      */
     internal class Com_EditSounds_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             edit_public.SoundEditorInit(idDict())
             CVarSystem.cvarSystem.SetCVarInteger("g_editEntityMode", 2)
         }
@@ -2370,7 +2375,7 @@ class Common {
      ==================
      */
     internal class Com_EditDecls_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             edit_public.DeclBrowserInit(idDict())
         }
 
@@ -2388,7 +2393,7 @@ class Common {
      ==================
      */
     internal class Com_EditAFs_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             edit_public.AFEditorInit(idDict())
         }
 
@@ -2406,7 +2411,7 @@ class Common {
      ==================
      */
     internal class Com_EditParticles_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             edit_public.ParticleEditorInit(idDict())
         }
 
@@ -2424,7 +2429,7 @@ class Common {
      ==================
      */
     internal class Com_EditScripts_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             edit_public.ScriptEditorInit(idDict())
         }
 
@@ -2442,7 +2447,7 @@ class Common {
      ==================
      */
     internal class Com_EditPDAs_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             edit_public.PDAEditorInit(idDict())
         }
 
@@ -2463,12 +2468,12 @@ class Common {
      */
     internal class Com_Error_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             if (!com_developer.GetBool()) {
                 commonLocal.Printf("error may only be used in developer mode\n")
                 return
             }
-            if (args.Argc() > 1) {
+            if (args!!.Argc() > 1) {
                 commonLocal.FatalError("Testing fatal error")
             } else {
                 commonLocal.Error("Testing drop error")
@@ -2492,11 +2497,11 @@ class Common {
      */
     internal class Com_Freeze_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             val s: Float
             val start: Int
             var now: Int
-            if (args.Argc() != 2) {
+            if (args!!.Argc() != 2) {
                 commonLocal.Printf("freeze <seconds>\n")
                 return
             }
@@ -2531,7 +2536,7 @@ class Common {
      */
     internal class Com_Crash_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             if (!com_developer.GetBool()) {
                 commonLocal.Printf("crash may only be used in developer mode\n")
                 //                return;
@@ -2554,7 +2559,7 @@ class Common {
      =================
      */
     internal class Com_Quit_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             commonLocal.Quit()
         }
 
@@ -2575,9 +2580,9 @@ class Common {
      */
     internal class Com_WriteConfig_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             val filename: idStr
-            if (args.Argc() != 2) {
+            if (args!!.Argc() != 2) {
                 commonLocal.Printf("Usage: writeconfig <filename>\n")
                 return
             }
@@ -2602,7 +2607,7 @@ class Common {
      */
     internal class Com_SetMachineSpec_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             commonLocal.SetMachineSpec()
         }
 
@@ -2624,7 +2629,7 @@ class Common {
     // boolean OSX_GetCPUIdentification( int& cpuId, boolean& oldArchitecture );
     // #endif
     internal class Com_ExecMachineSpec_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             if (com_machineSpec.GetInteger() == 3) {
                 CVarSystem.cvarSystem.SetCVarInteger("image_anisotropy", 1, CVarSystem.CVAR_ARCHIVE)
                 CVarSystem.cvarSystem.SetCVarInteger("image_lodbias", 0, CVarSystem.CVAR_ARCHIVE)
@@ -2775,12 +2780,12 @@ class Common {
      */
     internal class Com_ReloadEngine_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             var menu = false
             if (!commonLocal.IsInitialized()) {
                 return
             }
-            if (args.Argc() > 1 && idStr.Icmp(args.Argv(1), "menu") == 0) {
+            if (args!!.Argc() > 1 && idStr.Icmp(args.Argv(1), "menu") == 0) {
                 menu = true
             }
             common.Printf("============= ReloadEngine start =============\n")
@@ -2817,8 +2822,8 @@ class Common {
      */
     internal class Com_LocalizeMaps_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs) {
-            if (args.Argc() < 2) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
+            if (args!!.Argc() < 2) {
                 common.Printf("Usage: localizeMaps <count | dictupdate | all> <map>\n")
                 return
             }
@@ -2885,8 +2890,8 @@ class Common {
      */
     internal class Com_LocalizeGuis_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs) {
-            if (args.Argc() != 2) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
+            if (args!!.Argc() != 2) {
                 common.Printf("Usage: localizeGuis <all | gui>\n")
                 return
             }
@@ -2933,7 +2938,7 @@ class Common {
 
     internal class Com_LocalizeGuiParmsTest_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             common.SetRefreshOnPrint(true)
             val localizeFile = FileSystem_h.fileSystem.OpenFileWrite("gui_parm_localize.csv")!!
             val noLocalizeFile = FileSystem_h.fileSystem.OpenFileWrite("gui_parm_nolocalize.csv")!!
@@ -2980,7 +2985,7 @@ class Common {
 
     internal class Com_LocalizeMapsTest_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             val listHash = ListHash()
             LoadMapLocalizeData(listHash)
             common.SetRefreshOnPrint(true)
@@ -3058,7 +3063,7 @@ class Common {
      =================
      */
     internal class Com_StartBuild_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             Image.globalImages.StartBuild()
         }
 
@@ -3076,11 +3081,11 @@ class Common {
      =================
      */
     internal class Com_FinishBuild_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             if (Game_local.game != null) {
                 Game_local.game.CacheDictionaryMedia(null)
             }
-            Image.globalImages.FinishBuild(args.Argc() > 1)
+            Image.globalImages.FinishBuild(args!!.Argc() > 1)
         }
 
         companion object {
@@ -3098,7 +3103,7 @@ class Common {
      */
     internal class Com_Help_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             common.Printf("\nCommonly used commands:\n")
             common.Printf("  spawnServer      - start the server.\n")
             common.Printf("  disconnect       - shut down the server.\n")
@@ -3135,7 +3140,7 @@ class Common {
      */
     internal class Com_ReloadLanguage_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             commonLocal.InitLanguageDict()
         }
 
@@ -3160,6 +3165,8 @@ class Common {
         val EDITOR_AF: Int = Lib.BIT(8)
         val EDITOR_DEBUGGER: Int = Lib.BIT(3)
         val EDITOR_DECL: Int = Lib.BIT(7)
+
+        @JvmField
         val EDITOR_GUI: Int = Lib.BIT(2)
         val EDITOR_LIGHT: Int = Lib.BIT(5)
         val EDITOR_MATERIAL: Int = Lib.BIT(12)
@@ -3171,7 +3178,10 @@ class Common {
 
         //
         //
+        @JvmField
         val STRTABLE_ID: String = "#str_"
+
+        @JvmField
         val STRTABLE_ID_LENGTH = STRTABLE_ID.length //5
         val com_allowConsole: idCVar = idCVar(
             "com_allowConsole",
@@ -3205,6 +3215,8 @@ class Common {
             0f,
             1f
         )
+
+        @JvmField
         val com_developer: idCVar = idCVar(
             "developer",
             "1",
@@ -3234,12 +3246,16 @@ class Common {
             CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_NOCHEAT,
             "name of log file, if empty, qconsole.log will be used"
         )
+
+        @JvmField
         val com_machineSpec: idCVar = idCVar(
             "com_machineSpec",
             "-1",
             CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_ARCHIVE or CVarSystem.CVAR_SYSTEM,
             "hardware classification, -1 = not detected, 0 = low quality, 1 = medium quality, 2 = high quality, 3 = ultra quality"
         )
+
+        @JvmField
         val com_makingBuild: idCVar =
             idCVar("com_makingBuild", "0", CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM, "1 when making a build")
         val com_memoryMarker: idCVar = idCVar(
@@ -3262,6 +3278,8 @@ class Common {
             CVarSystem.CVAR_INTEGER or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_ARCHIVE,
             "Extension to use when creating language files."
         )
+
+        @JvmField
         val com_purgeAll: idCVar = idCVar(
             "com_purgeAll",
             "0",
@@ -3322,6 +3340,8 @@ class Common {
             CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM or CVarSystem.CVAR_NOCHEAT,
             "update the load size after loading a map"
         )
+
+        @JvmField
         val com_videoRam: idCVar = idCVar(
             "com_videoRam",
             "512",
@@ -3345,16 +3365,22 @@ class Common {
         )
         var com_editorActive // true if an editor has focus
                 = false
+
+        @JvmField
         var com_editors // currently opened editor(s)
                 = 0
         var com_frameNumber // variable frame number
                 = 0
 
+        @Volatile
+        @JvmField
         var com_frameTime // time for the current frame in milliseconds
                 = 0
         var   /*HWND*/com_hwndMsg: Long = 0
         var com_outputMsg = false
 
+        @Volatile
+        @JvmField
         var com_ticNumber // 60 hz tics
                 = 0
         var time_backend // renderSystem backend time

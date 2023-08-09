@@ -32,6 +32,8 @@ object Simd {
     const val MIXBUFFER_SAMPLES = 4096
     var baseClocks: Long = 0
     var generic: idSIMDProcessor = idSIMD_Generic() // pointer to generic SIMD implementation
+
+    @JvmField
     var SIMDProcessor: idSIMDProcessor = generic
 
     //
@@ -121,7 +123,7 @@ object Simd {
           pretend"""
         )
         class Test_f : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs) {
+            override fun run(args: CmdArgs.idCmdArgs?) {
 //
 //                if (_WIN32) {
 ////                    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL);
@@ -338,7 +340,7 @@ object Simd {
         fun  /*VPCALL*/Memcpy(dst: Array<idDrawVert>, src: Array<idDrawVert>, count: Int) {
             System.arraycopy(src, 0, dst, 0, count)
             //            for (int i = 0; i < count; i++) {
-//                dst[i].oSet(src[i]); // it's not overloaded
+//                dst[i].set(src[i]); // it's not overloaded
 //            }
         }
 

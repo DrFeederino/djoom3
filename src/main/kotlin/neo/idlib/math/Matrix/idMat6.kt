@@ -1092,10 +1092,10 @@ class idMat6 {
 //    #else
         // 6*27+2*30 = 222 multiplications
         //		2*1  =	 2 divisions
-        val r0: Array<idVec3> = idVec3.generateArray(3)
-        val r1: Array<idVec3> = idVec3.generateArray(3)
-        val r2: Array<idVec3> = idVec3.generateArray(3)
-        val r3: Array<idVec3> = idVec3.generateArray(3)
+        val r0: Array<idVec3> = idVec3.Companion.generateArray(3)
+        val r1: Array<idVec3> = idVec3.Companion.generateArray(3)
+        val r2: Array<idVec3> = idVec3.Companion.generateArray(3)
+        val r3: Array<idVec3> = idVec3.Companion.generateArray(3)
         val c0: Float
         val c1: Float
         val c2: Float

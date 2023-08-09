@@ -5,8 +5,6 @@ import neo.Renderer.Material
 import neo.Renderer.Material.idMaterial
 import neo.Renderer.Model.idRenderModel
 import neo.Renderer.RenderWorld
-import neo.Renderer.RenderWorld.deferredEntityCallback_t
-import neo.Renderer.RenderWorld.renderView_s
 import neo.Sound.sound.idSoundEmitter
 import neo.framework.DeclSkin.idDeclSkin
 import neo.idlib.BV.Bounds.idBounds
@@ -55,6 +53,7 @@ object TempDump {
      * @param str a char array.
      * @return -1 if the array is NULL or the location of the first terminator.
      */
+    @JvmStatic
     fun strLen(str: CharArray): Int {
         var len: Int
         if (NOT(str)) {
@@ -70,6 +69,7 @@ object TempDump {
         return len
     }
 
+    @JvmStatic
     @JvmOverloads
     fun strLen(str: ByteArray, offset: Int = 0): Int {
         var len: Int
@@ -86,6 +86,7 @@ object TempDump {
         return len
     }
 
+    @JvmStatic
     fun strLen(str: String): Int {
         return strLen(str.toCharArray())
     }
@@ -142,6 +143,7 @@ object TempDump {
         } else unknownArray.javaClass.toString().split("\\[").toTypedArray().size - 1
     }
 
+    @JvmStatic
     fun flatten(input: Array<ByteArray>): ByteArray {
         val height = input.size
         val width: Int = input[0].size
@@ -152,6 +154,7 @@ object TempDump {
         return output
     }
 
+    @JvmStatic
     fun flatten(input: Array<Array<ByteArray>>): ByteArray {
         val height = input.size
         val width: Int = input[0].size
@@ -174,6 +177,7 @@ object TempDump {
      * @return substring before **index** + character + substring after
      * **index**.
      */
+    @JvmStatic
     fun replaceByIndex(character: kotlin.Char, index: Int, string: String): String {
         return string.substring(0, index) + character + string.substring(index + 1)
     }
@@ -184,6 +188,7 @@ object TempDump {
      * @param objects
      * @return True if **ALL** objects[0...i] = null.
      */
+    @JvmStatic
     fun NOT(vararg objects: Any?): Boolean {
         //TODO: make sure incoming object isn't Integer or Float...etc.
         if (objects == null) return true
@@ -193,6 +198,12 @@ object TempDump {
             }
         }
         return true
+    }
+
+    @JvmStatic
+    fun NOT(objects: Any?): Boolean {
+        //TODO: make sure incoming object isn't Integer or Float...etc.
+        if (objects == null) return true else return false
     }
 
     /**
@@ -213,6 +224,7 @@ object TempDump {
      *
      * ORDINALS!! mine arch enemy!!
      */
+    @JvmStatic
     fun etoi(enumeration: Enum<*>): Int {
         return enumeration.ordinal
     }
@@ -220,6 +232,7 @@ object TempDump {
     /**
      * Boolean TO Int
      */
+    @JvmStatic
     fun btoi(bool: Boolean): Int {
         return if (bool) 1 else 0
     }
@@ -227,6 +240,7 @@ object TempDump {
     /**
      * Byte TO Int
      */
+    @JvmStatic
     fun btoi(b: Byte): Int {
         return b.toInt() and 0xFF
     }
@@ -234,6 +248,7 @@ object TempDump {
     /**
      * @return -1 if **v1** not in **vList**.
      */
+    @JvmStatic
     fun indexOf(v1: Any?, vList: Array<*>?): Int {
         var i: Int
         if (v1 != null && vList != null) {
@@ -253,6 +268,7 @@ object TempDump {
     /**
      * Byte TO Int
      */
+    @JvmStatic
     fun btoi(b: ByteBuffer): Int {
         return b.get(0).toInt() and 0xFF
     }
@@ -260,6 +276,7 @@ object TempDump {
     /**
      * Int TO Boolean
      */
+    @JvmStatic
     fun itob(i: Int): Boolean {
         return i != 0
     }
@@ -281,6 +298,7 @@ object TempDump {
         return fa
     }
 
+    @JvmStatic
     fun atoi(ascii: String): Int {
         return try {
             ascii.trim { it <= ' ' }.toInt()
@@ -293,14 +311,17 @@ object TempDump {
         return itob(atoi(ascii))
     }
 
+    @JvmStatic
     fun atoi(ascii: idStr): Int {
         return atoi(ascii.toString())
     }
 
+    @JvmStatic
     fun atoi(ascii: CharArray): Int {
         return atoi(ctos(ascii))
     }
 
+    @JvmStatic
     fun atof(ascii: String): Float {
         return try {
             ascii.trim { it <= ' ' }.toFloat()
@@ -309,10 +330,12 @@ object TempDump {
         }
     }
 
+    @JvmStatic
     fun atof(ascii: idStr?): Float {
         return atof(ascii.toString())
     }
 
+    @JvmStatic
     fun ctos(ascii: CharArray): String { //TODO:rename this moronic overloading!
 //        if (NOT(ascii)) {
 //            return null
@@ -325,6 +348,7 @@ object TempDump {
         return String(ascii)
     }
 
+    @JvmStatic
     fun ctos(ascii: kotlin.Char): String {
         return "" + ascii
     }
@@ -377,6 +401,7 @@ object TempDump {
         } else CharBuffer.wrap(ascii.toCharArray())
     }
 
+    @JvmStatic
     fun bbtocb(buffer: ByteBuffer): CharBuffer {
 
 //        buffer.rewind();
@@ -388,6 +413,7 @@ object TempDump {
         return bbtocb(buffer).toString()
     }
 
+    @JvmStatic
     fun wrapToNativeBuffer(bytes: ByteArray?): ByteBuffer? {
         return if (null == bytes) {
             null
@@ -407,6 +433,7 @@ object TempDump {
         return intArray
     }
 
+    @JvmStatic
     fun itob(intArray: IntArray): ByteArray {
         val buffer = ByteBuffer.allocate(intArray.size * 4)
         buffer.asIntBuffer().put(intArray)
@@ -464,6 +491,7 @@ object TempDump {
     }
 
     @Throws(IOException::class)
+    @JvmStatic
     fun fprintf(logFile: FileChannel, text: String) {
         logFile.write(ByteBuffer.wrap(text.toByteArray()))
     }
@@ -478,6 +506,7 @@ object TempDump {
         return temp
     }
 
+    @JvmStatic
     fun dynamic_cast(glass: Class<*>, `object`: Any?): Any? {
         return if (glass.isInstance(`object`)) {
             `object`
@@ -535,6 +564,7 @@ object TempDump {
     }
 
     @Deprecated("")
+    @JvmStatic
     fun <T> allocArray(clazz: Class<T>, length: Int): Array<T> {
         val array = java.lang.reflect.Array.newInstance(clazz, length) as Array<T>
         for (a in 0 until length) {
@@ -691,17 +721,17 @@ object TempDump {
         fun _GetMul(`object`: Any, index: Int, value: Float): Float {
             val clazz: Class<*> = `object`.javaClass
             var returnValue = 0f
-            val oGet: Method?
-            val oMultiply: Method
+            val get: Method?
+            val times: Method
             val returnObject: Any?
             try {
 //                System.out.printf("%s\n\n", Arrays.toString(clazz.getDeclaredMethods()));
-                oGet = clazz.getDeclaredMethod(O_GET, Int::class.javaPrimitiveType)
-                returnObject = oGet.invoke(`object`, index)
+                get = clazz.getDeclaredMethod(O_GET, Int::class.javaPrimitiveType)
+                returnObject = get.invoke(`object`, index)
                 try {
-                    oMultiply = returnObject.javaClass.getDeclaredMethod(O_MULTIPLY)
+                    times = returnObject.javaClass.getDeclaredMethod(O_MULTIPLY)
                     returnValue =
-                        oMultiply.invoke(returnObject, value) as Float //object becomes float when multiplied(idMat)
+                        times.invoke(returnObject, value) as Float //object becomes float when multiplied(idMat)
                 } catch (ex: NoSuchMethodException) {
                     returnValue = returnObject as Float * value //object that has float(idVec)
                 }
@@ -722,12 +752,12 @@ object TempDump {
         fun _GetGet(`object`: Any, x: Int, y: Int): Float {
             val clazz: Class<*> = `object`.javaClass
             var returnValue = 0f
-            val oGet: Method?
+            val get: Method?
             val oGet2: Method
             val returnObject: Any?
             try {
-                oGet = clazz.getDeclaredMethod(O_GET)
-                returnObject = oGet.invoke(`object`, x)
+                get = clazz.getDeclaredMethod(O_GET)
+                returnObject = get.invoke(`object`, x)
                 oGet2 = returnObject.javaClass.getDeclaredMethod(O_GET)
                 returnValue = oGet2.invoke(returnObject, y) as Float
             } catch (ex: NoSuchMethodException) {
@@ -747,12 +777,12 @@ object TempDump {
         fun _GetSet(`object`: Any, x: Int, y: Int, value: Float): Float {
             val clazz: Class<*> = `object`.javaClass
             var returnValue = 0f
-            val oGet: Method?
+            val get: Method?
             val oGet2: Method
             val returnObject: Any?
             try {
-                oGet = clazz.getDeclaredMethod(O_GET)
-                returnObject = oGet.invoke(`object`, x)
+                get = clazz.getDeclaredMethod(O_GET)
+                returnObject = get.invoke(`object`, x)
                 oGet2 = returnObject.javaClass.getDeclaredMethod(O_SET)
                 returnValue = oGet2.invoke(returnObject, y, value) as Float
             } catch (ex: NoSuchMethodException) {
@@ -775,7 +805,7 @@ object TempDump {
 
         /**
          * Resolves the object types and processes the mathematical operation
-         * accordingly, whether it's **overridden**(e.g oPlus, oMinus..etc)
+         * accordingly, whether it's **overridden**(e.g oPlus, minus..etc)
          * or not.
          *
          * @param object1
@@ -825,127 +855,225 @@ object TempDump {
     class Atomics {
         class renderViewShadow {
             //
+            @JvmField
             var cramZNear: CBool = CBool(false)
+
+            @JvmField
             var forceUpdate: CBool = CBool(false)
 
             //
+            @JvmField
             var fov_x: CFloat = CFloat()
+
+            @JvmField
             var fov_y: CFloat = CFloat()
+
+            @JvmField
             var globalMaterial: idMaterial? = null
+
+            @JvmField
             var shaderParms = Array(RenderWorld.MAX_GLOBAL_SHADER_PARMS) { CFloat() }
 
             //
+            @JvmField
             var time: CInt = CInt()
+
+            @JvmField
             var viewID: CInt = CInt()
+
+            @JvmField
             var viewaxis: idMat3 = idMat3()
+
+            @JvmField
             val vieworg: idVec3 = idVec3()
 
             //
+            @JvmField
             var x: CInt = CInt()
+
+            @JvmField
             var y: CInt = CInt()
+
+            @JvmField
             var width: CInt = CInt()
+
+            @JvmField
             var height: CInt = CInt()
         }
 
         class renderEntityShadow {
             //
+            @JvmField
             var allowSurfaceInViewID: CInt = CInt()
+
+            @JvmField
             var axis: idMat3 = idMat3()
+
+            @JvmField
             var bodyId: CInt = CInt()
 
             //      
+            @JvmField
             var bounds: idBounds = idBounds()
-            var callback: deferredEntityCallback_t? = null
+
+            @JvmField
+            var callback: RenderWorld.deferredEntityCallback_t? = null
 
             //
+            @JvmField
             var callbackData: ByteBuffer? = null
 
             //
+            @JvmField
             var customShader: idMaterial? = null
+
+            @JvmField
             var customSkin: idDeclSkin? = null
 
             //
+            @JvmField
             var entityNum: CInt = CInt()
 
             //
+            @JvmField
             var forceUpdate: CInt = CInt()
 
             //
+            @JvmField
             var gui: Array<idUserInterface?> = arrayOfNulls(RenderWorld.MAX_RENDERENTITY_GUI)
+
+            @JvmField
             var hModel: idRenderModel? = null
+
+            @JvmField
             var joints: Array<idJointMat>? = null
 
             //
+            @JvmField
             var modelDepthHack: CFloat = CFloat()
 
             //
+            @JvmField
             var noDynamicInteractions: CBool = CBool()
 
             //
+            @JvmField
             var noSelfShadow: CBool = CBool()
+
+            @JvmField
             var noShadow: CBool = CBool()
 
             //
+            @JvmField
             var numJoints: CInt = CInt()
 
             //
+            @JvmField
             var origin: idVec3 = idVec3()
+
+            @JvmField
             var referenceShader: idMaterial? = null
+
+            @JvmField
             var referenceSound: idSoundEmitter? = null
 
             //
-            var remoteRenderView: renderView_s? = null
+            @JvmField
+            var remoteRenderView: RenderWorld.renderView_s? = null
+
+            @JvmField
             var shaderParms = Array(Material.MAX_ENTITY_SHADER_PARMS) { CFloat() }
 
             //
+            @JvmField
             var suppressShadowInLightID: CInt = CInt()
+
+            @JvmField
             var suppressShadowInViewID: CInt = CInt()
 
             //
+            @JvmField
             var suppressSurfaceInViewID: CInt = CInt()
+
+            @JvmField
             var timeGroup: CInt = CInt()
 
             //
+            @JvmField
             var weaponDepthHack: CBool = CBool()
+
+            @JvmField
             var xrayIndex: CInt = CInt()
         }
 
         class renderLightShadow {
             //
+            @JvmField
             var allowLightInViewID: CInt = CInt()
+
+            @JvmField
             var axis: idMat3 = idMat3()
+
+            @JvmField
             val end: idVec3 = idVec3()
+
+            @JvmField
             val lightCenter: idVec3 = idVec3()
 
             //
+            @JvmField
             var lightId: CInt = CInt()
+
+            @JvmField
             val lightRadius: idVec3 = idVec3()
 
             //
+            @JvmField
             var noShadows: CBool = CBool()
+
+            @JvmField
             var noSpecular: CBool = CBool()
+
+            @JvmField
             val origin: idVec3 = idVec3()
+
+            @JvmField
             var parallel: CBool = CBool()
 
             //
+            @JvmField
             var pointLight: CBool = CBool()
 
             //
+            @JvmField
             var prelightModel: idRenderModel? = null
+
+            @JvmField
             var referenceSound: idSoundEmitter? = null
+
+            @JvmField
             val right: idVec3 = idVec3()
 
             //
             //
+            @JvmField
             var shader: idMaterial? = null
+
+            @JvmField
             var shaderParms: FloatArray = FloatArray(Material.MAX_ENTITY_SHADER_PARMS)
+
+            @JvmField
             val start: idVec3 = idVec3()
 
             //
+            @JvmField
             var suppressLightInViewID: CInt = CInt()
 
             //
+            @JvmField
             val target: idVec3 = idVec3()
+
+            @JvmField
             val up: idVec3 = idVec3()
         }
     }
@@ -961,6 +1089,7 @@ object TempDump {
              * A 32bit C++ pointer is 32bits wide, duh!
              */
             @Transient
+            @JvmField
             val SIZE = 32
         }
 
@@ -969,6 +1098,7 @@ object TempDump {
              * A C++ bool is 8bits.
              */
             @Transient
+            @JvmField
             val SIZE = java.lang.Byte.SIZE
         }
 
@@ -977,10 +1107,12 @@ object TempDump {
              * A C++ char is also 8bits wide.
              */
             @Transient
+            @JvmField
             val SIZE = java.lang.Byte.SIZE
         }
 
         object Enum {
+
             /**
              * A C++ long is 4 bytes.
              */
@@ -991,6 +1123,7 @@ object TempDump {
              * A C++ enum is as big as an int.
              */
             @Transient
+            @JvmField
             val SIZE = Integer.SIZE
         }
 
@@ -999,6 +1132,7 @@ object TempDump {
              * A C++ long is 4 bytes.
              */
             @Transient
+            @JvmField
             val SIZE = Integer.SIZE
         }
     }

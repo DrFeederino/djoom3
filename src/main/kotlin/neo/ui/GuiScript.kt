@@ -1,55 +1,57 @@
 package neo.ui
 
 import neo.Renderer.Material
-import neo.TempDump
-import neo.framework.CmdSystem
+import neo.TempDump.atoi
+import neo.TempDump.dynamic_cast
+import neo.framework.CVarSystem.cvarSystem
 import neo.framework.CmdSystem.cmdExecution_t
+import neo.framework.CmdSystem.cmdSystem
 import neo.framework.Common
 import neo.framework.DeclManager
 import neo.framework.DemoFile.idDemoFile
 import neo.framework.File_h.idFile
 import neo.framework.Session
-import neo.idlib.Lib.idLib
-import neo.idlib.Text.Lexer
+import neo.idlib.Text.Lexer.LEXFL_ALLOWBACKSLASHSTRINGCONCAT
+import neo.idlib.Text.Lexer.LEXFL_ALLOWMULTICHARLITERALS
+import neo.idlib.Text.Lexer.LEXFL_NOSTRINGCONCAT
 import neo.idlib.Text.Parser.idParser
-import neo.idlib.Text.Str.idStr
+import neo.idlib.Text.Str.idStr.Companion.Cmpn
+import neo.idlib.Text.Str.idStr.Companion.Icmp
+import neo.idlib.Text.Str.idStr.Companion.Icmpn
 import neo.idlib.Text.Token.idToken
 import neo.idlib.containers.List.idList
 import neo.ui.Rectangle.idRectangle
 import neo.ui.SimpleWindow.drawWin_t
 import neo.ui.Window.idWindow
 import neo.ui.Winvar.idWinBackground
-import neo.ui.Winvar.idWinFloat
-import neo.ui.Winvar.idWinRectangle
 import neo.ui.Winvar.idWinStr
 import neo.ui.Winvar.idWinVar
-import neo.ui.Winvar.idWinVec4
 
 /**
  *
  */
 object GuiScript {
-    val commandList: Array<guiCommandDef_t> = arrayOf(
-        guiCommandDef_t("set", Script_Set.getInstance(), 2, 999),
-        guiCommandDef_t("setFocus", Script_SetFocus.getInstance(), 1, 1),
-        guiCommandDef_t("endGame", Script_EndGame.getInstance(), 0, 0),
-        guiCommandDef_t("resetTime", Script_ResetTime.getInstance(), 0, 2),
-        guiCommandDef_t("showCursor", Script_ShowCursor.getInstance(), 1, 1),
-        guiCommandDef_t("resetCinematics", Script_ResetCinematics.getInstance(), 0, 2),
-        guiCommandDef_t("transition", Script_Transition.getInstance(), 4, 6),
-        guiCommandDef_t("localSound", Script_LocalSound.getInstance(), 1, 1),
-        guiCommandDef_t("runScript", Script_RunScript.getInstance(), 1, 1),
-        guiCommandDef_t("evalRegs", Script_EvalRegs.getInstance(), 0, 0)
+    val commandList = arrayOf(
+        guiCommandDef_t("set", Script_Set.instance, 2, 999),
+        guiCommandDef_t("setFocus", Script_SetFocus.instance, 1, 1),
+        guiCommandDef_t("endGame", Script_EndGame.instance, 0, 0),
+        guiCommandDef_t("resetTime", Script_ResetTime.instance, 0, 2),
+        guiCommandDef_t("showCursor", Script_ShowCursor.instance, 1, 1),
+        guiCommandDef_t("resetCinematics", Script_ResetCinematics.instance, 0, 2),
+        guiCommandDef_t("transition", Script_Transition.instance, 4, 6),
+        guiCommandDef_t("localSound", Script_LocalSound.instance, 1, 1),
+        guiCommandDef_t("runScript", Script_RunScript.instance, 1, 1),
+        guiCommandDef_t("evalRegs", Script_EvalRegs.instance, 0, 0)
     )
     val scriptCommandCount = commandList.size
 
     class idGSWinVar {
         var own = false
-        var storedValue: idWinVar? = null
+        var `var`: idWinVar? = null
     }
 
     class guiCommandDef_t(
-        var name: String?, var handler: Handler?, // void (*handler) (idWindow *window, idList<idGSWinVar> *src);
+        var name: String, var handler: Handler, // void (*handler) (idWindow *window, idList<idGSWinVar> *src);
         var mMinParms: Int, var mMaxParms: Int
     )
 
@@ -59,8 +61,16 @@ object GuiScript {
         var conditionReg: Int
         var elseList: idGuiScriptList? = null
         var ifList: idGuiScriptList? = null
-        private var handler: Handler?
-        private val parms: idList<idGSWinVar?>
+        private var handler: Handler? = null
+        private val parms: idList<idGSWinVar>
+
+        //
+        //
+        init {
+            conditionReg = -1
+            parms = idList()
+            parms.SetGranularity(2)
+        }
 
         // ~idGuiScript();
         fun Parse(src: idParser): Boolean {
@@ -69,15 +79,15 @@ object GuiScript {
             // first token should be function call
             // then a potentially variable set of parms
             // ended with a ;
-            var token: idToken = idToken()
-            if (!src.ReadToken(token)) {
+            var token: idToken? = idToken()
+            if (!src.ReadToken(token!!)) {
                 src.Error("Unexpected end of file")
                 return false
             }
             handler = null
             i = 0
             while (i < scriptCommandCount) {
-                if (idStr.Icmp(token, commandList[i].name!!) == 0) {
+                if (Icmp(token, commandList[i].name) == 0) {
                     handler = commandList[i].handler
                     break
                 }
@@ -90,23 +100,22 @@ object GuiScript {
             // all parms are read as idWinStr's but will be fixed up later 
             // to be proper types
             while (true) {
-                token = idToken()
-                if (!src.ReadToken(token)) {
+                if (!src.ReadToken(idToken().also { token = it })) {
                     src.Error("Unexpected end of file")
                     return false
                 }
-                if (idStr.Icmp(token, ";") == 0) {
+                if (Icmp(token!!, ";") == 0) {
                     break
                 }
-                if (idStr.Icmp(token, "}") == 0) {
-                    src.UnreadToken(token)
+                if (Icmp(token!!, "}") == 0) {
+                    src.UnreadToken(token!!)
                     break
                 }
                 val str = idWinStr()
-                str.data.set(token)
+                str.data = token
                 val wv = idGSWinVar()
                 wv.own = true
-                wv.storedValue = str
+                wv.`var` = str
                 parms.Append(wv)
             }
 
@@ -121,30 +130,30 @@ object GuiScript {
 
         fun Execute(win: idWindow) {
             if (handler != null) {
-                handler!!.run(win, parms as idList<idGSWinVar>)
+                handler!!.run(win, parms)
             }
         }
 
         fun FixupParms(win: idWindow) {
-            if (handler === Script_Set.getInstance()) {
+            if (handler === Script_Set.instance) {
                 var precacheBackground = false
                 var precacheSounds = false
-                var str = (parms[0]!!.storedValue as idWinStr)
+                var str = (parms[0].`var` as idWinStr)
                 var dest = win.GetWinVarByName(str.data.toString(), true)
                 if (dest != null) {
 //			delete parms[0].var;
-                    parms[0]!!.storedValue = dest
-                    parms[0]!!.own = false
+                    parms[0].`var` = dest
+                    parms[0].own = false
                     if (dest is idWinBackground) { //TODO:cast null comparison. EDIT: not possible with static typing, use "instanceof" instead.
                         precacheBackground = true
                     }
-                } else if (idStr.Icmp(str.c_str(), "cmd") == 0) {
+                } else if (Icmp(str.c_str()!!, "cmd") == 0) {
                     precacheSounds = true
                 }
                 val parmCount = parms.Num()
                 for (i in 1 until parmCount) {
-                    str = parms[i]!!.storedValue as idWinStr
-                    if (idStr.Icmpn(str.data, "gui::", 5) == 0) {
+                    str = parms[i].`var` as idWinStr
+                    if (Icmpn(str.data!!, "gui::", 5) == 0) {
 
                         //  always use a string here, no point using a float if it is one
                         //  FIXME: This creates duplicate variables, while not technically a problem since they
@@ -153,8 +162,8 @@ object GuiScript {
                         defvar.Init(str.data.toString(), win)
                         win.AddDefinedVar(defvar)
                         //				delete parms[i].var;
-                        parms[0]!!.storedValue = defvar
-                        parms[0]!!.own = false
+                        parms[0].`var` = defvar
+                        parms[0].own = false
 
                         //dest = win.GetWinVarByName(*str, true);
                         //if (dest) {
@@ -163,27 +172,27 @@ object GuiScript {
                         //	parms[i].own = false;
                         //}
                         // 
-                    } else if (str.c_str() == "$") {
+                    } else if (str.data.toString() == '$'.toString()) {
                         // 
                         //  dont include the $ when asking for variable
-                        dest = win.GetGui().GetDesktop().GetWinVarByName(str.c_str().substring(1), true)
+                        dest = win.GetGui().GetDesktop()!!.GetWinVarByName(str.c_str()!!.substring(1), true)
                         // 					
                         if (dest != null) {
 //					delete parms[i].var;
-                            parms[i]!!.storedValue = dest
-                            parms[i]!!.own = false
+                            parms[i].`var` = dest
+                            parms[i].own = false
                         }
-                    } else if (idStr.Cmpn(str.c_str(), Common.STRTABLE_ID, Common.STRTABLE_ID_LENGTH) == 0) {
-                        str.set(Common.common.GetLanguageDict().GetString(str.c_str()))
+                    } else if (Cmpn(str.c_str()!!, Common.STRTABLE_ID, Common.STRTABLE_ID_LENGTH) == 0) {
+                        str.Set(Common.common.GetLanguageDict().GetString(str.c_str()))
                     } else if (precacheBackground) {
-                        val mat = DeclManager.declManager.FindMaterial(str.c_str())
+                        val mat = DeclManager.declManager.FindMaterial(str.c_str()!!)
                         mat!!.SetSort(Material.SS_GUI.toFloat())
                     } else if (precacheSounds) {
                         // Search for "play <...>"
                         val token = idToken()
                         val parser =
-                            idParser(Lexer.LEXFL_NOSTRINGCONCAT or Lexer.LEXFL_ALLOWMULTICHARLITERALS or Lexer.LEXFL_ALLOWBACKSLASHSTRINGCONCAT)
-                        parser.LoadMemory(str.c_str(), str.Length(), "command")
+                            idParser(LEXFL_NOSTRINGCONCAT or LEXFL_ALLOWMULTICHARLITERALS or LEXFL_ALLOWBACKSLASHSTRINGCONCAT)
+                        parser.LoadMemory(str.c_str()!!, str.Length(), "command")
                         while (parser.ReadToken(token)) {
                             if (token.Icmp("play") == 0) {
                                 if (parser.ReadToken(token) && !token.IsEmpty()) {
@@ -193,7 +202,7 @@ object GuiScript {
                         }
                     }
                 }
-            } else if (handler === Script_Transition.getInstance()) {
+            } else if (handler === Script_Transition.instance) {
                 if (parms.Num() < 4) {
                     Common.common.Warning(
                         "Window %s in gui %s has a bad transition definition",
@@ -201,7 +210,7 @@ object GuiScript {
                         win.GetGui().GetSourceFile()
                     )
                 }
-                var str = (parms[0]!!.storedValue as idWinStr)
+                var str = (parms[0].`var` as idWinStr?)!!
 
                 // 
                 val destOwner = arrayOf<drawWin_t?>(null)
@@ -209,14 +218,14 @@ object GuiScript {
                 // 
                 if (dest != null) {
 //			delete parms[0].var;
-                    parms[0]!!.storedValue = dest
-                    parms[0]!!.own = false
+                    parms[0].`var` = dest
+                    parms[0].own = false
                 } else {
                     Common.common.Warning(
                         "Window %s in gui %s: a transition does not have a valid destination var %s",
                         win.GetName(),
                         win.GetGui().GetSourceFile(),
-                        str.c_str()
+                        str.c_str()!!
                     )
                 }
 
@@ -225,13 +234,13 @@ object GuiScript {
                 var c: Int
                 c = 1
                 while (c < 3) {
-                    str = parms[c]!!.storedValue as idWinStr
-                    val v4 = idWinVec4()
-                    parms[c]!!.storedValue = v4
-                    parms[c]!!.own = true
+                    str = parms[c].`var` as idWinStr
+                    val v4 = Winvar.idWinVec4()
+                    parms[c].`var` = v4
+                    parms[c].own = true
                     val owner = arrayOf<drawWin_t?>(null)
-                    dest = if (str.data[0] == '$') {
-                        win.GetWinVarByName(str.c_str().substring(1), true, owner)
+                    dest = if (str.data!![0] == '$') {
+                        win.GetWinVarByName(str.c_str()!!.substring(1), true, owner)
                     } else {
                         null
                     }
@@ -250,18 +259,18 @@ object GuiScript {
                                 ) else owner[0]!!.win!!.GetWinVarByName("rect")
                             ) {
                                 val rect = idRectangle()
-                                rect.set((dest as idWinRectangle).data)
+                                rect.set((dest as Winvar.idWinRectangle).data)
                                 ownerparent.ClientToScreen(rect)
                                 destparent.ScreenToClient(rect)
                                 v4.set(rect.ToVec4())
                             } else {
-                                v4.set(dest.c_str())
+                                v4.Set(dest.c_str())
                             }
                         } else {
-                            v4.set(dest.c_str())
+                            v4.Set(dest.c_str())
                         }
                     } else {
-                        v4.set(str.data)
+                        v4.Set(str.data!!)
                     }
                     c++
                 }
@@ -269,7 +278,7 @@ object GuiScript {
             } else {
                 val c = parms.Num()
                 for (i in 0 until c) {
-                    parms[i]!!.storedValue!!.Init(parms[i]!!.storedValue!!.c_str(), win)
+                    parms[i].`var`!!.Init(parms[i].`var`!!.c_str(), win)
                 }
             }
         }
@@ -277,20 +286,24 @@ object GuiScript {
         fun  /*size_t*/Size(): Int {
             var sz = 4
             for (i in 0 until parms.Num()) {
-                sz += parms[i]!!.storedValue!!.Size()
+                sz += parms[i].`var`!!.Size()
             }
             return sz
         }
 
         fun WriteToSaveGame(savefile: idFile) {
             var i: Int
-            ifList?.WriteToSaveGame(savefile)
-            elseList?.WriteToSaveGame(savefile)
+            if (ifList != null) {
+                ifList!!.WriteToSaveGame(savefile)
+            }
+            if (elseList != null) {
+                elseList!!.WriteToSaveGame(savefile)
+            }
             savefile.WriteInt(conditionReg)
             i = 0
             while (i < parms.Num()) {
-                if (parms[i]!!.own) {
-                    parms[i]!!.storedValue!!.WriteToSaveGame(savefile)
+                if (parms[i].own) {
+                    parms[i].`var`!!.WriteToSaveGame(savefile)
                 }
                 i++
             }
@@ -298,30 +311,30 @@ object GuiScript {
 
         fun ReadFromSaveGame(savefile: idFile) {
             var i: Int
-            ifList?.ReadFromSaveGame(savefile)
-            elseList?.ReadFromSaveGame(savefile)
+            if (ifList != null) {
+                ifList!!.ReadFromSaveGame(savefile)
+            }
+            if (elseList != null) {
+                elseList!!.ReadFromSaveGame(savefile)
+            }
             conditionReg = savefile.ReadInt()
             i = 0
             while (i < parms.Num()) {
-                if (parms[i]!!.own) {
-                    parms[i]!!.storedValue!!.ReadFromSaveGame(savefile)
+                if (parms[i].own) {
+                    parms[i].`var`!!.ReadFromSaveGame(savefile)
                 }
                 i++
             }
         } //protected	void (*handler) (idWindow *window, idList<idGSWinVar> *src);
-
-        //
-        //
-        init {
-            conditionReg = -1
-            handler = null
-            parms = idList()
-            parms.SetGranularity(2)
-        }
     }
 
     class idGuiScriptList {
         val list: idList<idGuiScript>
+
+        init {
+            list = idList()
+            list.SetGranularity(4)
+        }
 
         // ~idGuiScriptList() { list.DeleteContents(true); };
         fun Execute(win: idWindow) {
@@ -361,13 +374,17 @@ object GuiScript {
             for (i in 0 until c) {
                 val gs = list[i]
                 gs.FixupParms(win)
-                gs.ifList?.FixupParms(win)
-                gs.elseList?.FixupParms(win)
+                if (gs.ifList != null) {
+                    gs.ifList!!.FixupParms(win)
+                }
+                if (gs.elseList != null) {
+                    gs.elseList!!.FixupParms(win)
+                }
             }
         }
 
-        fun ReadFromDemoFile(f: idDemoFile) {}
-        fun WriteToDemoFile(f: idDemoFile) {}
+        fun ReadFromDemoFile(f: idDemoFile?) {}
+        fun WriteToDemoFile(f: idDemoFile?) {}
         fun WriteToSaveGame(savefile: idFile) {
             var i: Int
             i = 0
@@ -385,11 +402,6 @@ object GuiScript {
                 i++
             }
         }
-
-        init {
-            list = idList()
-            list.SetGranularity(4)
-        }
     }
 
     abstract class Handler {
@@ -406,37 +418,34 @@ object GuiScript {
             scriptSetTotal++
             var key: String
             var `val`: String?
-            var dest: idWinStr? = TempDump.dynamic_cast(idWinStr::class.java, src[0].storedValue as Any) as idWinStr?
+            var dest = dynamic_cast(idWinStr::class.java, src[0].`var`) as idWinStr?
             if (dest != null) {
-                if (idStr.Icmp(dest.data, "cmd") == 0) {
-                    dest = src[1].storedValue as idWinStr?
+                if (Icmp(dest.data!!, "cmd") == 0) {
+                    dest = src[1].`var` as idWinStr
                     val parmCount = src.Num()
                     if (parmCount > 2) {
-                        `val` = dest!!.c_str()
+                        `val` = dest.c_str()
                         var i = 2
                         while (i < parmCount) {
                             `val` += " \""
-                            `val` += src[i].storedValue!!.c_str()
+                            `val` += src[i].`var`!!.c_str()
                             `val` += "\""
                             i++
                         }
                         window.AddCommand(`val`)
                     } else {
-                        window.AddCommand(dest!!.data.toString())
+                        window.AddCommand(dest.data.toString())
                     }
                     return
                 }
             }
-            src[0].storedValue!!.set(src[1].storedValue!!.c_str())
-            src[0].storedValue!!.SetEval(false)
+            src[0].`var`!!.Set(src[1].`var`!!.c_str())
+            src[0].`var`!!.SetEval(false)
         }
 
         companion object {
-            private val instance: Handler? = Script_Set()
+            val instance: Handler = Script_Set()
             private var scriptSetTotal = 0
-            fun getInstance(): Handler? {
-                return instance
-            }
         }
     }
 
@@ -447,20 +456,17 @@ object GuiScript {
      */
     internal class Script_SetFocus private constructor() : Handler() {
         override fun run(window: idWindow, src: idList<idGSWinVar>) {
-            val parm = src[0].storedValue as idWinStr?
+            val parm = src[0].`var` as idWinStr?
             if (parm != null) {
-                val win = window.GetGui().GetDesktop().FindChildByName(parm.data.toString())
+                val win = window.GetGui().GetDesktop()!!.FindChildByName(parm.data.toString())
                 if (win != null && win.win != null) {
-                    window.SetFocus(win.win!!)
+                    window.SetFocus(win.win)
                 }
             }
         }
 
         companion object {
-            private val instance: Handler = Script_SetFocus()
-            fun getInstance(): Handler {
-                return instance
-            }
+            val instance: Handler = Script_SetFocus()
         }
     }
 
@@ -471,21 +477,18 @@ object GuiScript {
      */
     internal class Script_ShowCursor private constructor() : Handler() {
         override fun run(window: idWindow, src: idList<idGSWinVar>) {
-            val parm = src[0].storedValue as idWinStr?
+            val parm = src[0].`var` as idWinStr?
             if (parm != null) {
                 if (parm.data.toString().toInt() != 0) {
-                    window.GetGui().GetDesktop().ClearFlag(Window.WIN_NOCURSOR)
+                    window.GetGui().GetDesktop()!!.ClearFlag(Window.WIN_NOCURSOR)
                 } else {
-                    window.GetGui().GetDesktop().SetFlag(Window.WIN_NOCURSOR)
+                    window.GetGui().GetDesktop()!!.SetFlag(Window.WIN_NOCURSOR)
                 }
             }
         }
 
         companion object {
-            private val instance: Handler = Script_ShowCursor()
-            fun getInstance(): Handler {
-                return instance
-            }
+            val instance: Handler = Script_ShowCursor()
         }
     }
 
@@ -498,7 +501,7 @@ object GuiScript {
      */
     internal class Script_RunScript private constructor() : Handler() {
         override fun run(window: idWindow, src: idList<idGSWinVar>) {
-            val parm = src[0].storedValue as idWinStr?
+            val parm = src[0].`var` as idWinStr?
             if (parm != null) {
                 var str: String? = window.cmd.toString()
                 str += " ; runScript "
@@ -508,10 +511,7 @@ object GuiScript {
         }
 
         companion object {
-            private val instance: Handler = Script_RunScript()
-            fun getInstance(): Handler {
-                return instance
-            }
+            val instance: Handler = Script_RunScript()
         }
     }
 
@@ -522,17 +522,14 @@ object GuiScript {
      */
     internal class Script_LocalSound private constructor() : Handler() {
         override fun run(window: idWindow, src: idList<idGSWinVar>) {
-            val parm = src[0].storedValue as idWinStr?
+            val parm = src[0].`var` as idWinStr?
             if (parm != null) {
                 Session.session.sw.PlayShaderDirectly(parm.data.toString())
             }
         }
 
         companion object {
-            private val instance: Handler = Script_LocalSound()
-            fun getInstance(): Handler {
-                return instance
-            }
+            val instance: Handler = Script_LocalSound()
         }
     }
 
@@ -547,10 +544,7 @@ object GuiScript {
         }
 
         companion object {
-            private val instance: Handler = Script_EvalRegs()
-            fun getInstance(): Handler {
-                return instance
-            }
+            val instance: Handler = Script_EvalRegs()
         }
     }
 
@@ -561,15 +555,12 @@ object GuiScript {
      */
     internal class Script_EndGame private constructor() : Handler() {
         override fun run(window: idWindow, src: idList<idGSWinVar>) {
-            idLib.cvarSystem.SetCVarBool("g_nightmare", true)
-            CmdSystem.cmdSystem.BufferCommandText(cmdExecution_t.CMD_EXEC_APPEND, "disconnect\n")
+            cvarSystem.SetCVarBool("g_nightmare", true)
+            cmdSystem.BufferCommandText(cmdExecution_t.CMD_EXEC_APPEND, "disconnect\n")
         }
 
         companion object {
-            private val instance: Handler = Script_EndGame()
-            fun getInstance(): Handler {
-                return instance
-            }
+            val instance: Handler = Script_EndGame()
         }
     }
 
@@ -580,15 +571,15 @@ object GuiScript {
      */
     internal class Script_ResetTime private constructor() : Handler() {
         override fun run(window: idWindow, src: idList<idGSWinVar>) {
-            var parm = src[0].storedValue as idWinStr?
+            var parm = src[0].`var` as idWinStr?
             var win: drawWin_t? = null
             if (parm != null && src.Num() > 1) {
-                win = window.GetGui().GetDesktop().FindChildByName(parm.data.toString())
-                parm = src[1].storedValue as idWinStr?
+                win = window.GetGui().GetDesktop()!!.FindChildByName(parm.data.toString())
+                parm = src[1].`var` as idWinStr
             }
             if (win != null && win.win != null) {
-                win.win?.ResetTime(parm!!.data.toString().toInt())
-                win.win?.EvalRegs(-1, true)
+                win.win!!.ResetTime(parm!!.data.toString().toInt())
+                win.win!!.EvalRegs(-1, true)
             } else {
                 window.ResetTime(parm!!.data.toString().toInt())
                 window.EvalRegs(-1, true)
@@ -596,10 +587,7 @@ object GuiScript {
         }
 
         companion object {
-            private val instance: Handler = Script_ResetTime()
-            fun getInstance(): Handler {
-                return instance
-            }
+            val instance: Handler = Script_ResetTime()
         }
     }
 
@@ -614,10 +602,7 @@ object GuiScript {
         }
 
         companion object {
-            private val instance: Handler = Script_ResetCinematics()
-            fun getInstance(): Handler {
-                return instance
-            }
+            val instance: Handler = Script_ResetCinematics()
         }
     }
 
@@ -630,30 +615,27 @@ object GuiScript {
         override fun run(window: idWindow, src: idList<idGSWinVar>) {
             // transitions always affect rect or vec4 vars
             if (src.Num() >= 4) {
-                var rect: idWinRectangle? = null
-                val vec4 = TempDump.dynamic_cast(idWinVec4::class.java, src[0].storedValue as Any) as idWinVec4?
+                var rect: Winvar.idWinRectangle? = null
+                val vec4 = dynamic_cast(Winvar.idWinVec4::class.java, src[0].`var`) as Winvar.idWinVec4?
                 // 
                 //  added float variable
-                var `val`: idWinFloat? = null
+                var `val`: Winvar.idWinFloat? = null
                 // 
                 if (null == vec4) {
-                    rect =
-                        TempDump.dynamic_cast(idWinRectangle::class.java, src[0].storedValue as Any) as idWinRectangle?
+                    rect = dynamic_cast(Winvar.idWinRectangle::class.java, src[0].`var`) as Winvar.idWinRectangle?
                     // 
                     //  added float variable					
                     if (null == rect) {
-                        `val` = src[0].storedValue as idWinFloat?
+                        `val` = src[0].`var` as Winvar.idWinFloat?
                     }
                     // 
                 }
-                val from = TempDump.dynamic_cast(idWinVec4::class.java, src[1].storedValue as Any) as idWinVec4?
-                val to = TempDump.dynamic_cast(idWinVec4::class.java, src[2].storedValue as Any) as idWinVec4?
-                val timeStr = TempDump.dynamic_cast(idWinStr::class.java, src[3].storedValue as Any) as idWinStr?
+                val from = dynamic_cast(Winvar.idWinVec4::class.java, src[1].`var`) as Winvar.idWinVec4?
+                val to = dynamic_cast(Winvar.idWinVec4::class.java, src[2].`var`) as Winvar.idWinVec4?
+                val timeStr = dynamic_cast(idWinStr::class.java, src[3].`var`) as idWinStr?
                 // 
                 //  added float variable					
-                if (!((vec4 != null || rect != null || `val` != null)
-                            && from != null && to != null && timeStr != null)
-                ) {
+                if (!((vec4 != null || rect != null || `val` != null) && from != null && to != null && timeStr != null)) {
                     // 
                     Common.common.Warning(
                         "Bad transition in gui %s in window %s\n",
@@ -662,15 +644,15 @@ object GuiScript {
                     )
                     return
                 }
-                val time = TempDump.atoi(timeStr.data.toString())
+                val time = atoi(timeStr.data.toString())
                 var ac = 0.0f
                 var dc = 0.0f
                 if (src.Num() > 4) {
-                    val acv = TempDump.dynamic_cast(idWinStr::class.java, src[4].storedValue as Any) as idWinStr
-                    val dcv = TempDump.dynamic_cast(idWinStr::class.java, src[5].storedValue as Any) as idWinStr
+                    val acv = dynamic_cast(idWinStr::class.java, src[4].`var`) as idWinStr?
+                    val dcv = dynamic_cast(idWinStr::class.java, src[5].`var`) as idWinStr?
                     assert(acv != null && dcv != null)
-                    ac = acv.data.toString().toFloat()
-                    dc = dcv.data.toString().toFloat()
+                    ac = acv!!.data.toString().toFloat()
+                    dc = dcv!!.data.toString().toFloat()
                 }
                 if (vec4 != null) {
                     vec4.SetEval(false)
@@ -690,10 +672,7 @@ object GuiScript {
         }
 
         companion object {
-            private val instance: Handler = Script_Transition()
-            fun getInstance(): Handler {
-                return instance
-            }
+            val instance: Handler = Script_Transition()
         }
     }
 }

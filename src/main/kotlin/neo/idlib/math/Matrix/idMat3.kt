@@ -22,7 +22,7 @@ import kotlin.math.cos
 //
 //===============================================================
 class idMat3 {
-    val mat: Array<idVec3> = idVec3.generateArray(3)
+    val mat: Array<idVec3> = idVec3.Companion.generateArray(3)
 
     constructor()
     constructor(x: idVec3, y: idVec3, z: idVec3) {
@@ -739,6 +739,7 @@ class idMat3 {
             return idMat3(mat3_zero)
         }
 
+        @JvmStatic
         fun getMat3_identity(): idMat3 {
             return idMat3(mat3_identity)
         }

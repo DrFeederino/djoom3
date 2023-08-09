@@ -15,7 +15,9 @@ import neo.Renderer.Material
 import neo.Renderer.Model.idRenderModel
 import neo.Renderer.ModelManager
 import neo.Renderer.RenderWorld
-import neo.Renderer.RenderWorld.*
+import neo.Renderer.RenderWorld.renderEntity_s
+import neo.Renderer.RenderWorld.renderLight_s
+import neo.Renderer.RenderWorld.renderView_s
 import neo.Sound.snd_shader.idSoundShader
 import neo.TempDump.SERiAL
 import neo.TempDump.TODO_Exception

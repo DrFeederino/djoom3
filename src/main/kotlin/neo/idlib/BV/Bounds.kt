@@ -195,6 +195,11 @@ object Bounds {
             return b[index].minusAssign(t)
         }
 
+        fun plusAssign(bounds: idBounds): idBounds {
+            this.AddBounds(bounds)
+            return this
+        }
+
         fun Compare(a: idBounds): Boolean {                            // exact compare, no epsilon
             return b[0].Compare(a.b[0]) && b[1].Compare(a.b[1])
         }

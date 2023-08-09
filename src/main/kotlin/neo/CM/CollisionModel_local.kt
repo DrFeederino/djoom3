@@ -7015,7 +7015,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             i = 0
             while (i < renderModel.NumSurfaces()) {
                 surf = renderModel.Surface(i)
-                if (surf.shader!!.GetSurfaceFlags() and Material.SURF_COLLISION != 0) {
+                if (surf!!.shader!!.GetSurfaceFlags() and Material.SURF_COLLISION != 0) {
                     collisionSurface = true
                 }
                 i++
@@ -7024,12 +7024,12 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             while (i < renderModel.NumSurfaces()) {
                 surf = renderModel.Surface(i)
                 // if this surface has no contents
-                if (0 == surf.shader!!.GetContentFlags() and Material.CONTENTS_REMOVE_UTIL) {
+                if (0 == surf!!.shader!!.GetContentFlags() and Material.CONTENTS_REMOVE_UTIL) {
                     i++
                     continue
                 }
                 // if the model has a collision surface and this surface is not a collision surface
-                if (collisionSurface && 0 == surf.shader!!.GetSurfaceFlags() and Material.SURF_COLLISION) {
+                if (collisionSurface && 0 == surf!!.shader!!.GetSurfaceFlags() and Material.SURF_COLLISION) {
                     i++
                     continue
                 }
@@ -7050,7 +7050,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             while (i < renderModel.NumSurfaces()) {
                 surf = renderModel.Surface(i)
                 // if this surface has no contents
-                if (0 == surf.shader!!.GetContentFlags() and Material.CONTENTS_REMOVE_UTIL) {
+                if (0 == surf!!.shader!!.GetContentFlags() and Material.CONTENTS_REMOVE_UTIL) {
                     i++
                     continue
                 }

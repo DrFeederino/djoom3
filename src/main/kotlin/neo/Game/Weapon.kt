@@ -851,20 +851,20 @@ object Weapon {
 
 //	memset( &renderEntity, 0, sizeof( renderEntity ) );
             renderEntity = renderEntity_s()
-            renderEntity.entityNum = entityNumber
-            renderEntity.noShadow = true
-            renderEntity.noSelfShadow = true
-            renderEntity.customSkin = null
+            renderEntity!!.entityNum = entityNumber
+            renderEntity!!.noShadow = true
+            renderEntity!!.noSelfShadow = true
+            renderEntity!!.customSkin = null
 
             // set default shader parms
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_RED] = 1.0f
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN] = 1.0f
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE] = 1.0f
-            renderEntity.shaderParms[3] = 1.0f
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] = 0.0f
-            renderEntity.shaderParms[5] = 0.0f
-            renderEntity.shaderParms[6] = 0.0f
-            renderEntity.shaderParms[7] = 0.0f
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_RED] = 1.0f
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_GREEN] = 1.0f
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_BLUE] = 1.0f
+            renderEntity!!.shaderParms[3] = 1.0f
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] = 0.0f
+            renderEntity!!.shaderParms[5] = 0.0f
+            renderEntity!!.shaderParms[6] = 0.0f
+            renderEntity!!.shaderParms[7] = 0.0f
             if (refSound.referenceSound != null) {
                 refSound.referenceSound!!.Free(true)
             }
@@ -1152,10 +1152,10 @@ object Weapon {
                     ammoClip = ammoAvail
                 }
             }
-            renderEntity.gui[0] = null
+            renderEntity!!.gui[0] = null
             guiName = weaponDef!!.dict.GetString("gui")
             if (guiName.isNotEmpty()) {
-                renderEntity.gui[0] = UserInterface.uiManager.FindGui(guiName, true, false, true)!!
+                renderEntity!!.gui[0] = UserInterface.uiManager.FindGui(guiName, true, false, true)!!
             }
             zoomFov = weaponDef!!.dict.GetFloat("zoomFov", "70")
             berserk = weaponDef!!.dict.GetInt("berserk", "2")
@@ -1212,7 +1212,7 @@ object Weapon {
         }
 
         fun UpdateGUI() {
-            if (null == renderEntity.gui[0]) {
+            if (null == renderEntity!!.gui[0]) {
                 return
             }
             if (status == weaponStatus_t.WP_HOLSTERED) {
@@ -1261,15 +1261,15 @@ object Weapon {
             if (modelDefHandle >= 0) {
                 Game_local.gameRenderWorld.RemoveDecals(modelDefHandle)
             }
-            renderEntity.hModel = animator.SetModel(modelname)
-            if (renderEntity.hModel != null) {
-                renderEntity.customSkin = animator.ModelDef()!!.GetDefaultSkin()
-                renderEntity.numJoints = animator.GetJoints(renderEntity)
+            renderEntity!!.hModel = animator.SetModel(modelname)
+            if (renderEntity!!.hModel != null) {
+                renderEntity!!.customSkin = animator.ModelDef()!!.GetDefaultSkin()
+                renderEntity!!.numJoints = animator.GetJoints(renderEntity!!)
             } else {
-                renderEntity.customSkin = null
-                renderEntity.callback = null
-                renderEntity.numJoints = 0
-                renderEntity.joints = null
+                renderEntity!!.customSkin = null
+                renderEntity!!.callback = null
+                renderEntity!!.numJoints = 0
+                renderEntity!!.joints = null
             }
 
             // hide the model until an animation is played
@@ -1724,10 +1724,10 @@ object Weapon {
             UpdateAnimation()
 
             // only show the surface in player view
-            renderEntity.allowSurfaceInViewID = owner!!.entityNumber + 1
+            renderEntity!!.allowSurfaceInViewID = owner!!.entityNumber + 1
 
             // crunch the depth range so it never pokes into walls this breaks the machine gun gui
-            renderEntity.weaponDepthHack = true
+            renderEntity!!.weaponDepthHack = true
 
             // present the model
             if (showViewModel) {
@@ -1739,10 +1739,10 @@ object Weapon {
                 // deal with the third-person visible world model
                 // don't show shadows of the world model in first person
                 if (Game_local.gameLocal.isMultiplayer || SysCvar.g_showPlayerShadow.GetBool() || SysCvar.pm_thirdPerson.GetBool()) {
-                    worldModel.GetEntity()!!.GetRenderEntity().suppressShadowInViewID = 0
+                    worldModel.GetEntity()!!.GetRenderEntity()!!.suppressShadowInViewID = 0
                 } else {
-                    worldModel.GetEntity()!!.GetRenderEntity().suppressShadowInViewID = owner!!.entityNumber + 1
-                    worldModel.GetEntity()!!.GetRenderEntity().suppressShadowInLightID =
+                    worldModel.GetEntity()!!.GetRenderEntity()!!.suppressShadowInViewID = owner!!.entityNumber + 1
+                    worldModel.GetEntity()!!.GetRenderEntity()!!.suppressShadowInLightID =
                         LIGHTID_VIEW_MUZZLE_FLASH + owner!!.entityNumber
                 }
             }
@@ -1881,7 +1881,7 @@ object Weapon {
             localPlane[1].set(localAxis[1])
             localPlane[1][3] = -localOrigin.times(localAxis[1]) + 0.5f
             val mtr: Material.idMaterial? = DeclManager.declManager.FindMaterial("textures/decals/duffysplatgun")
-            Game_local.gameRenderWorld.ProjectOverlay(modelDefHandle, localPlane, mtr)
+            Game_local.gameRenderWorld.ProjectOverlay(modelDefHandle, localPlane as Array<idPlane?>, mtr)
             return true
         }
 
@@ -1969,13 +1969,13 @@ object Weapon {
                 }
                 EVENT_CHANGESKIN -> {
                     val index = Game_local.gameLocal.ClientRemapDecl(declType_t.DECL_SKIN, msg.ReadLong())
-                    renderEntity.customSkin = if (index != -1) DeclManager.declManager.DeclByIndex(
+                    renderEntity!!.customSkin = if (index != -1) DeclManager.declManager.DeclByIndex(
                         declType_t.DECL_SKIN,
                         index
                     ) as idDeclSkin else null
                     UpdateVisuals()
                     if (worldModel.GetEntity() != null) {
-                        worldModel.GetEntity()!!.SetSkin(renderEntity.customSkin)
+                        worldModel.GetEntity()!!.SetSkin(renderEntity!!.customSkin)
                     }
                     true
                 }
@@ -2092,11 +2092,11 @@ object Weapon {
             muzzleFlash.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] =
                 -Math_h.MS2SEC(Game_local.gameLocal.time.toFloat())
             muzzleFlash.shaderParms[RenderWorld.SHADERPARM_DIVERSITY] =
-                renderEntity.shaderParms[RenderWorld.SHADERPARM_DIVERSITY]
+                renderEntity!!.shaderParms[RenderWorld.SHADERPARM_DIVERSITY]
             worldMuzzleFlash.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] =
                 -Math_h.MS2SEC(Game_local.gameLocal.time.toFloat())
             worldMuzzleFlash.shaderParms[RenderWorld.SHADERPARM_DIVERSITY] =
-                renderEntity.shaderParms[RenderWorld.SHADERPARM_DIVERSITY]
+                renderEntity!!.shaderParms[RenderWorld.SHADERPARM_DIVERSITY]
 
             // the light will be removed at this time
             muzzleFlashEnd = Game_local.gameLocal.time + flashTime
@@ -2153,8 +2153,8 @@ object Weapon {
                 s = la.toFloat() / nozzleFxFade
                 l = 1.0f - s
             }
-            renderEntity.shaderParms[5] = s
-            renderEntity.shaderParms[6] = l
+            renderEntity!!.shaderParms[5] = s
+            renderEntity!!.shaderParms[6] = l
             if (ventLightJointView == Model.INVALID_JOINT) {
                 return
             }
@@ -2406,7 +2406,7 @@ object Weapon {
             } else {
                 DeclManager.declManager.FindSkin(skinname!!)
             }
-            renderEntity.customSkin = skinDecl
+            renderEntity!!.customSkin = skinDecl
             UpdateVisuals()
             if (worldModel.GetEntity() != null) {
                 worldModel.GetEntity()!!.SetSkin(skinDecl)
@@ -2536,17 +2536,17 @@ object Weapon {
 
             // set the shader parm to the time of last projectile firing,
             // which the gun material shaders can reference for single shot barrel glows, etc
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_DIVERSITY] = Game_local.gameLocal.random.CRandomFloat()
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] =
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_DIVERSITY] = Game_local.gameLocal.random.CRandomFloat()
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] =
                 -Math_h.MS2SEC(Game_local.gameLocal.realClientTime.toFloat())
             if (worldModel.GetEntity() != null) {
                 worldModel.GetEntity()!!.SetShaderParm(
                     RenderWorld.SHADERPARM_DIVERSITY,
-                    renderEntity.shaderParms[RenderWorld.SHADERPARM_DIVERSITY]
+                    renderEntity!!.shaderParms[RenderWorld.SHADERPARM_DIVERSITY]
                 )
                 worldModel.GetEntity()!!.SetShaderParm(
                     RenderWorld.SHADERPARM_TIMEOFFSET,
-                    renderEntity.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET]
+                    renderEntity!!.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET]
                 )
             }
 

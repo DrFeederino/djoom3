@@ -900,7 +900,7 @@ object Session_local {
                     guiTest = null
                     return true
                 }
-                cmd = guiTest!!.HandleEvent(event, Common.com_frameTime).toCharArray()
+                cmd = guiTest!!.HandleEvent(event, Common.com_frameTime)!!.toCharArray()
                 if (cmd != null && cmd!!.get(0) != '\u0000') {
                     Common.common.Printf("testGui event returned: '%s'\n", cmd!!)
                 }
@@ -992,7 +992,7 @@ object Session_local {
 
         override fun GuiFrameEvents() {
             frameEvents++
-            val cmd: String
+            val cmd: String?
             val ev: sysEvent_s
             val gui: idUserInterface?
 
@@ -1015,7 +1015,7 @@ object Session_local {
             ev.evType = sysEventType_t.SE_NONE
             //            System.out.println(System.nanoTime()+"com_frameTime="+com_frameTime+" "+Common.com_ticNumber);
             cmd = gui!!.HandleEvent(ev, Common.com_frameTime)
-            if (cmd.isNotEmpty()) {
+            if (cmd != null && cmd.isNotEmpty()) {
                 DispatchCommand(guiActive, cmd, false)
             }
         }

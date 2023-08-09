@@ -363,7 +363,7 @@ object Mover {
             if (!spawnArgs.GetBool("solid", "1")) {
                 physicsObj.SetContents(0)
             }
-            if (null == renderEntity.hModel || !spawnArgs.GetBool("nopush")) {
+            if (null == renderEntity!!.hModel || !spawnArgs.GetBool("nopush")) {
                 physicsObj.SetPusher(0)
             }
             physicsObj.SetLinearExtrapolation(
@@ -674,9 +674,9 @@ object Mover {
             }
             i = 0
             while (i < RenderWorld.MAX_RENDERENTITY_GUI) {
-                if (renderEntity.gui[i] != null) {
-                    renderEntity.gui[i]!!.SetStateString("movestate", state)
-                    renderEntity.gui[i]!!.StateChanged(Game_local.gameLocal.time, true)
+                if (renderEntity!!.gui[i] != null) {
+                    renderEntity!!.gui[i]!!.SetStateString("movestate", state)
+                    renderEntity!!.gui[i]!!.StateChanged(Game_local.gameLocal.time, true)
                 }
                 i++
             }
@@ -699,9 +699,9 @@ object Mover {
                 val ent = guiTargets[i].GetEntity()
                 if (ent != null) {
                     for (j in 0 until RenderWorld.MAX_RENDERENTITY_GUI) {
-                        if (ent.GetRenderEntity() != null && ent.GetRenderEntity().gui[j] != null) {
-                            ent.GetRenderEntity().gui[j]!!.SetStateString(key, `val`)
-                            ent.GetRenderEntity().gui[j]!!.StateChanged(Game_local.gameLocal.time, true)
+                        if (ent.GetRenderEntity() != null && ent.GetRenderEntity()!!.gui[j] != null) {
+                            ent.GetRenderEntity()!!.gui[j]!!.SetStateString(key, `val`)
+                            ent.GetRenderEntity()!!.gui[j]!!.StateChanged(Game_local.gameLocal.time, true)
                         }
                     }
                     ent.UpdateVisuals()
@@ -1734,9 +1734,9 @@ object Mover {
                 val ent = Game_local.gameLocal.FindEntity(kv.GetValue().toString())
                 if (ent != null) {
                     for (j in 0 until RenderWorld.MAX_RENDERENTITY_GUI) {
-                        if (ent.GetRenderEntity() != null && ent.GetRenderEntity().gui[j] != null) {
-                            ent.GetRenderEntity().gui[j]!!.SetStateString("floor", Str.va("%d", currentFloor))
-                            ent.GetRenderEntity().gui[j]!!.StateChanged(Game_local.gameLocal.time, true)
+                        if (ent.GetRenderEntity() != null && ent.GetRenderEntity()!!.gui[j] != null) {
+                            ent.GetRenderEntity()!!.gui[j]!!.SetStateString("floor", Str.va("%d", currentFloor))
+                            ent.GetRenderEntity()!!.gui[j]!!.StateChanged(Game_local.gameLocal.time, true)
                         }
                     }
                     ent.UpdateVisuals()
@@ -1759,9 +1759,9 @@ object Mover {
                 val ent = Game_local.gameLocal.FindEntity(kv.GetValue().toString())
                 if (ent != null) {
                     for (j in 0 until RenderWorld.MAX_RENDERENTITY_GUI) {
-                        if (ent.GetRenderEntity() != null && ent.GetRenderEntity().gui[j] != null) {
-                            ent.GetRenderEntity().gui[j]!!.SetStateString("floor", "")
-                            ent.GetRenderEntity().gui[j]!!.StateChanged(Game_local.gameLocal.time, true)
+                        if (ent.GetRenderEntity() != null && ent.GetRenderEntity()!!.gui[j] != null) {
+                            ent.GetRenderEntity()!!.gui[j]!!.SetStateString("floor", "")
+                            ent.GetRenderEntity()!!.gui[j]!!.StateChanged(Game_local.gameLocal.time, true)
                         }
                     }
                     ent.UpdateVisuals()
@@ -2703,9 +2703,9 @@ object Mover {
                 val ent = guiTargets[i].GetEntity()
                 if (ent != null) {
                     for (j in 0 until RenderWorld.MAX_RENDERENTITY_GUI) {
-                        if (ent.GetRenderEntity() != null && ent.GetRenderEntity().gui[j] != null) {
-                            ent.GetRenderEntity().gui[j]!!.SetStateString(key, `val`)
-                            ent.GetRenderEntity().gui[j]!!.StateChanged(Game_local.gameLocal.time, true)
+                        if (ent.GetRenderEntity() != null && ent.GetRenderEntity()!!.gui[j] != null) {
+                            ent.GetRenderEntity()!!.gui[j]!!.SetStateString(key, `val`)
+                            ent.GetRenderEntity()!!.gui[j]!!.StateChanged(Game_local.gameLocal.time, true)
                         }
                     }
                     ent.UpdateVisuals()
@@ -3460,7 +3460,7 @@ object Mover {
                 }
             }
             ActivateTargets(activator.value)
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_MODE] = 1f
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_MODE] = 1f
             UpdateVisuals()
             Use_BinaryMover(activator.value)
         }

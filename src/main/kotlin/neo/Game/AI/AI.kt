@@ -3361,7 +3361,7 @@ object AI {
             if (spawnArgs.GetString("model_death", "", modelDeath)) {
                 // lost soul is only case that does not use a ragdoll and has a model_death so get the death sound in here
                 StartSound("snd_death", gameSoundChannel_t.SND_CHANNEL_VOICE, 0, false, CInt())
-                renderEntity.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] =
+                renderEntity!!.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] =
                     -Math_h.MS2SEC(Game_local.gameLocal.time.toFloat())
                 SetModel(modelDeath[0])
                 physicsObj.SetLinearVelocity(Vector.getVec3_zero())
@@ -4343,7 +4343,7 @@ object AI {
                 pe.particle = null
             } else {
                 animator.GetJointTransform(pe.joint, Game_local.gameLocal.time, origin, axis)
-                origin.set(renderEntity.origin.plus(origin.times(renderEntity.axis)))
+                origin.set(renderEntity!!.origin.plus(origin.times(renderEntity!!.axis)))
                 BecomeActive(Entity.TH_UPDATEPARTICLES)
                 if (0 == Game_local.gameLocal.time) {
                     // particles with time of 0 don't show, so set the time differently on the first frame
@@ -5166,9 +5166,9 @@ object AI {
 
             // muzzle flash
             // offset the shader parms so muzzle flashes show up
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] =
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] =
                 -Math_h.MS2SEC(Game_local.gameLocal.time.toFloat())
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_DIVERSITY] = Game_local.gameLocal.random.CRandomFloat()
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_DIVERSITY] = Game_local.gameLocal.random.CRandomFloat()
             if (flashJointWorld != Model.INVALID_JOINT) {
                 GetJointWorldTransform(flashJointWorld, Game_local.gameLocal.time, org, axis)
                 if (worldMuzzleFlash.lightRadius.x > 0.0f) {
@@ -5421,7 +5421,7 @@ object AI {
                                 realVector,
                                 realAxis
                             )
-                            realAxis.timesAssign(renderEntity.axis)
+                            realAxis.timesAssign(renderEntity!!.axis)
                             realVector.set(
                                 physicsObj.GetOrigin().plus(
                                     realVector.plus(modelOffset)
@@ -6739,30 +6739,30 @@ object AI {
             }
             t = (Game_local.gameLocal.time - shrivel_start) * shrivel_rate
             if (t > 0.25f) {
-                renderEntity.noShadow = true
+                renderEntity!!.noShadow = true
             }
             if (t > 1.0f) {
                 t = 1.0f
                 idThread.EndMultiFrameEvent(this, AI_Events.AI_Shrivel)
             }
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_MD5_SKINSCALE] = 1.0f - t * 0.5f
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_MD5_SKINSCALE] = 1.0f - t * 0.5f
             UpdateVisuals()
         }
 
         protected fun Event_Burn() {
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_TIME_OF_DEATH] = Game_local.gameLocal.time * 0.001f
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_TIME_OF_DEATH] = Game_local.gameLocal.time * 0.001f
             SpawnParticles("smoke_burnParticleSystem")
             UpdateVisuals()
         }
 
         protected fun Event_PreBurn() {
             // for now this just turns shadows off
-            renderEntity.noShadow = true
+            renderEntity!!.noShadow = true
         }
 
         protected fun Event_ClearBurn() {
-            renderEntity.noShadow = spawnArgs.GetBool("noshadows")
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_TIME_OF_DEATH] = 0.0f
+            renderEntity!!.noShadow = spawnArgs.GetBool("noshadows")
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_TIME_OF_DEATH] = 0.0f
             UpdateVisuals()
         }
 
@@ -7342,7 +7342,7 @@ object AI {
 
         // Outputs a list of all monsters to the console.
         class List_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs) {
+            override fun run(args: CmdArgs.idCmdArgs?) {
                 var e: Int
                 var check: idEntity?
                 var count: Int

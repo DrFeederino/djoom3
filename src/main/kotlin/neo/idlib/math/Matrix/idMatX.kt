@@ -3205,7 +3205,7 @@ class idMatX {
                         w.p[k] = -z
                         j = 0
                         while (j < numColumns) {
-                            V.oNegative(j, k)
+                            V.unaryMinus(j, k)
                             j++
                         }
                     }
@@ -5803,7 +5803,7 @@ class idMatX {
         mat[column + row * numColumns] /= value
     }
 
-    private fun oNegative(row: Int, column: Int) {
+    private fun unaryMinus(row: Int, column: Int) {
         mat[column + row * numColumns] = -mat[column + row * numColumns]
     }
 

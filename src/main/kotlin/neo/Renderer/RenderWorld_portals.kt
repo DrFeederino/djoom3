@@ -20,15 +20,15 @@ object RenderWorld_portals {
     //
     // if we hit this many planes, we will just stop cropping the
     // view down, which is still correct, just conservative
-    const val MAX_PORTAL_PLANES = 20
+    val MAX_PORTAL_PLANES: Int = 20
 
     class portalStack_s {
         var next: portalStack_s? = null
 
         //
-        var numPortalPlanes = 0
-        var p: portal_s?
-        val portalPlanes: Array<idPlane> = idPlane.generateArray(MAX_PORTAL_PLANES + 1)
+        var numPortalPlanes: Int = 0
+        var p: portal_s? = null
+        val portalPlanes: Array<idPlane> = idPlane.generateArray(RenderWorld_portals.MAX_PORTAL_PLANES + 1)
 
         //
         var rect: idScreenRect
@@ -44,7 +44,7 @@ object RenderWorld_portals {
             next = p.next
             rect = idScreenRect(p.rect)
             for (i in portalPlanes.indices) {
-                portalPlanes[i].set(p.portalPlanes[i])
+                portalPlanes.get(i).set(p.portalPlanes.get(i))
             }
         }
     }

@@ -2,14 +2,21 @@ package neo.ui
 
 import neo.Renderer.Material
 import neo.Renderer.Material.idMaterial
-import neo.TempDump
+import neo.TempDump.NOT
+import neo.framework.CVarSystem.cvarSystem
 import neo.framework.CVarSystem.idCVar
 import neo.framework.Common
 import neo.framework.DeclManager
-import neo.framework.KeyInput
-import neo.idlib.Lib.idLib
+import neo.framework.KeyInput.K_KP_LEFTARROW
+import neo.framework.KeyInput.K_KP_RIGHTARROW
+import neo.framework.KeyInput.K_LEFTARROW
+import neo.framework.KeyInput.K_MOUSE1
+import neo.framework.KeyInput.K_MOUSE2
+import neo.framework.KeyInput.K_RIGHTARROW
 import neo.idlib.Text.Parser.idParser
 import neo.idlib.Text.Str.idStr
+import neo.idlib.Text.Str.idStr.Companion.Cmpn
+import neo.idlib.Text.Str.idStr.Companion.Icmp
 import neo.idlib.containers.CBool
 import neo.idlib.math.Vector.idVec4
 import neo.sys.sys_public.sysEventType_t
@@ -34,31 +41,31 @@ class SliderWindow {
         private val cvarGroup: idWinStr? = null
 
         //
-        private val cvarStr: idWinStr = idWinStr()
+        private val cvarStr = idWinStr()
         private var cvar_init = false
         private var high = 0f
         private val lastValue = 0f
-        private val liveUpdate: idWinBool = idWinBool()
+        private val liveUpdate = idWinBool()
         private var low = 0f
         private var scrollbar = false
         private var stepSize = 0f
         private var thumbHeight = 0f
         private var thumbMat: idMaterial? = null
-        private val thumbRect: idRectangle = idRectangle()
-        private val thumbShader: idStr = idStr()
+        private val thumbRect = idRectangle()
+        private val thumbShader = idStr()
         private var thumbWidth = 0f
-        private val value: idWinFloat = idWinFloat()
+        private val value = idWinFloat()
         private var vertical = false
         private var verticalFlip = false
 
         //
         //
-        constructor(gui: idUserInterfaceLocal) : super(gui) {
+        constructor(gui: idUserInterfaceLocal?) : super(gui) {
             this.gui = gui
             CommonInit()
         }
 
-        constructor(dc: idDeviceContext, gui: idUserInterfaceLocal) : super(dc, gui) {
+        constructor(dc: idDeviceContext?, gui: idUserInterfaceLocal?) : super(dc, gui) {
             this.dc = dc
             this.gui = gui
             CommonInit()
@@ -66,12 +73,12 @@ class SliderWindow {
 
         //	// virtual				~idSliderWindow();
         fun InitWithDefaults(
-            _name: String,
-            _rect: idRectangle,
-            _foreColor: idVec4,
-            _matColor: idVec4,
-            _background: String,
-            thumbShader: String,
+            _name: String?,
+            _rect: idRectangle?,
+            _foreColor: idVec4?,
+            _matColor: idVec4?,
+            _background: String?,
+            thumbShader: String?,
             _vertical: Boolean,
             _scrollbar: Boolean
         ) {
@@ -79,11 +86,11 @@ class SliderWindow {
             rect.set(_rect)
             foreColor.set(_foreColor)
             matColor.set(_matColor)
-            thumbMat = DeclManager.declManager.FindMaterial(thumbShader)
+            thumbMat = DeclManager.declManager.FindMaterial(thumbShader!!)
             thumbMat!!.SetSort(Material.SS_GUI.toFloat())
             thumbWidth = thumbMat!!.GetImageWidth().toFloat()
             thumbHeight = thumbMat!!.GetImageHeight().toFloat()
-            background = DeclManager.declManager.FindMaterial(_background)
+            background = DeclManager.declManager.FindMaterial(_background!!)
             background!!.SetSort(Material.SS_GUI.toFloat())
             vertical = _vertical
             scrollbar = _scrollbar
@@ -112,39 +119,47 @@ class SliderWindow {
             return value.data
         }
 
+        override fun  /*size_t*/Allocated(): Int {
+            return super.Allocated()
+        }
+
         override fun GetWinVarByName(
-            _name: String,
+            _name: String?,
             winLookup: Boolean /*= false*/,
             owner: Array<drawWin_t?>? /*= NULL*/
         ): idWinVar? {
-            if (idStr.Companion.Icmp(_name, "value") == 0) {
+            if (Icmp(_name!!, "value") == 0) {
                 return value
             }
-            if (idStr.Companion.Icmp(_name, "cvar") == 0) {
+            if (Icmp(_name, "cvar") == 0) {
                 return cvarStr
             }
-            if (idStr.Companion.Icmp(_name, "liveUpdate") == 0) {
+            if (Icmp(_name, "liveUpdate") == 0) {
                 return liveUpdate
             }
-            return if (idStr.Companion.Icmp(_name, "cvarGroup") == 0) {
+            return if (Icmp(_name, "cvarGroup") == 0) {
                 cvarGroup
-            } else super.GetWinVarByName(_name, winLookup, owner)
+            } else super.GetWinVarByName(
+                _name,
+                winLookup,
+                owner
+            )
         }
 
-        override fun HandleEvent(event: sysEvent_s, updateVisuals: CBool): String {
-            if (!(event.evType == sysEventType_t.SE_KEY && event.evValue2 != 0)) {
+        override fun HandleEvent(event: sysEvent_s, updateVisuals: CBool?): String? {
+            if (!(event.evType === sysEventType_t.SE_KEY && event.evValue2 != 0)) {
                 return ""
             }
             val key = event.evValue
-            if (event.evValue2 != 0 && key == KeyInput.K_MOUSE1) {
+            if (event.evValue2 != 0 && key == K_MOUSE1) {
                 SetCapture(this)
                 RouteMouseCoords(0.0f, 0.0f)
                 return ""
             }
-            if (key == KeyInput.K_RIGHTARROW || key == KeyInput.K_KP_RIGHTARROW || key == KeyInput.K_MOUSE2 && gui!!.CursorY() > thumbRect.y) {
+            if (key == K_RIGHTARROW || key == K_KP_RIGHTARROW || key == K_MOUSE2 && gui!!.CursorY() > thumbRect.y) {
                 value.data = value.data + stepSize
             }
-            if (key == KeyInput.K_LEFTARROW || key == KeyInput.K_KP_LEFTARROW || key == KeyInput.K_MOUSE2 && gui!!.CursorY() < thumbRect.y) {
+            if (key == K_LEFTARROW || key == K_KP_LEFTARROW || key == K_MOUSE2 && gui!!.CursorY() < thumbRect.y) {
                 value.data = value.data - stepSize
             }
             if (buddyWin != null) {
@@ -206,15 +221,15 @@ class SliderWindow {
             thumbRect.w = thumbWidth
             thumbRect.h = thumbHeight
             if (hover && !noEvents.oCastBoolean() && Contains(gui!!.CursorX(), gui!!.CursorY())) {
-                color.set(hoverColor.data)
+                color!!.set(hoverColor.data)
             } else {
                 hover = false
             }
             if (flags and Window.WIN_CAPTURE != 0) {
-                color.set(hoverColor.data)
+                color!!.set(hoverColor.data)
                 hover = true
             }
-            dc!!.DrawMaterial(thumbRect.x, thumbRect.y, thumbRect.w, thumbRect.h, thumbMat!!, color)
+            dc!!.DrawMaterial(thumbRect.x, thumbRect.y, thumbRect.w, thumbRect.h, thumbMat, color)
             if (flags and Window.WIN_FOCUS != 0) {
                 dc!!.DrawRect(
                     thumbRect.x + 1.0f,
@@ -247,9 +262,9 @@ class SliderWindow {
             super.DrawBackground(r)
         }
 
-        override fun RouteMouseCoords(xd: Float, yd: Float): String {
+        override fun RouteMouseCoords(xd: Float, yd: Float): String? {
             var pct: Float
-            if (TempDump.NOT((flags and Window.WIN_CAPTURE).toDouble())) {
+            if (NOT(flags and Window.WIN_CAPTURE)) {
                 return ""
             }
             val r = idRectangle(drawRect)
@@ -307,54 +322,54 @@ class SliderWindow {
             }
         }
 
-        override fun SetBuddy(buddy: idWindow) {
+        override fun SetBuddy(buddy: idWindow?) {
             buddyWin = buddy
         }
 
-        override fun RunNamedEvent(eventName: String) {
+        override fun RunNamedEvent(eventName: String?) {
             val event: idStr
             val group: idStr
-            if (0 == idStr.Companion.Cmpn(eventName, "cvar read ", 10)) {
+            if (0 == Cmpn(eventName!!, "cvar read ", 10)) {
                 event = idStr(eventName)
                 group = idStr(event.Mid(10, event.Length() - 10))
-                if (TempDump.NOT(group.Cmp(cvarGroup!!.data).toDouble())) {
+                if (NOT(group.Cmp(cvarGroup!!.data!!))) {
                     UpdateCvar(true, true)
                 }
-            } else if (0 == idStr.Companion.Cmpn(eventName, "cvar write ", 11)) {
+            } else if (0 == Cmpn(eventName, "cvar write ", 11)) {
                 event = idStr(eventName)
                 group = idStr(event.Mid(11, event.Length() - 11))
-                if (TempDump.NOT(group.Cmp(cvarGroup!!.data).toDouble())) {
+                if (NOT(group.Cmp(cvarGroup!!.data!!))) {
                     UpdateCvar(false, true)
                 }
             }
         }
 
-        override fun ParseInternalVar(_name: String, src: idParser): Boolean {
-            if (idStr.Companion.Icmp(_name, "stepsize") == 0 || idStr.Companion.Icmp(_name, "step") == 0) {
+        override fun ParseInternalVar(_name: String?, src: idParser): Boolean {
+            if (Icmp(_name!!, "stepsize") == 0 || Icmp(_name, "step") == 0) {
                 stepSize = src.ParseFloat()
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "low") == 0) {
+            if (Icmp(_name, "low") == 0) {
                 low = src.ParseFloat()
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "high") == 0) {
+            if (Icmp(_name, "high") == 0) {
                 high = src.ParseFloat()
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "vertical") == 0) {
+            if (Icmp(_name, "vertical") == 0) {
                 vertical = src.ParseBool()
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "verticalflip") == 0) {
+            if (Icmp(_name, "verticalflip") == 0) {
                 verticalFlip = src.ParseBool()
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "scrollbar") == 0) {
+            if (Icmp(_name, "scrollbar") == 0) {
                 scrollbar = src.ParseBool()
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "thumbshader") == 0) {
+            if (Icmp(_name, "thumbshader") == 0) {
                 ParseString(src, thumbShader)
                 DeclManager.declManager.FindMaterial(thumbShader)
                 return true
@@ -378,25 +393,25 @@ class SliderWindow {
         }
 
         private fun InitCvar() {
-            if (cvarStr.c_str().isEmpty()) {
+            if (cvarStr.c_str() == null || cvarStr.c_str()!!.isEmpty()) {
                 if (null == buddyWin) {
                     Common.common.Warning(
                         "idSliderWindow.InitCvar: gui '%s' window '%s' has an empty cvar string",
                         gui!!.GetSourceFile(),
-                        name
+                        name!!
                     )
                 }
                 cvar_init = true
                 cvar = null
                 return
             }
-            cvar = idLib.cvarSystem.Find(cvarStr.data.toString())
+            cvar = cvarSystem.Find(cvarStr.data.toString())
             if (null == cvar) {
                 Common.common.Warning(
                     "idSliderWindow.InitCvar: gui '%s' window '%s' references undefined cvar '%s'",
                     gui!!.GetSourceFile(),
-                    name,
-                    cvarStr.c_str()
+                    name!!,
+                    cvarStr.c_str()!!
                 )
                 cvar_init = true
                 return

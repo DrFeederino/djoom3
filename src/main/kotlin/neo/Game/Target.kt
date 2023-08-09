@@ -1129,10 +1129,10 @@ object Target {
                 update = false
                 j = 0
                 while (j < RenderWorld.MAX_RENDERENTITY_GUI) {
-                    if (ent.GetRenderEntity().gui[j] != null
+                    if (ent.GetRenderEntity()!!.gui[j] != null
                         && ent.spawnArgs.FindKey(if (j == 0) "gui_demonic" else Str.va("gui_demonic%d", j + 1)) != null
                     ) {
-                        ent.GetRenderEntity().gui[j] = UserInterface.uiManager.FindGui(
+                        ent.GetRenderEntity()!!.gui[j] = UserInterface.uiManager.FindGui(
                             ent.spawnArgs.GetString(
                                 if (j == 0) "gui_demonic" else Str.va(
                                     "gui_demonic%d",
@@ -1238,8 +1238,8 @@ object Target {
                 update = false
                 j = 0
                 while (j < RenderWorld.MAX_RENDERENTITY_GUI) {
-                    if (ent.GetRenderEntity().gui[j] != null) {
-                        ent.GetRenderEntity().gui[j] = UserInterface.uiManager.FindGui(
+                    if (ent.GetRenderEntity()!!.gui[j] != null) {
+                        ent.GetRenderEntity()!!.gui[j] = UserInterface.uiManager.FindGui(
                             ent.spawnArgs.GetString(
                                 if (j == 0) "gui" else Str.va(
                                     "gui%d",
@@ -1322,7 +1322,7 @@ object Target {
                         i++
                         continue
                     }
-                    if (guis && ent.GetRenderEntity() != null && ent.GetRenderEntity().gui[0] != null && ent.spawnArgs.FindKey(
+                    if (guis && ent.GetRenderEntity() != null && ent.GetRenderEntity()!!.gui[0] != null && ent.spawnArgs.FindKey(
                             "gui_demonic"
                         ) != null
                     ) {
@@ -1442,10 +1442,10 @@ object Target {
                             `val` = kv.GetValue().Right(kv.GetValue().Length() - n - 1).toString()
                             ent.spawnArgs.Set(key, `val`)
                             for (j in 0 until RenderWorld.MAX_RENDERENTITY_GUI) {
-                                if (ent.GetRenderEntity().gui[j] != null) {
+                                if (ent.GetRenderEntity()!!.gui[j] != null) {
                                     if (idStr.Icmpn(key, "gui_", 4) == 0) {
-                                        ent.GetRenderEntity().gui[j]!!.SetStateString(key, `val`)
-                                        ent.GetRenderEntity().gui[j]!!.StateChanged(Game_local.gameLocal.time)
+                                        ent.GetRenderEntity()!!.gui[j]!!.SetStateString(key, `val`)
+                                        ent.GetRenderEntity()!!.gui[j]!!.StateChanged(Game_local.gameLocal.time)
                                     }
                                 }
                             }

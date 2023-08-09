@@ -1,8 +1,9 @@
 package neo.ui
 
 import neo.framework.Common
-import neo.idlib.Text.Str
 import neo.idlib.Text.Str.idStr
+import neo.idlib.Text.Str.idStr.Companion.snPrintf
+import neo.idlib.Text.Str.va
 import neo.idlib.containers.List.idList
 import neo.ui.ListGUI.idListGUI
 import neo.ui.UserInterface.idUserInterface
@@ -20,19 +21,28 @@ class ListGUILocal {
      ===============================================================================
      */
     class idListGUILocal : idListGUI() {
-        private val m_ids: idList<Int> = idList()
-        private val m_name: idStr = idStr()
+        private val m_ids: idList<Int>
+        private val m_name: idStr
         private var m_pGUI: idUserInterface? = null
-        private var m_stateUpdates: Boolean = true
-        private var m_water: Int = 0
+        private var m_stateUpdates: Boolean
+        private var m_water: Int
+
+        //
+        //
+        init {
+            m_name = idStr()
+            m_water = 0
+            m_ids = idList()
+            m_stateUpdates = true
+        }
 
         // idListGUI interface
-        override fun Config(pGUI: idUserInterface, name: String) {
+        override fun Config(pGUI: idUserInterface?, name: String) {
             m_pGUI = pGUI
             m_name.set("" + name)
         }
 
-        override fun Add(id: Int, s: idStr) {
+        override fun Add(id: Int, s: idStr?) {
             val i = m_ids.FindIndex(id)
             if (i == -1) {
                 Append(s)
@@ -44,7 +54,7 @@ class ListGUILocal {
         }
 
         // use the element count as index for the ids
-        override fun Push(s: idStr) {
+        override fun Push(s: idStr?) {
             Append(s)
             m_ids.Append(m_ids.Num())
             StateChanged()
@@ -70,6 +80,10 @@ class ListGUILocal {
             }
         }
 
+        override fun Num(): Int {
+            return super.Num()
+        }
+
         override fun GetSelection(
             s: Array<String?>?,
             size: Int,
@@ -79,32 +93,28 @@ class ListGUILocal {
 //                s[0] = '\0';
                 s[0] = ""
             }
-            var sel = m_pGUI!!.State().GetInt(Str.va("%s_sel_%d", m_name, _sel), "-1")
+            var sel = m_pGUI!!.State().GetInt(va("%s_sel_%d", m_name, _sel), "-1")
             if (sel == -1 || sel >= m_ids.Num()) {
                 return -1
             }
             if (s != null) {
-                idStr.snPrintf(
-                    s as Array<String>,
-                    size,
-                    m_pGUI!!.State().GetString(Str.va("%s_item_%d", m_name, sel), "")!!
-                )
+                snPrintf(s as Array<String>, size, m_pGUI!!.State().GetString(va("%s_item_%d", m_name, sel), "")!!)
             }
             // don't let overflow
             if (sel >= m_ids.Num()) {
                 sel = 0
             }
-            m_pGUI!!.SetStateInt(Str.va("%s_selid_0", m_name), m_ids[sel])
+            m_pGUI!!.SetStateInt(va("%s_selid_0", m_name), m_ids[sel])
             return m_ids[sel]
         }
 
         override fun SetSelection(sel: Int) {
-            m_pGUI!!.SetStateInt(Str.va("%s_sel_0", m_name), sel)
+            m_pGUI!!.SetStateInt(va("%s_sel_0", m_name), sel)
             StateChanged()
         }
 
         override fun GetNumSelections(): Int {
-            return m_pGUI!!.State().GetInt(Str.va("%s_numsel", m_name))
+            return m_pGUI!!.State().GetInt(va("%s_numsel", m_name))
         }
 
         override fun IsConfigured(): Boolean {
@@ -129,17 +139,16 @@ class ListGUILocal {
             }
             i = 0
             while (i < Num()) {
-                m_pGUI!!.SetStateString(Str.va("%s_item_%d", m_name, i), get(i).toString())
+                m_pGUI!!.SetStateString(va("%s_item_%d", m_name, i), this[i].toString())
                 i++
             }
             i = Num()
             while (i < m_water) {
-                m_pGUI!!.SetStateString(Str.va("%s_item_%d", m_name, i), "")
+                m_pGUI!!.SetStateString(va("%s_item_%d", m_name, i), "")
                 i++
             }
             m_water = Num()
             m_pGUI!!.StateChanged(Common.com_frameTime)
         }
-
     }
 }

@@ -127,7 +127,10 @@ import neo.Game.SmokeParticles.idSmokeParticles
 import neo.Game.Trigger.idTrigger
 import neo.Game.WorldSpawn.idWorldspawn
 import neo.Renderer.*
-import neo.Renderer.RenderWorld.*
+import neo.Renderer.RenderWorld.idRenderWorld
+import neo.Renderer.RenderWorld.modelTrace_s
+import neo.Renderer.RenderWorld.portalConnection_t
+import neo.Renderer.RenderWorld.renderView_s
 import neo.Sound.snd_shader
 import neo.Sound.snd_shader.idSoundShader
 import neo.Sound.snd_system
@@ -3918,9 +3921,9 @@ class Game_local {
             return null
         }
 
-        fun GetClientByCmdArgs(args: CmdArgs.idCmdArgs): idPlayer? {
+        fun GetClientByCmdArgs(args: CmdArgs.idCmdArgs?): idPlayer? {
             val player: idPlayer?
-            val client = idStr(args.Argv(1))
+            val client = idStr(args!!.Argv(1))
             if (0 == client.Length()) {
                 return null
             }
@@ -6151,7 +6154,7 @@ class Game_local {
 
         override fun GetMapLoadingGUI(gui: CharArray? /*[MAX_STRING_CHARS ]*/) {}
         class MapRestart_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs) {
+            override fun run(args: CmdArgs.idCmdArgs?) {
                 if (!gameLocal.isMultiplayer || gameLocal.isClient) {
                     Common.common.Printf("server is not running - use spawnServer\n")
                     CmdSystem.cmdSystem.BufferCommandText(cmdExecution_t.CMD_EXEC_APPEND, "spawnServer\n")
@@ -6169,7 +6172,7 @@ class Game_local {
         }
 
         class NextMap_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs) {
+            override fun run(args: CmdArgs.idCmdArgs?) {
                 if (!gameLocal.isMultiplayer || gameLocal.isClient) {
                     Common.common.Printf("server is not running\n")
                     return
@@ -6195,12 +6198,12 @@ class Game_local {
          =============
          */
         class ArgCompletion_EntityName private constructor() : CmdSystem.argCompletion_t() {
-            override fun run(args: CmdArgs.idCmdArgs, callback: void_callback<String>) {
+            override fun run(args: CmdArgs.idCmdArgs?, callback: void_callback<String>) {
                 var i: Int
                 i = 0
                 while (i < gameLocal.num_entities) {
                     if (gameLocal.entities[i] != null) {
-                        callback.run(Str.va("%s %s", args.Argv(0), gameLocal.entities[i]!!.name))
+                        callback.run(Str.va("%s %s", args!!.Argv(0), gameLocal.entities[i]!!.name))
                     }
                     i++
                 }
@@ -6314,6 +6317,8 @@ class Game_local {
         // the rest of the engine will only reference the "game" variable, while all local aspects stay hidden
         val gameLocal: idGameLocal =
             idGameLocal() //TODO:these globals should either be collected to a single file, or always be set at the top.
+
+        @JvmField
         val game: idGame = gameLocal // statically pointed at an idGameLocal
 
         // if set to 1 the server sends the client PVS with snapshots and the client compares against what it sees
@@ -6456,7 +6461,7 @@ class Game_local {
                 RenderSystem.setRenderSystems(gameImport.renderSystem)
                 snd_system.setSoundSystems(gameImport.soundSystem)
                 ModelManager.setRenderModelManagers(gameImport.renderModelManager)
-                UserInterface.setUiManagers(gameImport.uiManager)
+                UserInterface.setUiManager(gameImport.uiManager)
                 DeclManager.setDeclManagers(gameImport.declManager)
                 AASFileManager.setAASFileManagers(gameImport.AASFileManager)
                 CollisionModel_local.setCollisionModelManagers(gameImport.collisionModelManager)

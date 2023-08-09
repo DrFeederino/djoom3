@@ -1969,12 +1969,12 @@ object AASBuild {
      */
     class RunAAS_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             var i: Int
             val aas = idAASBuild()
             val settings = idAASSettings()
             var mapName: idStr
-            if (args.Argc() <= 1) {
+            if (args!!.Argc() <= 1) {
                 Common.common.Printf(
                     """runAAS [options] <mapfile>
 options:
@@ -2033,12 +2033,12 @@ options:
      */
     class RunAASDir_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             var i: Int
             val aas = idAASBuild()
             val settings = idAASSettings()
             val mapFiles: idFileList?
-            if (args.Argc() <= 1) {
+            if (args!!.Argc() <= 1) {
                 Common.common.Printf("runAASDir <folder>\n")
                 return
             }
@@ -2053,7 +2053,7 @@ options:
             }
 
             // scan for .map files
-            mapFiles = FileSystem_h.fileSystem.ListFiles(idStr("maps/").toString() + args.Argv(1), ".map")
+            mapFiles = FileSystem_h.fileSystem.ListFiles(idStr("maps/").toString() + args!!.Argv(1), ".map")
 
             // create AAS files for all the .map files
             i = 0
@@ -2097,11 +2097,11 @@ options:
      */
     class RunReach_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             var i: Int
             val aas = idAASBuild()
             val settings = idAASSettings()
-            if (args.Argc() <= 1) {
+            if (args!!.Argc() <= 1) {
                 Common.common.Printf("runReach [options] <mapfile>\n")
                 return
             }

@@ -25,7 +25,7 @@ import neo.Renderer.Model
 import neo.Renderer.Model.idRenderModel
 import neo.Renderer.Model.modelSurface_s
 import neo.Renderer.Model.srfTriangles_s
-import neo.Renderer.RenderWorld.Companion.MAX_RENDERENTITY_GUI
+import neo.Renderer.RenderWorld.MAX_RENDERENTITY_GUI
 import neo.Renderer.RenderWorld.renderEntity_s
 import neo.TempDump
 import neo.TempDump.void_callback
@@ -72,7 +72,7 @@ object SysCmds {
      ==================
      */
     fun Cmd_GetFloatArg(args: CmdArgs.idCmdArgs, argNum: IntArray): Float {
-        val value: String = args.Argv(argNum[0]++)
+        val value: String = args!!.Argv(argNum[0]++)
         return value.toFloat()
     }
 
@@ -92,8 +92,8 @@ object SysCmds {
             return
         }
         i = 1
-        while (i < args.Argc()) {
-            name = args.Argv(i)
+        while (i < args!!.Argc()) {
+            name = args!!.Argv(i)
             ignore.add(idStr.parseStr(name))
             i++
         }
@@ -120,7 +120,7 @@ object SysCmds {
      Cmd_Say
      ==================
      */
-    fun Cmd_Say(team: Boolean, args: CmdArgs.idCmdArgs) {
+    fun Cmd_Say(team: Boolean, args: CmdArgs.idCmdArgs?) {
         var name: String
         val text: idStr
         val cmd = if (team) "sayTeam" else "say"
@@ -128,11 +128,11 @@ object SysCmds {
             Game_local.gameLocal.Printf("%s can only be used in a multiplayer game\n", cmd)
             return
         }
-        if (args.Argc() < 2) {
+        if (args!!.Argc() < 2) {
             Game_local.gameLocal.Printf("usage: %s <text>\n", cmd)
             return
         }
-        text = idStr(args.Args())
+        text = idStr(args!!.Args())
         if (text.Length() == 0) {
             return
         }
@@ -245,14 +245,14 @@ object SysCmds {
      ===================
      */
     class Cmd_EntityList_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             var e: Int
             var check: idEntity?
             var count: Int
             var   /*size_t*/size: Int
             var match: String?
-            if (args.Argc() > 1) {
-                match = args.Args()
+            if (args!!.Argc() > 1) {
+                match = args!!.Args()
                 match = match.replace(" ".toRegex(), "")
             } else {
                 match = ""
@@ -297,7 +297,7 @@ object SysCmds {
      ===================
      */
     class Cmd_ActiveEntityList_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             var check: idEntity?
             var count: Int
             count = 0
@@ -334,10 +334,10 @@ object SysCmds {
      ===================
      */
     class Cmd_ListSpawnArgs_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             var i: Int
             val ent: idEntity?
-            ent = Game_local.gameLocal.FindEntity(args.Argv(1))
+            ent = Game_local.gameLocal.FindEntity(args!!.Argv(1))
             if (null == ent) {
                 Game_local.gameLocal.Printf("entity not found\n")
                 return
@@ -369,7 +369,7 @@ object SysCmds {
      ===================
      */
     class Cmd_ReloadScript_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             // shutdown the map because entities may point to script objects
             Game_local.gameLocal.MapShutdown()
 
@@ -394,7 +394,7 @@ object SysCmds {
      ===================
      */
     class Cmd_Script_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             val script: String?
             val text: String
             val funcname: String
@@ -405,7 +405,7 @@ object SysCmds {
                 return
             }
             funcname = String.format("ConsoleFunction_%d", funcCount++)
-            script = args.Args()
+            script = args!!.Args()
             text = String.format("void %s() {%s;}\n", funcname, script)
             if (Game_local.gameLocal.program.CompileText("console", text, true)) {
                 func = Game_local.gameLocal.program.FindFunction(funcname)
@@ -439,11 +439,11 @@ object SysCmds {
      ==================
      */
     class Cmd_KillMonsters_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
-            KillEntities(args, idAI::class.java)
+        override fun run(args: CmdArgs.idCmdArgs?) {
+            KillEntities(args!!, idAI::class.java)
 
             // kill any projectiles as well since they have pointers to the monster that created them
-            KillEntities(args, idProjectile::class.java)
+            KillEntities(args!!, idProjectile::class.java)
         }
 
         companion object {
@@ -462,11 +462,11 @@ object SysCmds {
      ==================
      */
     class Cmd_KillMovables_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             if (TempDump.NOT(Game_local.gameLocal.GetLocalPlayer()) || !Game_local.gameLocal.CheatsOk(false)) {
                 return
             }
-            KillEntities(args, idMoveable::class.java)
+            KillEntities(args!!, idMoveable::class.java)
         }
 
         companion object {
@@ -485,12 +485,12 @@ object SysCmds {
      ==================
      */
     class Cmd_KillRagdolls_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             if (TempDump.NOT(Game_local.gameLocal.GetLocalPlayer()) || !Game_local.gameLocal.CheatsOk(false)) {
                 return
             }
-            KillEntities(args, idAFEntity_Generic::class.java)
-            KillEntities(args, idAFEntity_WithAttachedHead::class.java)
+            KillEntities(args!!, idAFEntity_Generic::class.java)
+            KillEntities(args!!, idAFEntity_WithAttachedHead::class.java)
         }
 
         companion object {
@@ -509,7 +509,7 @@ object SysCmds {
      ==================
      */
     class Cmd_Give_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             val name: String?
             var i: Int
             val give_all: Boolean
@@ -518,7 +518,7 @@ object SysCmds {
             if (player == null || !Game_local.gameLocal.CheatsOk()) {
                 return
             }
-            name = args.Argv(1)
+            name = args!!.Argv(1)
             give_all = idStr.Icmp(name, "all") == 0
             if (give_all || idStr.Cmpn(name, "weapon", 6) == 0) {
                 if (Game_local.gameLocal.world!!.spawnArgs.GetBool("no_Weapons")) {
@@ -584,14 +584,14 @@ object SysCmds {
                 return
             }
             if (idStr.Icmp(name, "pda") == 0) {
-                player.GivePDA(idStr.parseStr(args.Argv(2)), null)
+                player.GivePDA(idStr.parseStr(args!!.Argv(2)), null)
                 return
             }
             if (idStr.Icmp(name, "video") == 0) {
-                player.GiveVideo(args.Argv(2), null)
+                player.GiveVideo(args!!.Argv(2), null)
                 return
             }
-            if (!give_all && !player.Give(args.Argv(1), args.Argv(2))) {
+            if (!give_all && !player.Give(args!!.Argv(1), args!!.Argv(2))) {
                 Game_local.gameLocal.Printf("unknown item\n")
             }
         }
@@ -612,7 +612,7 @@ object SysCmds {
      ==================
      */
     class Cmd_CenterView_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             val player: idPlayer?
             val ang: idAngles
             player = Game_local.gameLocal.GetLocalPlayer()
@@ -642,7 +642,7 @@ object SysCmds {
      ==================
      */
     class Cmd_God_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             val msg: String
             val player: idPlayer?
             player = Game_local.gameLocal.GetLocalPlayer()
@@ -677,7 +677,7 @@ object SysCmds {
      ==================
      */
     class Cmd_Notarget_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             val msg: String
             val player: idPlayer?
             player = Game_local.gameLocal.GetLocalPlayer()
@@ -710,7 +710,7 @@ object SysCmds {
      ==================
      */
     class Cmd_Noclip_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             val msg: String
             val player: idPlayer?
             player = Game_local.gameLocal.GetLocalPlayer()
@@ -740,7 +740,7 @@ object SysCmds {
      =================
      */
     class Cmd_Kill_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             val player: idPlayer?
             if (Game_local.gameLocal.isMultiplayer) {
                 if (Game_local.gameLocal.isClient) {
@@ -788,7 +788,7 @@ object SysCmds {
      =================
      */
     class Cmd_PlayerModel_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             val player: idPlayer?
             val name: String?
             val pos = idVec3()
@@ -797,11 +797,11 @@ object SysCmds {
             if (player == null || !Game_local.gameLocal.CheatsOk()) {
                 return
             }
-            if (args.Argc() < 2) {
+            if (args!!.Argc() < 2) {
                 Game_local.gameLocal.Printf("usage: playerModel <modelname>\n")
                 return
             }
-            name = args.Argv(1)
+            name = args!!.Argv(1)
             player.spawnArgs.Set("model", name)
             pos.set(player.GetPhysics().GetOrigin())
             ang = idAngles(player.viewAngles)
@@ -822,7 +822,7 @@ object SysCmds {
      ==================
      */
     class Cmd_Say_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             Cmd_Say(false, args)
         }
 
@@ -840,7 +840,7 @@ object SysCmds {
      ==================
      */
     class Cmd_SayTeam_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             Cmd_Say(true, args)
         }
 
@@ -858,8 +858,8 @@ object SysCmds {
      ==================
      */
     class Cmd_AddChatLine_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
-            Game_local.gameLocal.mpGame.AddChatLine(args.Argv(1))
+        override fun run(args: CmdArgs.idCmdArgs?) {
+            Game_local.gameLocal.mpGame.AddChatLine(args!!.Argv(1))
         }
 
         companion object {
@@ -876,7 +876,7 @@ object SysCmds {
      ==================
      */
     class Cmd_Kick_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             val player: idPlayer?
             if (!Game_local.gameLocal.isMultiplayer) {
                 Game_local.gameLocal.Printf("kick can only be used in a multiplayer game\n")
@@ -916,7 +916,7 @@ object SysCmds {
      ==================
      */
     class Cmd_GetViewpos_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             val player: idPlayer?
             val origin = idVec3()
             val axis = idMat3()
@@ -947,7 +947,7 @@ object SysCmds {
      =================
      */
     class Cmd_SetViewpos_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             val origin = idVec3()
             val angels = idAngles()
             var i: Int
@@ -956,17 +956,17 @@ object SysCmds {
             if (player == null || !Game_local.gameLocal.CheatsOk()) {
                 return
             }
-            if (args.Argc() != 4 && args.Argc() != 5) {
+            if (args!!.Argc() != 4 && args!!.Argc() != 5) {
                 Game_local.gameLocal.Printf("usage: setviewpos <x> <y> <z> <yaw>\n")
                 return
             }
             angels.Zero()
-            if (args.Argc() == 5) {
-                angels.yaw = args.Argv(4).toFloat()
+            if (args!!.Argc() == 5) {
+                angels.yaw = args!!.Argv(4).toFloat()
             }
             i = 0
             while (i < 3) {
-                origin[i] = args.Argv(i + 1).toFloat()
+                origin[i] = args!!.Argv(i + 1).toFloat()
                 i++
             }
             origin.z -= SysCvar.pm_normalviewheight.GetFloat() - 0.25f
@@ -987,7 +987,7 @@ object SysCmds {
      =================
      */
     class Cmd_Teleport_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             val origin = idVec3()
             val angles = idAngles()
             val player: idPlayer?
@@ -996,11 +996,11 @@ object SysCmds {
             if (player == null || !Game_local.gameLocal.CheatsOk()) {
                 return
             }
-            if (args.Argc() != 2) {
+            if (args!!.Argc() != 2) {
                 Game_local.gameLocal.Printf("usage: teleport <name of entity to teleport to>\n")
                 return
             }
-            ent = Game_local.gameLocal.FindEntity(args.Argv(1))
+            ent = Game_local.gameLocal.FindEntity(args!!.Argv(1))
             if (null == ent) {
                 Game_local.gameLocal.Printf("entity not found\n")
                 return
@@ -1025,7 +1025,7 @@ object SysCmds {
      =================
      */
     class Cmd_Trigger_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             val origin = idVec3()
             var angles: idAngles
             val player: idPlayer?
@@ -1034,11 +1034,11 @@ object SysCmds {
             if (player == null || !Game_local.gameLocal.CheatsOk()) {
                 return
             }
-            if (args.Argc() != 2) {
+            if (args!!.Argc() != 2) {
                 Game_local.gameLocal.Printf("usage: trigger <name of entity to trigger>\n")
                 return
             }
-            ent = Game_local.gameLocal.FindEntity(args.Argv(1))
+            ent = Game_local.gameLocal.FindEntity(args!!.Argv(1))
             if (null == ent) {
                 Game_local.gameLocal.Printf("entity not found\n")
                 return
@@ -1062,7 +1062,7 @@ object SysCmds {
      ===================
      */
     class Cmd_Spawn_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             var key: String?
             var value: String?
             var i: Int
@@ -1074,12 +1074,12 @@ object SysCmds {
             if (player == null || !Game_local.gameLocal.CheatsOk(false)) {
                 return
             }
-            if (args.Argc() and 1 != 0) {    // must always have an even number of arguments
+            if (args!!.Argc() and 1 != 0) {    // must always have an even number of arguments
                 Game_local.gameLocal.Printf("usage: spawn classname [key/value pairs]\n")
                 return
             }
             yaw = player.viewAngles.yaw
-            value = args.Argv(1)
+            value = args!!.Argv(1)
             dict.Set("classname", value)
             dict.Set("angle", Str.va("%f", yaw + 180))
             org.set(
@@ -1088,9 +1088,9 @@ object SysCmds {
             )
             dict.Set("origin", org.ToString())
             i = 2
-            while (i < args.Argc() - 1) {
-                key = args.Argv(i)
-                value = args.Argv(i + 1)
+            while (i < args!!.Argc() - 1) {
+                key = args!!.Argv(i)
+                value = args!!.Argv(i + 1)
                 dict.Set(key, value)
                 i += 2
             }
@@ -1113,15 +1113,15 @@ object SysCmds {
      ==================
      */
     class Cmd_Damage_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             if (TempDump.NOT(Game_local.gameLocal.GetLocalPlayer()) || !Game_local.gameLocal.CheatsOk(false)) {
                 return
             }
-            if (args.Argc() != 3) {
+            if (args!!.Argc() != 3) {
                 Game_local.gameLocal.Printf("usage: damage <name of entity to damage> <damage>\n")
                 return
             }
-            val ent = Game_local.gameLocal.FindEntity(args.Argv(1))
+            val ent = Game_local.gameLocal.FindEntity(args!!.Argv(1))
             if (null == ent) {
                 Game_local.gameLocal.Printf("entity not found\n")
                 return
@@ -1131,7 +1131,7 @@ object SysCmds {
                 Game_local.gameLocal.world,
                 idVec3(0, 0, 1),
                 "damage_moverCrush",
-                args.Argv(2).toInt().toFloat(),
+                args!!.Argv(2).toInt().toFloat(),
                 Model.INVALID_JOINT
             )
         }
@@ -1152,15 +1152,15 @@ object SysCmds {
      ==================
      */
     class Cmd_Remove_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             if (TempDump.NOT(Game_local.gameLocal.GetLocalPlayer()) || !Game_local.gameLocal.CheatsOk(false)) {
                 return
             }
-            if (args.Argc() != 2) {
+            if (args!!.Argc() != 2) {
                 Game_local.gameLocal.Printf("usage: remove <name of entity to remove>\n")
                 return
             }
-            val ent = Game_local.gameLocal.FindEntity(args.Argv(1))
+            val ent = Game_local.gameLocal.FindEntity(args!!.Argv(1))
             if (TempDump.NOT(ent)) {
                 Game_local.gameLocal.Printf("entity not found\n")
                 return
@@ -1183,7 +1183,7 @@ object SysCmds {
      ===================
      */
     class Cmd_TestLight_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             var i: Int
             val filename = idStr()
             var key: String?
@@ -1204,17 +1204,17 @@ object SysCmds {
             dict.SetVector("light_up", rv.viewaxis[2].times(fov))
             dict.SetVector("light_start", rv.viewaxis[0].times(16f))
             dict.SetVector("light_end", rv.viewaxis[0].times(1000f))
-            if (args.Argc() >= 2) {
-                value = args.Argv(1)
-                filename.set(args.Argv(1))
+            if (args!!.Argc() >= 2) {
+                value = args!!.Argv(1)
+                filename.set(args!!.Argv(1))
                 filename.DefaultFileExtension(".tga")
                 dict.Set("texture", filename)
             }
             dict.Set("classname", "light")
             i = 2
-            while (i < args.Argc() - 1) {
-                key = args.Argv(i)
-                value = args.Argv(i + 1)
+            while (i < args!!.Argc() - 1) {
+                key = args!!.Argv(i)
+                value = args!!.Argv(i + 1)
                 dict.Set(key, value)
                 i += 2
             }
@@ -1245,7 +1245,7 @@ object SysCmds {
      ===================
      */
     class Cmd_TestPointLight_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             var key: String?
             var value: String?
             var name: String = ""
@@ -1257,17 +1257,17 @@ object SysCmds {
                 return
             }
             dict.SetVector("origin", player.GetRenderView()!!.vieworg)
-            if (args.Argc() >= 2) {
-                value = args.Argv(1)
+            if (args!!.Argc() >= 2) {
+                value = args!!.Argv(1)
                 dict.Set("light", value)
             } else {
                 dict.Set("light", "300")
             }
             dict.Set("classname", "light")
             i = 2
-            while (i < args.Argc() - 1) {
-                key = args.Argv(i)
-                value = args.Argv(i + 1)
+            while (i < args!!.Argc() - 1) {
+                key = args!!.Argv(i)
+                value = args!!.Argv(i + 1)
                 dict.Set(key, value)
                 i += 2
             }
@@ -1298,7 +1298,7 @@ object SysCmds {
      ==================
      */
     class Cmd_PopLight_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             var ent: idEntity?
             val mapEnt: idMapEntity?
             val mapFile = Game_local.gameLocal.GetLevelMap()!!
@@ -1307,7 +1307,7 @@ object SysCmds {
             if (!Game_local.gameLocal.CheatsOk()) {
                 return
             }
-            val removeFromMap = args.Argc() > 1
+            val removeFromMap = args!!.Argc() > 1
             lastLight = null
             last = -1
             ent = Game_local.gameLocal.spawnedEntities.Next()
@@ -1349,13 +1349,13 @@ object SysCmds {
      ====================
      */
     class Cmd_ClearLights_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             var ent: idEntity?
             var next: idEntity?
             var light: idLight?
             var mapEnt: idMapEntity?
             val mapFile = Game_local.gameLocal.GetLevelMap()!!
-            val removeFromMap = args.Argc() > 1
+            val removeFromMap = args!!.Argc() > 1
             Game_local.gameLocal.Printf("Clearing all lights.\n")
             ent = Game_local.gameLocal.spawnedEntities.Next()
             while (ent != null) {
@@ -1387,7 +1387,7 @@ object SysCmds {
      ==================
      */
     class Cmd_TestFx_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             val offset = idVec3()
             val name: String?
             val player: idPlayer?
@@ -1402,10 +1402,10 @@ object SysCmds {
 //            delete gameLocal.testFx;
                 Game_local.gameLocal.testFx = null
             }
-            if (args.Argc() < 2) {
+            if (args!!.Argc() < 2) {
                 return
             }
-            name = args.Argv(1)
+            name = args!!.Argv(1)
             offset.set(player.GetPhysics().GetOrigin().plus(player.viewAngles.ToForward().times(100.0f)))
             dict.Set("origin", offset.ToString())
             dict.Set("test", "1")
@@ -1437,14 +1437,14 @@ object SysCmds {
      ==================
      */
     class Cmd_AddDebugLine_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             var i: Int
             val argNum = intArrayOf(0)
             val value: String?
             if (!Game_local.gameLocal.CheatsOk()) {
                 return
             }
-            if (args.Argc() < 7) {
+            if (args!!.Argc() < 7) {
                 Game_local.gameLocal.Printf("usage: addline <x y z> <x y z> <color>\n")
                 return
             }
@@ -1459,7 +1459,7 @@ object SysCmds {
                 Game_local.gameLocal.Printf("no free debug lines\n")
                 return
             }
-            value = args.Argv(0)
+            value = args!!.Argv(0)
             debugLines[i].arrow = TempDump.NOT(idStr.Icmp(value, "addarrow").toDouble())
             debugLines[i].used = true
             debugLines[i].blink = false
@@ -1487,18 +1487,18 @@ object SysCmds {
      ==================
      */
     class Cmd_RemoveDebugLine_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             var i: Int
             var num: Int
             val value: String?
             if (!Game_local.gameLocal.CheatsOk()) {
                 return
             }
-            if (args.Argc() < 2) {
+            if (args!!.Argc() < 2) {
                 Game_local.gameLocal.Printf("usage: removeline <num>\n")
                 return
             }
-            value = args.Argv(1)
+            value = args!!.Argv(1)
             num = value.toInt()
             i = 0
             while (i < MAX_DEBUGLINES) {
@@ -1530,18 +1530,18 @@ object SysCmds {
      ==================
      */
     class Cmd_BlinkDebugLine_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             var i: Int
             var num: Int
             val value: String?
             if (!Game_local.gameLocal.CheatsOk()) {
                 return
             }
-            if (args.Argc() < 2) {
+            if (args!!.Argc() < 2) {
                 Game_local.gameLocal.Printf("usage: blinkline <num>\n")
                 return
             }
-            value = args.Argv(1)
+            value = args!!.Argv(1)
             num = value.toInt()
             i = 0
             while (i < MAX_DEBUGLINES) {
@@ -1573,7 +1573,7 @@ object SysCmds {
      ==================
      */
     class Cmd_ListDebugLines_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             var i: Int
             var num: Int
             if (!Game_local.gameLocal.CheatsOk()) {
@@ -1620,7 +1620,7 @@ object SysCmds {
      ==================
      */
     class Cmd_ListCollisionModels_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             if (!Game_local.gameLocal.CheatsOk()) {
                 return
             }
@@ -1641,12 +1641,12 @@ object SysCmds {
      ==================
      */
     class Cmd_CollisionModelInfo_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             val value: String?
             if (!Game_local.gameLocal.CheatsOk()) {
                 return
             }
-            if (args.Argc() < 2) {
+            if (args!!.Argc() < 2) {
                 Game_local.gameLocal.Printf(
                     """
     usage: collisionModelInfo <modelNum>
@@ -1656,7 +1656,7 @@ object SysCmds {
                 )
                 return
             }
-            value = args.Argv(1)
+            value = args!!.Argv(1)
             if (TempDump.NOT(idStr.Icmp(value, "all").toDouble())) {
                 CollisionModel_local.collisionModelManager.ModelInfo(-1)
             } else {
@@ -1678,7 +1678,7 @@ object SysCmds {
      ==================
      */
     class Cmd_ExportModels_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             val exporter = idModelExport()
             val name = idStr()
 
@@ -1687,10 +1687,10 @@ object SysCmds {
             if (Game_local.gameLocal.GetLocalPlayer() != null && !Game_local.gameLocal.CheatsOk(false)) {
                 return
             }
-            if (args.Argc() < 2) {
+            if (args!!.Argc() < 2) {
                 exporter.ExportModels("def", ".def")
             } else {
-                name.set(args.Argv(1))
+                name.set(args!!.Argv(1))
                 name.set("def/$name")
                 name.DefaultFileExtension(".def")
                 exporter.ExportDefFile(name.toString())
@@ -1711,7 +1711,7 @@ object SysCmds {
      ==================
      */
     class Cmd_ReexportModels_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             val exporter = idModelExport()
             val name = idStr()
 
@@ -1721,10 +1721,10 @@ object SysCmds {
                 return
             }
             idAnimManager.forceExport = true
-            if (args.Argc() < 2) {
+            if (args!!.Argc() < 2) {
                 exporter.ExportModels("def", ".def")
             } else {
-                name.set(args.Argv(1))
+                name.set(args!!.Argv(1))
                 name.set("def/$name")
                 name.DefaultFileExtension(".def")
                 exporter.ExportDefFile(name.toString())
@@ -1746,7 +1746,7 @@ object SysCmds {
      ==================
      */
     class Cmd_ReloadAnims_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             // don't allow reloading anims when cheats are disabled,
             // but if we're not in the game, it's ok
             if (Game_local.gameLocal.GetLocalPlayer() != null && !Game_local.gameLocal.CheatsOk(false)) {
@@ -1769,7 +1769,7 @@ object SysCmds {
      ==================
      */
     class Cmd_ListAnims_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             var ent: idEntity?
             var num: Int
             var   /*size_t*/size: Int
@@ -1778,9 +1778,9 @@ object SysCmds {
             val classname: String?
             val dict: idDict?
             var i: Int
-            if (args.Argc() > 1) {
+            if (args!!.Argc() > 1) {
                 animator = idAnimator()
-                classname = args.Argv(1)
+                classname = args!!.Argv(1)
                 dict = Game_local.gameLocal.FindEntityDefDict(classname, false)
                 if (null == dict) {
                     Game_local.gameLocal.Printf("Entitydef '%s' not found\n", classname)
@@ -1827,7 +1827,7 @@ object SysCmds {
      ==================
      */
     class Cmd_AASStats_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             val aasNum: Int
             if (!Game_local.gameLocal.CheatsOk()) {
                 return
@@ -1855,21 +1855,21 @@ object SysCmds {
      ==================
      */
     class Cmd_TestDamage_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             val player: idPlayer?
             val damageDefName: String?
             player = Game_local.gameLocal.GetLocalPlayer()
             if (player == null || !Game_local.gameLocal.CheatsOk()) {
                 return
             }
-            if (args.Argc() < 2 || args.Argc() > 3) {
+            if (args!!.Argc() < 2 || args!!.Argc() > 3) {
                 Game_local.gameLocal.Printf("usage: testDamage <damageDefName> [angle]\n")
                 return
             }
-            damageDefName = args.Argv(1)
+            damageDefName = args!!.Argv(1)
             val dir = idVec3()
-            if (args.Argc() == 3) {
-                val angle = args.Argv(2).toFloat()
+            if (args!!.Argc() == 3) {
+                val angle = args!!.Argv(2).toFloat()
                 val d1 = CFloat()
                 val d0 = CFloat()
                 idMath.SinCos(Math_h.DEG2RAD(angle), d1, d0)
@@ -1900,7 +1900,7 @@ object SysCmds {
      ==================
      */
     class Cmd_TestBoneFx_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             val player: idPlayer?
             val bone: String?
             val fx: String?
@@ -1908,12 +1908,12 @@ object SysCmds {
             if (player == null || !Game_local.gameLocal.CheatsOk()) {
                 return
             }
-            if (args.Argc() < 3 || args.Argc() > 4) {
+            if (args!!.Argc() < 3 || args!!.Argc() > 4) {
                 Game_local.gameLocal.Printf("usage: testBoneFx <fxName> <boneName>\n")
                 return
             }
-            fx = args.Argv(1)
-            bone = args.Argv(2)
+            fx = args!!.Argv(1)
+            bone = args!!.Argv(2)
             player.StartFxOnBone(fx, bone)
         }
 
@@ -1931,7 +1931,7 @@ object SysCmds {
      ==================
      */
     class Cmd_TestDeath_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             val player: idPlayer?
             player = Game_local.gameLocal.GetLocalPlayer()
             if (player == null || !Game_local.gameLocal.CheatsOk()) {
@@ -1944,7 +1944,7 @@ object SysCmds {
             dir.set(idVec3(d0._val, d1._val, 0f))
             SysCvar.g_testDeath.SetBool(true)
             player.Damage(null, null, dir, "damage_triggerhurt_1000", 1.0f, Model.INVALID_JOINT)
-            if (args.Argc() >= 2) {
+            if (args!!.Argc() >= 2) {
                 player.SpawnGibs(dir, "damage_triggerhurt_1000")
             }
         }
@@ -1963,7 +1963,7 @@ object SysCmds {
      ==================
      */
     class Cmd_WeaponSplat_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             val player: idPlayer?
             player = Game_local.gameLocal.GetLocalPlayer()
             if (player == null || !Game_local.gameLocal.CheatsOk()) {
@@ -1986,7 +1986,7 @@ object SysCmds {
      ==================
      */
     class Cmd_SaveSelected_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             var i: Int
             val player: idPlayer?
             val s: idEntity?
@@ -2004,8 +2004,8 @@ object SysCmds {
                 Game_local.gameLocal.Printf("no entity selected, set g_dragShowSelection 1 to show the current selection\n")
                 return
             }
-            if (args.Argc() > 1) {
-                mapName = idStr(args.Argv(1))
+            if (args!!.Argc() > 1) {
+                mapName = idStr(args!!.Argv(1))
                 mapName.set("maps/$mapName")
             } else {
                 mapName = idStr(mapFile.GetName())
@@ -2058,7 +2058,7 @@ object SysCmds {
      ==================
      */
     class Cmd_DeleteSelected_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             val player: idPlayer?
             player = Game_local.gameLocal.GetLocalPlayer()
             if (player == null || !Game_local.gameLocal.CheatsOk()) {
@@ -2083,7 +2083,7 @@ object SysCmds {
      ==================
      */
     class Cmd_SaveMoveables_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             var e: Int
             var i: Int
             var m: idMoveable?
@@ -2117,8 +2117,8 @@ object SysCmds {
                 )
                 return
             }
-            if (args.Argc() > 1) {
-                mapName.set(args.Argv(1))
+            if (args!!.Argc() > 1) {
+                mapName.set(args!!.Argv(1))
                 mapName.set("maps/$mapName")
             } else {
                 mapName.set(mapFile.GetName())
@@ -2177,7 +2177,7 @@ object SysCmds {
      ==================
      */
     class Cmd_SaveRagdolls_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             var e: Int
             var i: Int
             var af: idAFEntity_Base
@@ -2189,8 +2189,8 @@ object SysCmds {
             if (!Game_local.gameLocal.CheatsOk()) {
                 return
             }
-            if (args.Argc() > 1) {
-                mapName.set(args.Argv(1))
+            if (args!!.Argc() > 1) {
+                mapName.set(args!!.Argv(1))
                 mapName.set("maps/$mapName")
             } else {
                 mapName.set(mapFile.GetName())
@@ -2260,7 +2260,7 @@ object SysCmds {
      ==================
      */
     class Cmd_BindRagdoll_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             val player: idPlayer?
             player = Game_local.gameLocal.GetLocalPlayer()
             if (player == null || !Game_local.gameLocal.CheatsOk()) {
@@ -2285,7 +2285,7 @@ object SysCmds {
      ==================
      */
     class Cmd_UnbindRagdoll_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             val player: idPlayer?
             player = Game_local.gameLocal.GetLocalPlayer()
             if (player == null || !Game_local.gameLocal.CheatsOk()) {
@@ -2310,7 +2310,7 @@ object SysCmds {
      ==================
      */
     class Cmd_GameError_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             idGameLocal.Error("game error")
         }
 
@@ -2328,7 +2328,7 @@ object SysCmds {
      ==================
      */
     class Cmd_SaveLights_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             var e: Int
             var i: Int
             var light: idLight
@@ -2340,8 +2340,8 @@ object SysCmds {
             if (!Game_local.gameLocal.CheatsOk()) {
                 return
             }
-            if (args.Argc() > 1) {
-                mapName.set(args.Argv(1))
+            if (args!!.Argc() > 1) {
+                mapName.set(args!!.Argv(1))
                 mapName.set("maps/$mapName")
             } else {
                 mapName.set(mapFile.GetName())
@@ -2397,7 +2397,7 @@ object SysCmds {
      ==================
      */
     class Cmd_SaveParticles_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             var e: Int
             var ent: idEntity?
             var mapEnt: idMapEntity?
@@ -2408,8 +2408,8 @@ object SysCmds {
             if (!Game_local.gameLocal.CheatsOk()) {
                 return
             }
-            if (args.Argc() > 1) {
-                mapName.set(args.Argv(1))
+            if (args!!.Argc() > 1) {
+                mapName.set(args!!.Argv(1))
                 mapName.set("maps/$mapName")
             } else {
                 mapName.set(mapFile.GetName())
@@ -2458,7 +2458,7 @@ object SysCmds {
      ==================
      */
     class Cmd_DisasmScript_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             Game_local.gameLocal.program.Disassemble()
         }
 
@@ -2476,7 +2476,7 @@ object SysCmds {
      ==================
      */
     class Cmd_TestSave_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             val f: idFile?
             f = FileSystem_h.fileSystem.OpenFileWrite("test.sav")!!
             Game_local.gameLocal.SaveGame(f)
@@ -2497,11 +2497,11 @@ object SysCmds {
      ==================
      */
     class Cmd_RecordViewNotes_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             val player: idPlayer?
             val origin = idVec3()
             val axis = idMat3()
-            if (args.Argc() <= 3) {
+            if (args!!.Argc() <= 3) {
                 return
             }
             player = Game_local.gameLocal.GetLocalPlayer()
@@ -2513,20 +2513,20 @@ object SysCmds {
             // Argv(1) = filename for map (viewnotes/mapname/person)
             // Argv(2) = note number (person0001)
             // Argv(3) = comments
-            val str = idStr(args.Argv(1))
+            val str = idStr(args!!.Argv(1))
             str.SetFileExtension(".txt")
             val file = FileSystem_h.fileSystem.OpenFileAppend(str.toString())
             if (file != null) {
                 file.WriteFloatString("\"view\"\t( %s )\t( %s )\r\n", origin.ToString(), axis.ToString())
-                file.WriteFloatString("\"comments\"\t\"%s: %s\"\r\n\r\n", args.Argv(2), args.Argv(3))
+                file.WriteFloatString("\"comments\"\t\"%s: %s\"\r\n\r\n", args!!.Argv(2), args!!.Argv(3))
                 FileSystem_h.fileSystem.CloseFile(file)
             }
-            val viewComments = idStr(args.Argv(1))
+            val viewComments = idStr(args!!.Argv(1))
             viewComments.StripLeading("viewnotes/")
             viewComments.plusAssign(" -- Loc: ")
             viewComments.plusAssign(origin.ToString())
             viewComments.plusAssign("\n")
-            viewComments.plusAssign(args.Argv(3))
+            viewComments.plusAssign(args!!.Argv(3))
             player.hud!!.SetStateString("viewcomments", viewComments.toString())
             player.hud!!.HandleNamedEvent("showViewComments")
         }
@@ -2545,7 +2545,7 @@ object SysCmds {
      ==================
      */
     class Cmd_CloseViewNotes_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             val player = Game_local.gameLocal.GetLocalPlayer() ?: return
             player.hud!!.SetStateString("viewcomments", "")
             player.hud!!.HandleNamedEvent("hideViewComments")
@@ -2565,7 +2565,7 @@ object SysCmds {
      ==================
      */
     class Cmd_ShowViewNotes_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             val token = idToken()
             val player: idPlayer?
             val origin = idVec3()
@@ -2579,8 +2579,8 @@ object SysCmds {
                 str.plusAssign(Game_local.gameLocal.GetMapName())
                 str.StripFileExtension()
                 str.plusAssign("/")
-                if (args.Argc() > 1) {
-                    str.plusAssign(args.Argv(1))
+                if (args!!.Argc() > 1) {
+                    str.plusAssign(args!!.Argv(1))
                 } else {
                     str.plusAssign("comments")
                 }
@@ -2619,7 +2619,7 @@ object SysCmds {
      =================
      */
     class Cmd_NextGUI_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             val origin = idVec3()
             val angles: idAngles
             val player: idPlayer?
@@ -2637,7 +2637,7 @@ object SysCmds {
             if (player == null || !Game_local.gameLocal.CheatsOk()) {
                 return
             }
-            if (args.Argc() != 1) {
+            if (args!!.Argc() != 1) {
                 Game_local.gameLocal.Printf("usage: nextgui\n")
                 return
             }
@@ -2708,7 +2708,7 @@ object SysCmds {
             }
             assert(geom.facePlanes != null)
             modelMatrix = idMat4(renderEnt.axis, renderEnt.origin)
-            normal.set(geom.facePlanes!![0].Normal().times(renderEnt.axis))
+            normal.set(geom.facePlanes!![0]!!.Normal().times(renderEnt.axis))
             center.set(geom.bounds.GetCenter().times(modelMatrix))
             origin.set(center.plus(normal.times(32.0f)))
             origin.z -= player.EyeHeight()
@@ -2776,7 +2776,7 @@ object SysCmds {
     }
 
     class ArgCompletion_DefFile private constructor() : CmdSystem.argCompletion_t() {
-        override fun run(args: CmdArgs.idCmdArgs, callback: void_callback<String>) {
+        override fun run(args: CmdArgs.idCmdArgs?, callback: void_callback<String>) {
             CmdSystem.cmdSystem.ArgCompletion_FolderExtension(args, callback, "def/", true, ".def", null)
         }
 
@@ -2795,16 +2795,16 @@ object SysCmds {
      ===============
      */
     class Cmd_TestId_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             var id: String = ""
             var i: Int
-            if (args.Argc() == 1) {
+            if (args!!.Argc() == 1) {
                 Common.common.Printf("usage: testid <string id>\n")
                 return
             }
             i = 1
-            while (i < args.Argc()) {
-                id += args.Argv(i)
+            while (i < args!!.Argc()) {
+                id += args!!.Argv(i)
                 i++
             }
             if (idStr.Cmpn(id, Common.STRTABLE_ID, Common.STRTABLE_ID_LENGTH) != 0) {

@@ -2,20 +2,24 @@ package neo.ui
 
 import neo.Renderer.Material
 import neo.Renderer.Material.idMaterial
-import neo.framework.CVarSystem
+import neo.framework.CVarSystem.CVAR_FLOAT
 import neo.framework.CVarSystem.idCVar
 import neo.framework.DeclManager
 import neo.framework.File_h.idFile
-import neo.framework.KeyInput
+import neo.framework.KeyInput.K_MOUSE1
 import neo.framework.Session
 import neo.idlib.Lib
 import neo.idlib.Text.Parser.idParser
-import neo.idlib.Text.Str
 import neo.idlib.Text.Str.idStr
+import neo.idlib.Text.Str.idStr.Companion.Icmp
+import neo.idlib.Text.Str.va
 import neo.idlib.containers.CBool
 import neo.idlib.containers.List.idList
-import neo.idlib.math.Math_h
-import neo.idlib.math.Math_h.idMath
+import neo.idlib.math.Math_h.DEG2RAD
+import neo.idlib.math.Math_h.RAD2DEG
+import neo.idlib.math.Math_h.idMath.ClampFloat
+import neo.idlib.math.Math_h.idMath.Cos
+import neo.idlib.math.Math_h.idMath.Sin
 import neo.idlib.math.Random.idRandom
 import neo.idlib.math.Vector.idVec2
 import neo.idlib.math.Vector.idVec4
@@ -31,30 +35,60 @@ import kotlin.math.abs
 import kotlin.math.acos
 import kotlin.math.atan2
 
-class GameBearShootWindow {
+/**
+ *
+ */
+object GameBearShootWindow {
+    const val BEAR_GRAVITY = 240
+    const val BEAR_SHRINK_TIME = 2000f
+    const val BEAR_SIZE = 24f
+
+    //
+    const val MAX_WINDFORCE = 100f
+
+    //
+    val bearTurretAngle = idCVar("bearTurretAngle", "0", CVAR_FLOAT, "")
+    val bearTurretForce = idCVar("bearTurretForce", "200", CVAR_FLOAT, "")
+
+    //
     /*
      *****************************************************************************
      * BSEntity
      ****************************************************************************
      */
-    class BSEntity(  //
+    class BSEntity(//
         var game: idGameBearShootWindow
     ) {
         //
-        val entColor: idVec4 = Lib.colorWhite
+        var entColor: idVec4
 
         //
-        var fadeIn: Boolean = false
-        var fadeOut: Boolean = false
-        var material: idMaterial? = null
-        val materialName: idStr = idStr("")
-        val position: idVec2 = idVec2()
-        var rotation: Float = 0f
-        var rotationSpeed: Float = 0f
-        val velocity: idVec2 = idVec2()
+        var fadeIn: Boolean
+        var fadeOut: Boolean
+        var material: idMaterial?
+        var materialName: idStr
+        var position: idVec2? = null
+        var rotation: Float
+        var rotationSpeed: Float
+        var velocity: idVec2? = null
         var visible = true
-        var width: Float = 8f
-        var height: Float = 8f
+        var width: Float
+        var height: Float
+
+        //
+        init {
+            entColor = Lib.colorWhite
+            materialName = idStr("")
+            material = null
+            height = 8f
+            width = height
+            rotation = 0f
+            rotationSpeed = 0f
+            fadeIn = false
+            fadeOut = false
+            position!!.Zero()
+            velocity!!.Zero()
+        }
 
         //	// virtual				~BSEntity();
         //
@@ -64,10 +98,10 @@ class GameBearShootWindow {
             savefile.WriteFloat(height)
             savefile.WriteBool(visible)
             savefile.Write(entColor)
-            savefile.Write(position)
+            savefile.Write(position!!)
             savefile.WriteFloat(rotation)
             savefile.WriteFloat(rotationSpeed)
-            savefile.Write(velocity)
+            savefile.Write(velocity!!)
             savefile.WriteBool(fadeIn)
             savefile.WriteBool(fadeOut)
         }
@@ -80,17 +114,17 @@ class GameBearShootWindow {
             height = savefile.ReadFloat()
             visible = savefile.ReadBool()
             savefile.Read(entColor)
-            savefile.Read(position)
+            savefile.Read(position!!)
             rotation = savefile.ReadFloat()
             rotationSpeed = savefile.ReadFloat()
-            savefile.Read(velocity)
+            savefile.Read(velocity!!)
             fadeIn = savefile.ReadBool()
             fadeOut = savefile.ReadBool()
         }
 
-        fun SetMaterial(name: String) {
+        fun SetMaterial(name: String?) {
             materialName.set(name)
-            material = DeclManager.declManager.FindMaterial(name)
+            material = DeclManager.declManager.FindMaterial(name!!)
             material!!.SetSort(Material.SS_GUI.toFloat())
         }
 
@@ -125,7 +159,7 @@ class GameBearShootWindow {
             }
 
             // Move the entity
-            position.plusAssign(velocity * timeslice)
+            position!!.plusAssign(velocity!!.times(timeslice))
 
             // Rotate Entity
             rotation += rotationSpeed * timeslice
@@ -134,19 +168,18 @@ class GameBearShootWindow {
         fun Draw(dc: idDeviceContext) {
             if (visible) {
                 dc.DrawMaterialRotated(
-                    position.x,
-                    position.y,
+                    position!!.x,
+                    position!!.y,
                     width,
                     height,
                     material,
                     entColor,
                     1.0f,
                     1.0f,
-                    Math_h.DEG2RAD(rotation)
+                    DEG2RAD(rotation)
                 )
             }
         }
-
     }
 
     /*
@@ -155,7 +188,7 @@ class GameBearShootWindow {
      ****************************************************************************
      */
     class idGameBearShootWindow : idWindow {
-        private lateinit var bear: BSEntity
+        private var bear: BSEntity? = null
         private var bearHitTarget = false
 
         // ~idGameBearShootWindow();
@@ -169,32 +202,32 @@ class GameBearShootWindow {
         private var currentLevel = 0
 
         //
-        private val entities: idList<BSEntity> = idList()
+        private val entities = idList<BSEntity>()
         private var gameOver = false
 
         //
         //
-        private lateinit var gamerunning: idWinBool
-        private lateinit var goal: BSEntity
+        private val gamerunning: idWinBool? = null
+        private var goal: BSEntity? = null
         private var goalsHit = 0
-        private lateinit var gunblast: BSEntity
-        private lateinit var helicopter: BSEntity
-        private lateinit var onContinue: idWinBool
-        private lateinit var onFire: idWinBool
-        private lateinit var onNewGame: idWinBool
+        private var gunblast: BSEntity? = null
+        private var helicopter: BSEntity? = null
+        private val onContinue: idWinBool? = null
+        private val onFire: idWinBool? = null
+        private val onNewGame: idWinBool? = null
         private var timeRemaining = 0f
 
         //
         private var timeSlice = 0f
 
         //
-        private lateinit var turret: BSEntity
+        private var turret: BSEntity? = null
 
         //
         private var turretAngle = 0f
         private var turretForce = 0f
         private var updateScore = false
-        private lateinit var wind: BSEntity
+        private var wind: BSEntity? = null
 
         //
         private var windForce = 0f
@@ -205,7 +238,7 @@ class GameBearShootWindow {
             CommonInit()
         }
 
-        constructor(dc: idDeviceContext, gui: idUserInterfaceLocal) : super(dc, gui) {
+        constructor(dc: idDeviceContext?, gui: idUserInterfaceLocal?) : super(dc, gui) {
             this.dc = dc
             this.gui = gui
             CommonInit()
@@ -213,10 +246,10 @@ class GameBearShootWindow {
 
         override fun WriteToSaveGame(savefile: idFile) {
             super.WriteToSaveGame(savefile)
-            gamerunning.WriteToSaveGame(savefile)
-            onFire.WriteToSaveGame(savefile)
-            onContinue.WriteToSaveGame(savefile)
-            onNewGame.WriteToSaveGame(savefile)
+            gamerunning!!.WriteToSaveGame(savefile)
+            onFire!!.WriteToSaveGame(savefile)
+            onContinue!!.WriteToSaveGame(savefile)
+            onNewGame!!.WriteToSaveGame(savefile)
             savefile.WriteFloat(timeSlice)
             savefile.WriteFloat(timeRemaining)
             savefile.WriteBool(gameOver)
@@ -256,10 +289,10 @@ class GameBearShootWindow {
 
             // Remove all existing entities
             entities.DeleteContents(true)
-            gamerunning.ReadFromSaveGame(savefile)
-            onFire.ReadFromSaveGame(savefile)
-            onContinue.ReadFromSaveGame(savefile)
-            onNewGame.ReadFromSaveGame(savefile)
+            gamerunning!!.ReadFromSaveGame(savefile)
+            onFire!!.ReadFromSaveGame(savefile)
+            onContinue!!.ReadFromSaveGame(savefile)
+            onNewGame!!.ReadFromSaveGame(savefile)
             timeSlice = savefile.ReadFloat()
             timeRemaining = savefile.ReadInt().toFloat()
             gameOver = savefile.ReadBool()
@@ -297,22 +330,26 @@ class GameBearShootWindow {
             gunblast = entities[index]
         }
 
-        override fun HandleEvent(event: sysEvent_s, updateVisuals: CBool): String {
+        override fun HandleEvent(event: sysEvent_s, updateVisuals: CBool?): String? {
             val key = event.evValue
 
             // need to call this to allow proper focus and capturing on embedded children
             val ret = super.HandleEvent(event, updateVisuals)
-            if (event.evType == sysEventType_t.SE_KEY) {
+            if (event.evType === sysEventType_t.SE_KEY) {
                 if (0 == event.evValue2) {
                     return ret
                 }
-                if (key == KeyInput.K_MOUSE1) {
+                if (key == K_MOUSE1) {
                     // Mouse was clicked
                 } else {
                     return ret
                 }
             }
             return ret
+        }
+
+        override fun PostParse() {
+            super.PostParse()
         }
 
         override fun Draw(time: Int, x: Float, y: Float) {
@@ -332,18 +369,18 @@ class GameBearShootWindow {
         }
 
         override fun GetWinVarByName(
-            _name: String,
+            _name: String?,
             winLookup: Boolean /*= false*/,
             owner: Array<drawWin_t?>? /*= NULL*/
         ): idWinVar? {
             var retVar: idWinVar? = null
-            if (idStr.Icmp(_name, "gamerunning") == 0) {
+            if (Icmp(_name!!, "gamerunning") == 0) {
                 retVar = gamerunning
-            } else if (idStr.Icmp(_name, "onFire") == 0) {
+            } else if (Icmp(_name, "onFire") == 0) {
                 retVar = onFire
-            } else if (idStr.Icmp(_name, "onContinue") == 0) {
+            } else if (Icmp(_name, "onContinue") == 0) {
                 retVar = onContinue
-            } else if (idStr.Icmp(_name, "onNewGame") == 0) {
+            } else if (Icmp(_name, "onNewGame") == 0) {
                 retVar = onNewGame
             }
             return retVar ?: super.GetWinVarByName(_name, winLookup, owner)
@@ -367,43 +404,43 @@ class GameBearShootWindow {
             turret = ent
             ent.SetMaterial("game/bearshoot/turret")
             ent.SetSize(272f, 144f)
-            ent.position.x = -44f
-            ent.position.y = 260f
+            ent.position!!.x = -44f
+            ent.position!!.y = 260f
             entities.Append(ent)
             ent = BSEntity(this)
             ent.SetMaterial("game/bearshoot/turret_base")
             ent.SetSize(144f, 160f)
-            ent.position.x = 16f
-            ent.position.y = 280f
+            ent.position!!.x = 16f
+            ent.position!!.y = 280f
             entities.Append(ent)
             ent = BSEntity(this)
             bear = ent
             ent.SetMaterial("game/bearshoot/bear")
             ent.SetSize(BEAR_SIZE, BEAR_SIZE)
             ent.SetVisible(false)
-            ent.position.x = 0f
-            ent.position.y = 0f
+            ent.position!!.x = 0f
+            ent.position!!.y = 0f
             entities.Append(ent)
             ent = BSEntity(this)
             helicopter = ent
             ent.SetMaterial("game/bearshoot/helicopter")
             ent.SetSize(64f, 64f)
-            ent.position.x = 550f
-            ent.position.y = 100f
+            ent.position!!.x = 550f
+            ent.position!!.y = 100f
             entities.Append(ent)
             ent = BSEntity(this)
             goal = ent
             ent.SetMaterial("game/bearshoot/goal")
             ent.SetSize(64f, 64f)
-            ent.position.x = 550f
-            ent.position.y = 164f
+            ent.position!!.x = 550f
+            ent.position!!.y = 164f
             entities.Append(ent)
             ent = BSEntity(this)
             wind = ent
             ent.SetMaterial("game/bearshoot/wind")
             ent.SetSize(100f, 40f)
-            ent.position.x = 500f
-            ent.position.y = 430f
+            ent.position!!.x = 500f
+            ent.position!!.y = 430f
             entities.Append(ent)
             ent = BSEntity(this)
             gunblast = ent
@@ -414,11 +451,11 @@ class GameBearShootWindow {
         }
 
         private fun ResetGameState() {
-            gamerunning.data = false
+            gamerunning!!.data = false
             gameOver = false
-            onFire.data = false
-            onContinue.data = false
-            onNewGame.data = false
+            onFire!!.data = false
+            onContinue!!.data = false
+            onNewGame!!.data = false
 
             // Game moves forward 16 milliseconds every frame
             timeSlice = 0.016f
@@ -441,33 +478,33 @@ class GameBearShootWindow {
             var startShrink = false
 
             // Apply gravity
-            bear.velocity.y += BEAR_GRAVITY * timeSlice
+            bear!!.velocity!!.y += BEAR_GRAVITY * timeSlice
 
             // Apply wind
-            bear.velocity.x += windForce * timeSlice
+            bear!!.velocity!!.x += windForce * timeSlice
 
             // Check for collisions
             if (!bearHitTarget && !gameOver) {
                 val bearCenter = idVec2()
                 var collision = false
-                bearCenter.x = bear.position.x + bear.width / 2
-                bearCenter.y = bear.position.y + bear.height / 2
-                if (bearCenter.x > helicopter.position.x + 16 && bearCenter.x < helicopter.position.x + helicopter.width - 29) {
-                    if (bearCenter.y > helicopter.position.y + 12 && bearCenter.y < helicopter.position.y + helicopter.height - 7) {
+                bearCenter.x = bear!!.position!!.x + bear!!.width / 2
+                bearCenter.y = bear!!.position!!.y + bear!!.height / 2
+                if (bearCenter.x > helicopter!!.position!!.x + 16 && bearCenter.x < helicopter!!.position!!.x + helicopter!!.width - 29) {
+                    if (bearCenter.y > helicopter!!.position!!.y + 12 && bearCenter.y < helicopter!!.position!!.y + helicopter!!.height - 7) {
                         collision = true
                     }
                 }
                 if (collision) {
                     // balloons pop and bear tumbles to ground
-                    helicopter.SetMaterial("game/bearshoot/helicopter_broken")
-                    helicopter.velocity.y = 230f
-                    goal.velocity.y = 230f
+                    helicopter!!.SetMaterial("game/bearshoot/helicopter_broken")
+                    helicopter!!.velocity!!.y = 230f
+                    goal!!.velocity!!.y = 230f
                     Session.session.sw.PlayShaderDirectly("arcade_balloonpop")
-                    bear.SetVisible(false)
-                    if (bear.velocity.x > 0) {
-                        bear.velocity.x *= -1f
+                    bear!!.SetVisible(false)
+                    if (bear!!.velocity!!.x > 0) {
+                        bear!!.velocity!!.x *= -1f
                     }
-                    bear.velocity.timesAssign(0.666f)
+                    bear!!.velocity!!.timesAssign(0.666f)
                     bearHitTarget = true
                     updateScore = true
                     startShrink = true
@@ -475,14 +512,14 @@ class GameBearShootWindow {
             }
 
             // Check for ground collision
-            if (bear.position.y > 380) {
-                bear.position.y = 380f
-                if (bear.velocity.Length() < 25) {
-                    bear.velocity.Zero()
+            if (bear!!.position!!.y > 380) {
+                bear!!.position!!.y = 380f
+                if (bear!!.velocity!!.Length() < 25) {
+                    bear!!.velocity!!.Zero()
                 } else {
                     startShrink = true
-                    bear.velocity.y *= -1f
-                    bear.velocity.timesAssign(0.5f)
+                    bear!!.velocity!!.y *= -1f
+                    bear!!.velocity!!.timesAssign(0.5f)
                     if (bearScale != 0f) {
                         Session.session.sw.PlayShaderDirectly("arcade_balloonpop")
                     }
@@ -491,13 +528,14 @@ class GameBearShootWindow {
 
             // Bear rotation is based on velocity
             val angle: Float
-            val dir: idVec2 = bear.velocity
-            dir.NormalizeFast()
-            angle = Math_h.RAD2DEG(atan2(dir.x.toDouble(), dir.y.toDouble()).toFloat())
-            bear.rotation = angle - 90
+            val dir: idVec2?
+            dir = bear!!.velocity
+            dir!!.NormalizeFast()
+            angle = RAD2DEG(atan2(dir.x.toDouble(), dir.y.toDouble()).toFloat())
+            bear!!.rotation = angle - 90
 
             // Update Bear scale
-            if (bear.position.x > 650) {
+            if (bear!!.position!!.x > 650) {
                 startShrink = true
             }
             if (!bearIsShrinking && bearScale != 0f && startShrink) {
@@ -511,29 +549,29 @@ class GameBearShootWindow {
                     1 - (time - bearShrinkStartTime).toFloat() / 750
                 }
                 bearScale *= BEAR_SIZE
-                bear.SetSize(bearScale, bearScale)
+                bear!!.SetSize(bearScale, bearScale)
                 if (bearScale < 0) {
                     gui!!.HandleNamedEvent("EnableFireButton")
                     bearIsShrinking = false
                     bearScale = 0f
                     if (bearHitTarget) {
-                        goal.SetMaterial("game/bearshoot/goal")
-                        goal.position.x = 550f
-                        goal.position.y = 164f
-                        goal.velocity.Zero()
-                        goal.velocity.y = ((currentLevel - 1) * 30).toFloat()
-                        goal.entColor.w = 0f
-                        goal.fadeIn = true
-                        goal.fadeOut = false
-                        helicopter.SetVisible(true)
-                        helicopter.SetMaterial("game/bearshoot/helicopter")
-                        helicopter.position.x = 550f
-                        helicopter.position.y = 100f
-                        helicopter.velocity.Zero()
-                        helicopter.velocity.y = goal.velocity.y
-                        helicopter.entColor.w = 0f
-                        helicopter.fadeIn = true
-                        helicopter.fadeOut = false
+                        goal!!.SetMaterial("game/bearshoot/goal")
+                        goal!!.position!!.x = 550f
+                        goal!!.position!!.y = 164f
+                        goal!!.velocity!!.Zero()
+                        goal!!.velocity!!.y = ((currentLevel - 1) * 30).toFloat()
+                        goal!!.entColor.w = 0f
+                        goal!!.fadeIn = true
+                        goal!!.fadeOut = false
+                        helicopter!!.SetVisible(true)
+                        helicopter!!.SetMaterial("game/bearshoot/helicopter")
+                        helicopter!!.position!!.x = 550f
+                        helicopter!!.position!!.y = 100f
+                        helicopter!!.velocity!!.Zero()
+                        helicopter!!.velocity!!.y = goal!!.velocity!!.y
+                        helicopter!!.entColor.w = 0f
+                        helicopter!!.fadeIn = true
+                        helicopter!!.fadeOut = false
                     }
                 }
             }
@@ -541,30 +579,30 @@ class GameBearShootWindow {
 
         private fun UpdateHelicopter() {
             if (bearHitTarget && bearIsShrinking) {
-                if (helicopter.velocity.y != 0f && helicopter.position.y > 264) {
-                    helicopter.velocity.y = 0f
-                    goal.velocity.y = 0f
-                    helicopter.SetVisible(false)
-                    goal.SetMaterial("game/bearshoot/goal_dead")
+                if (helicopter!!.velocity!!.y != 0f && helicopter!!.position!!.y > 264) {
+                    helicopter!!.velocity!!.y = 0f
+                    goal!!.velocity!!.y = 0f
+                    helicopter!!.SetVisible(false)
+                    goal!!.SetMaterial("game/bearshoot/goal_dead")
                     Session.session.sw.PlayShaderDirectly("arcade_beargroan", 1)
-                    helicopter.fadeOut = true
-                    goal.fadeOut = true
+                    helicopter!!.fadeOut = true
+                    goal!!.fadeOut = true
                 }
             } else if (currentLevel > 1) {
-                val height = helicopter.position.y.toInt()
+                val height = helicopter!!.position!!.y.toInt()
                 val speed = ((currentLevel - 1) * 30).toFloat()
                 if (height > 240) {
-                    helicopter.velocity.y = -speed
-                    goal.velocity.y = -speed
+                    helicopter!!.velocity!!.y = -speed
+                    goal!!.velocity!!.y = -speed
                 } else if (height < 30) {
-                    helicopter.velocity.y = speed
-                    goal.velocity.y = speed
+                    helicopter!!.velocity!!.y = speed
+                    goal!!.velocity!!.y = speed
                 }
             }
         }
 
         private fun UpdateTurret() {
-            var pt: idVec2 = idVec2()
+            var pt = idVec2()
             val turretOrig = idVec2()
             val right = idVec2()
             val dot: Float
@@ -572,37 +610,37 @@ class GameBearShootWindow {
             pt.x = gui!!.CursorX()
             pt.y = gui!!.CursorY()
             turretOrig.set(80f, 348f)
-            pt -= turretOrig
+            pt = pt.minus(turretOrig)
             pt.NormalizeFast()
             right.x = 1f
             right.y = 0f
-            dot = pt * right
-            angle = Math_h.RAD2DEG(acos(dot.toDouble()).toFloat())
-            turretAngle = idMath.ClampFloat(0f, 90f, angle)
+            dot = pt.times(right)
+            angle = RAD2DEG(acos(dot.toDouble()).toFloat())
+            turretAngle = ClampFloat(0f, 90f, angle)
         }
 
         private fun UpdateButtons() {
-            if (onFire.oCastBoolean()) {
+            if (onFire!!.oCastBoolean()) {
                 val vec = idVec2()
                 gui!!.HandleNamedEvent("DisableFireButton")
                 Session.session.sw.PlayShaderDirectly("arcade_sargeshoot")
-                bear.SetVisible(true)
+                bear!!.SetVisible(true)
                 bearScale = 1f
-                bear.SetSize(BEAR_SIZE, BEAR_SIZE)
-                vec.x = idMath.Cos(Math_h.DEG2RAD(turretAngle))
+                bear!!.SetSize(BEAR_SIZE, BEAR_SIZE)
+                vec.x = Cos(DEG2RAD(turretAngle))
                 vec.x += (1 - vec.x) * 0.18f
-                vec.y = -idMath.Sin(Math_h.DEG2RAD(turretAngle))
+                vec.y = -Sin(DEG2RAD(turretAngle))
                 turretForce = bearTurretForce.GetFloat()
-                bear.position.x = 80 + 96 * vec.x
-                bear.position.y = 334 + 96 * vec.y
-                bear.velocity.x = vec.x * turretForce
-                bear.velocity.y = vec.y * turretForce
-                gunblast.position.x = 55 + 96 * vec.x
-                gunblast.position.y = 310 + 100 * vec.y
-                gunblast.SetVisible(true)
-                gunblast.entColor.w = 1f
-                gunblast.rotation = turretAngle
-                gunblast.fadeOut = true
+                bear!!.position!!.x = 80 + 96 * vec.x
+                bear!!.position!!.y = 334 + 96 * vec.y
+                bear!!.velocity!!.x = vec.x * turretForce
+                bear!!.velocity!!.y = vec.y * turretForce
+                gunblast!!.position!!.x = 55 + 96 * vec.x
+                gunblast!!.position!!.y = 310 + 100 * vec.y
+                gunblast!!.SetVisible(true)
+                gunblast!!.entColor.w = 1f
+                gunblast!!.rotation = turretAngle
+                gunblast!!.fadeOut = true
                 bearHitTarget = false
                 onFire.data = false
             }
@@ -610,25 +648,25 @@ class GameBearShootWindow {
 
         private fun UpdateGame() {
             var i: Int
-            if (onNewGame.oCastBoolean()) {
+            if (onNewGame!!.oCastBoolean()) {
                 ResetGameState()
-                goal.position.x = 550f
-                goal.position.y = 164f
-                goal.velocity.Zero()
-                helicopter.position.x = 550f
-                helicopter.position.y = 100f
-                helicopter.velocity.Zero()
-                bear.SetVisible(false)
+                goal!!.position!!.x = 550f
+                goal!!.position!!.y = 164f
+                goal!!.velocity!!.Zero()
+                helicopter!!.position!!.x = 550f
+                helicopter!!.position!!.y = 100f
+                helicopter!!.velocity!!.Zero()
+                bear!!.SetVisible(false)
                 bearTurretAngle.SetFloat(0f)
                 bearTurretForce.SetFloat(200f)
-                gamerunning.data = true
+                gamerunning!!.data = true
             }
-            if (onContinue.oCastBoolean()) {
+            if (onContinue!!.oCastBoolean()) {
                 gameOver = false
                 timeRemaining = 60f
                 onContinue.data = false
             }
-            if (gamerunning.oCastBoolean() == true) {
+            if (gamerunning!!.oCastBoolean() == true) {
                 val current_time = gui!!.GetTime()
                 val rnd = idRandom(current_time)
 
@@ -648,26 +686,26 @@ class GameBearShootWindow {
                     windForce = rnd.CRandomFloat() * (MAX_WINDFORCE * 0.75f)
                     if (windForce > 0) {
                         windForce += MAX_WINDFORCE * 0.25f
-                        wind.rotation = 0f
+                        wind!!.rotation = 0f
                     } else {
                         windForce -= MAX_WINDFORCE * 0.25f
-                        wind.rotation = 180f
+                        wind!!.rotation = 180f
                     }
-                    scale = 1f - (MAX_WINDFORCE - abs(windForce)) / MAX_WINDFORCE
+                    scale = (1f - (MAX_WINDFORCE - abs(windForce.toDouble())) / MAX_WINDFORCE).toFloat()
                     width = (100 * scale).toInt()
                     if (windForce < 0) {
-                        wind.position.x = (500 - width + 1).toFloat()
+                        wind!!.position!!.x = (500 - width + 1).toFloat()
                     } else {
-                        wind.position.x = 500f
+                        wind!!.position!!.x = 500f
                     }
-                    wind.SetSize(width.toFloat(), 40f)
+                    wind!!.SetSize(width.toFloat(), 40f)
                     windUpdateTime = current_time + 7000 + rnd.RandomInt(5000.0)
                 }
 
                 // Update turret rotation angle
                 if (turret != null) {
                     turretAngle = bearTurretAngle.GetFloat()
-                    turret.rotation = turretAngle
+                    turret!!.rotation = turretAngle
                 }
                 i = 0
                 while (i < entities.Num()) {
@@ -677,8 +715,8 @@ class GameBearShootWindow {
 
                 // Update countdown timer
                 timeRemaining -= timeSlice
-                timeRemaining = idMath.ClampFloat(0f, 99999f, timeRemaining)
-                gui!!.SetStateString("time_remaining", Str.va("%2.1f", timeRemaining))
+                timeRemaining = ClampFloat(0f, 99999f, timeRemaining)
+                gui!!.SetStateString("time_remaining", va("%2.1f", timeRemaining))
                 if (timeRemaining <= 0f && !gameOver) {
                     gameOver = true
                     updateScore = true
@@ -696,44 +734,35 @@ class GameBearShootWindow {
                 return
             }
             goalsHit++
-            gui!!.SetStateString("player_score", Str.va("%d", goalsHit))
+            gui!!.SetStateString("player_score", va("%d", goalsHit))
 
             // Check for level progression
             if (0 == goalsHit % 5) {
                 currentLevel++
-                gui!!.SetStateString("current_level", Str.va("%d", currentLevel))
+                gui!!.SetStateString("current_level", va("%d", currentLevel))
                 Session.session.sw.PlayShaderDirectly("arcade_levelcomplete1", 3)
                 timeRemaining += 30f
             }
         }
 
-        override fun ParseInternalVar(_name: String, src: idParser): Boolean {
-            if (idStr.Icmp(_name, "gamerunning") == 0) {
-                gamerunning.oSet(src.ParseBool())
+        override fun ParseInternalVar(_name: String?, src: idParser): Boolean {
+            if (Icmp(_name!!, "gamerunning") == 0) {
+                gamerunning!!.set(src.ParseBool())
                 return true
             }
-            if (idStr.Icmp(_name, "onFire") == 0) {
-                onFire.oSet(src.ParseBool())
+            if (Icmp(_name, "onFire") == 0) {
+                onFire!!.set(src.ParseBool())
                 return true
             }
-            if (idStr.Icmp(_name, "onContinue") == 0) {
-                onContinue.oSet(src.ParseBool())
+            if (Icmp(_name, "onContinue") == 0) {
+                onContinue!!.set(src.ParseBool())
                 return true
             }
-            if (idStr.Icmp(_name, "onNewGame") == 0) {
-                onNewGame.oSet(src.ParseBool())
+            if (Icmp(_name, "onNewGame") == 0) {
+                onNewGame!!.set(src.ParseBool())
                 return true
             }
             return super.ParseInternalVar(_name, src)
         }
-    }
-
-    companion object {
-        const val BEAR_GRAVITY = 240
-        const val BEAR_SHRINK_TIME = 2000f
-        const val BEAR_SIZE = 24f
-        const val MAX_WINDFORCE = 100f
-        val bearTurretAngle: idCVar = idCVar("bearTurretAngle", "0", CVarSystem.CVAR_FLOAT, "")
-        val bearTurretForce: idCVar = idCVar("bearTurretForce", "200", CVarSystem.CVAR_FLOAT, "")
     }
 }

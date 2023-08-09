@@ -1330,11 +1330,11 @@ class snd_system {
      ===============
      */
     internal class SoundReloadSounds_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             if (TempDump.NOT(soundSystemLocal.soundCache)) {
                 return
             }
-            val force = args.Argc() == 2
+            val force = args!!.Argc() == 2
             soundSystem.SetMute(true)
             soundSystemLocal.soundCache!!.ReloadSounds(force)
             soundSystem.SetMute(false)
@@ -1354,9 +1354,9 @@ class snd_system {
      ===============
      */
     internal class ListSounds_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             var i: Int
-            val snd = args.Argv(1)
+            val snd = args!!.Argv(1)
             if (TempDump.NOT(soundSystemLocal.soundCache)) {
                 Common.common.Printf("No sound.\n")
                 return
@@ -1416,7 +1416,7 @@ class snd_system {
      ===============
      */
     internal class ListSoundDecoders_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             var i: Int
             var j: Int
             var numActiveDecoders: Int
@@ -1516,12 +1516,12 @@ class snd_system {
      ===============
      */
     internal class TestSound_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
-            if (args.Argc() != 2) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
+            if (args!!.Argc() != 2) {
                 Common.common.Printf("Usage: testSound <file>\n")
                 return
             }
-            soundSystemLocal.currentSoundWorld?.PlayShaderDirectly(args.Argv(1))
+            soundSystemLocal.currentSoundWorld?.PlayShaderDirectly(args!!.Argv(1))
         }
 
         companion object {
@@ -1539,7 +1539,7 @@ class snd_system {
      ===============
      */
     internal class SoundSystemRestart_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             soundSystem.SetMute(true)
             soundSystemLocal.ShutdownHW()
             soundSystemLocal.InitHW()
@@ -1553,6 +1553,8 @@ class snd_system {
 
     companion object {
         var soundSystemLocal: idSoundSystemLocal = idSoundSystemLocal()
+
+        @JvmField
         var soundSystem: idSoundSystem = soundSystemLocal
 
         fun setSoundSystems(soundSystem: idSoundSystem) {

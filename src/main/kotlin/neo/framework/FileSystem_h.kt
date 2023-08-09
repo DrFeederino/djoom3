@@ -261,6 +261,8 @@ object FileSystem_h {
     val pureExclusions: Array<pureExclusion_s> = if (DOOM3_PURE_SPECIAL_CASES) pureExclusions1 else pureExclusions2
     var initExclusions: idInitExclusions? = null
     private var fileSystemLocal: idFileSystemLocal = idFileSystemLocal()
+
+    @JvmField
     var fileSystem: idFileSystem = fileSystemLocal //TODO:make a [] pointer of this?? NO BOI
     fun setFileSystems(fileSystem: idFileSystem) {
         fileSystemLocal = fileSystem as idFileSystemLocal
@@ -333,8 +335,13 @@ object FileSystem_h {
     }
 
     class fileDownload_s {
+        @JvmField
         var buffer: ByteBuffer? = null
+
+        @JvmField
         var length = 0
+
+        @JvmField
         var position = 0
 
         constructor()
@@ -348,18 +355,31 @@ object FileSystem_h {
     }
 
     class backgroundDownload_s {
+        @Volatile
+        @JvmField
         var completed = false
+
+        @JvmField
         var f: idFile? = null
+
+        @JvmField
         var file: fileDownload_s = fileDownload_s()
+
+        @JvmField
         var next // set by the fileSystem
                 : backgroundDownload_s? = null
+
+        @JvmField
         var opcode: dlType_t = dlType_t.DLTYPE_URL
+
+        @JvmField
         var url: urlDownload_s = urlDownload_s()
 
         constructor()
 
         companion object {
             @Transient
+            @JvmField
             val SIZE = (TempDump.CPP_class.Pointer.SIZE //backgroundDownload_s next
                     + TempDump.CPP_class.Enum.SIZE
                     + TempDump.CPP_class.Pointer.SIZE //idFile f
@@ -4171,12 +4191,12 @@ object FileSystem_h {
         }
 
         class Dir_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs) {
+            override fun run(args: CmdArgs.idCmdArgs?) {
                 val relativePath: idStr
                 val extension: idStr
                 val fileList: idFileList?
                 var i: Int
-                if (args.Argc() < 2 || args.Argc() > 3) {
+                if (args!!.Argc() < 2 || args.Argc() > 3) {
                     idLib.common.Printf("usage: dir <directory> [extension]\n")
                     return
                 }
@@ -4213,12 +4233,12 @@ object FileSystem_h {
         }
 
         class DirTree_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs) {
+            override fun run(args: CmdArgs.idCmdArgs?) {
                 val relativePath: idStr
                 val extension: idStr
                 val fileList: idFileList?
                 var i: Int
-                if (args.Argc() < 2 || args.Argc() > 3) {
+                if (args!!.Argc() < 2 || args.Argc() > 3) {
                     idLib.common.Printf("usage: dirtree <directory> [extension]\n")
                     return
                 }
@@ -4260,7 +4280,7 @@ object FileSystem_h {
         }
 
         class Path_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs) {
+            override fun run(args: CmdArgs.idCmdArgs?) {
                 var sp: searchpath_s?
                 var i: Int
                 var status: String // = "";
@@ -4347,9 +4367,9 @@ object FileSystem_h {
          ============
          */
         class TouchFile_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs) {
+            override fun run(args: CmdArgs.idCmdArgs?) {
                 val f: idFile?
-                if (args.Argc() != 2) {
+                if (args!!.Argc() != 2) {
                     idLib.common.Printf("Usage: touchFile <file>\n")
                     return
                 }
@@ -4376,8 +4396,8 @@ object FileSystem_h {
          ============
          */
         class TouchFileList_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs) {
-                if (args.Argc() != 2) {
+            override fun run(args: CmdArgs.idCmdArgs?) {
+                if (args!!.Argc() != 2) {
                     idLib.common.Printf("Usage: touchFileList <filename>\n")
                     return
                 }

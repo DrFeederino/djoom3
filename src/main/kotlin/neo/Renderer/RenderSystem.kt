@@ -11,38 +11,39 @@ import neo.Renderer.tr_local.performanceCounters_t
 import neo.Renderer.tr_local.renderCommand_t
 import neo.Renderer.tr_local.viewDef_s
 import neo.Renderer.tr_local.viewEntity_s
-import neo.TempDump
+import neo.TempDump.CPP_class
 import neo.TempDump.CPP_class.Char
+import neo.TempDump.NOT
 import neo.framework.Common
 import neo.framework.Common.MemInfo_t
 import neo.idlib.geometry.DrawVert.idDrawVert
 import neo.idlib.math.Vector.idVec2
 import neo.idlib.math.Vector.idVec3
 import neo.idlib.math.Vector.idVec4
-import neo.sys.win_glimp
+import neo.sys.win_glimp.GLimp_EnableLogging
 import java.nio.ByteBuffer
 
 /**
  *
  */
 object RenderSystem {
-    const val BIGCHAR_HEIGHT = 16
-    const val BIGCHAR_WIDTH = 16
-    const val GLYPH_CHAREND = 127
-    const val GLYPH_CHARSTART = 32
-    const val GLYPH_END = 255
+    val BIGCHAR_HEIGHT: Int = 16
+    val BIGCHAR_WIDTH: Int = 16
+    val GLYPH_CHAREND: Int = 127
+    val GLYPH_CHARSTART: Int = 32
+    val GLYPH_END: Int = 255
 
     // font support
-    const val GLYPH_START = 0
-    const val GLYPHS_PER_FONT = GLYPH_END - GLYPH_START + 1
-    const val SCREEN_HEIGHT = 480
+    val GLYPH_START: Int = 0
+    val GLYPHS_PER_FONT: Int = GLYPH_END - GLYPH_START + 1
+    val SCREEN_HEIGHT: Int = 480
 
     //
     // all drawing is done to a 640 x 480 virtual screen size
     // and will be automatically scaled to the real resolution
-    const val SCREEN_WIDTH = 640
-    const val SMALLCHAR_HEIGHT = 16
-    const val SMALLCHAR_WIDTH = 8
+    val SCREEN_WIDTH: Int = 640
+    val SMALLCHAR_HEIGHT: Int = 16
+    val SMALLCHAR_WIDTH: Int = 8
     var renderSystem: idRenderSystem = tr_local.tr
 
     /*
@@ -54,87 +55,90 @@ object RenderSystem {
      =====================
      */
     fun R_PerformanceCounters() {
-        if (RenderSystem_init.r_showPrimitives.GetInteger() != 0) {
-            val megaBytes = Image.globalImages.SumOfUsedImages() / (1024 * 1024.0f)
-            if (RenderSystem_init.r_showPrimitives.GetInteger() > 1) {
+        if (RenderSystem_init.r_showPrimitives!!.GetInteger() != 0) {
+            val megaBytes: Float = Image.globalImages.SumOfUsedImages() / (1024 * 1024.0f)
+            if (RenderSystem_init.r_showPrimitives!!.GetInteger() > 1) {
                 Common.common.Printf(
                     "v:%d ds:%d t:%d/%d v:%d/%d st:%d sv:%d image:%5.1f MB\n",
-                    tr_local.tr.pc.c_numViews,
-                    tr_local.backEnd.pc.c_drawElements + tr_local.backEnd.pc.c_shadowElements,
-                    tr_local.backEnd.pc.c_drawIndexes / 3,
-                    (tr_local.backEnd.pc.c_drawIndexes - tr_local.backEnd.pc.c_drawRefIndexes) / 3,
-                    tr_local.backEnd.pc.c_drawVertexes,
-                    tr_local.backEnd.pc.c_drawVertexes - tr_local.backEnd.pc.c_drawRefVertexes,
-                    tr_local.backEnd.pc.c_shadowIndexes / 3,
-                    tr_local.backEnd.pc.c_shadowVertexes,
+                    tr_local.tr.pc!!.c_numViews,
+                    tr_local.backEnd!!.pc.c_drawElements + tr_local.backEnd!!.pc.c_shadowElements,
+                    tr_local.backEnd!!.pc.c_drawIndexes / 3,
+                    (tr_local.backEnd!!.pc.c_drawIndexes - tr_local.backEnd!!.pc.c_drawRefIndexes) / 3,
+                    tr_local.backEnd!!.pc.c_drawVertexes,
+                    (tr_local.backEnd!!.pc.c_drawVertexes - tr_local.backEnd!!.pc.c_drawRefVertexes),
+                    tr_local.backEnd!!.pc.c_shadowIndexes / 3,
+                    tr_local.backEnd!!.pc.c_shadowVertexes,
                     megaBytes
                 )
             } else {
                 Common.common.Printf(
                     "views:%d draws:%d tris:%d (shdw:%d) (vbo:%d) image:%5.1f MB\n",
-                    tr_local.tr.pc.c_numViews,
-                    tr_local.backEnd.pc.c_drawElements + tr_local.backEnd.pc.c_shadowElements,
-                    (tr_local.backEnd.pc.c_drawIndexes + tr_local.backEnd.pc.c_shadowIndexes) / 3,
-                    tr_local.backEnd.pc.c_shadowIndexes / 3,
-                    tr_local.backEnd.pc.c_vboIndexes / 3,
+                    tr_local.tr.pc!!.c_numViews,
+                    tr_local.backEnd!!.pc.c_drawElements + tr_local.backEnd!!.pc.c_shadowElements,
+                    (tr_local.backEnd!!.pc.c_drawIndexes + tr_local.backEnd!!.pc.c_shadowIndexes) / 3,
+                    tr_local.backEnd!!.pc.c_shadowIndexes / 3,
+                    tr_local.backEnd!!.pc.c_vboIndexes / 3,
                     megaBytes
                 )
             }
         }
-        if (RenderSystem_init.r_showDynamic.GetBool()) {
+        if (RenderSystem_init.r_showDynamic!!.GetBool()) {
             Common.common.Printf(
                 "callback:%d md5:%d dfrmVerts:%d dfrmTris:%d tangTris:%d guis:%d\n",
-                tr_local.tr.pc.c_entityDefCallbacks,
-                tr_local.tr.pc.c_generateMd5,
-                tr_local.tr.pc.c_deformedVerts,
-                tr_local.tr.pc.c_deformedIndexes / 3,
-                tr_local.tr.pc.c_tangentIndexes / 3,
-                tr_local.tr.pc.c_guiSurfs
+                tr_local.tr.pc!!.c_entityDefCallbacks,
+                tr_local.tr.pc!!.c_generateMd5,
+                tr_local.tr.pc!!.c_deformedVerts,
+                tr_local.tr.pc!!.c_deformedIndexes / 3,
+                tr_local.tr.pc!!.c_tangentIndexes / 3,
+                tr_local.tr.pc!!.c_guiSurfs
             )
         }
-        if (RenderSystem_init.r_showCull.GetBool()) {
+        if (RenderSystem_init.r_showCull!!.GetBool()) {
             Common.common.Printf(
                 "%d sin %d sclip  %d sout %d bin %d bout\n",
-                tr_local.tr.pc.c_sphere_cull_in, tr_local.tr.pc.c_sphere_cull_clip, tr_local.tr.pc.c_sphere_cull_out,
-                tr_local.tr.pc.c_box_cull_in, tr_local.tr.pc.c_box_cull_out
+                tr_local.tr.pc!!.c_sphere_cull_in,
+                tr_local.tr.pc!!.c_sphere_cull_clip,
+                tr_local.tr.pc!!.c_sphere_cull_out,
+                tr_local.tr.pc!!.c_box_cull_in,
+                tr_local.tr.pc!!.c_box_cull_out
             )
         }
-        if (RenderSystem_init.r_showAlloc.GetBool()) {
-            Common.common.Printf("alloc:%d free:%d\n", tr_local.tr.pc.c_alloc, tr_local.tr.pc.c_free)
+        if (RenderSystem_init.r_showAlloc!!.GetBool()) {
+            Common.common.Printf("alloc:%d free:%d\n", tr_local.tr.pc!!.c_alloc, tr_local.tr.pc!!.c_free)
         }
-        if (RenderSystem_init.r_showInteractions.GetBool()) {
+        if (RenderSystem_init.r_showInteractions!!.GetBool()) {
             Common.common.Printf(
                 "createInteractions:%d createLightTris:%d createShadowVolumes:%d\n",
-                tr_local.tr.pc.c_createInteractions,
-                tr_local.tr.pc.c_createLightTris,
-                tr_local.tr.pc.c_createShadowVolumes
+                tr_local.tr.pc!!.c_createInteractions,
+                tr_local.tr.pc!!.c_createLightTris,
+                tr_local.tr.pc!!.c_createShadowVolumes
             )
         }
-        if (RenderSystem_init.r_showDefs.GetBool()) {
+        if (RenderSystem_init.r_showDefs!!.GetBool()) {
             Common.common.Printf(
-                "viewEntities:%d  shadowEntities:%d  viewLights:%d\n", tr_local.tr.pc.c_visibleViewEntities,
-                tr_local.tr.pc.c_shadowViewEntities, tr_local.tr.pc.c_viewLights
+                "viewEntities:%d  shadowEntities:%d  viewLights:%d\n", tr_local.tr.pc!!.c_visibleViewEntities,
+                tr_local.tr.pc!!.c_shadowViewEntities, tr_local.tr.pc!!.c_viewLights
             )
         }
-        if (RenderSystem_init.r_showUpdates.GetBool()) {
+        if (RenderSystem_init.r_showUpdates!!.GetBool()) {
             Common.common.Printf(
                 "entityUpdates:%d  entityRefs:%d  lightUpdates:%d  lightRefs:%d\n",
-                tr_local.tr.pc.c_entityUpdates, tr_local.tr.pc.c_entityReferences,
-                tr_local.tr.pc.c_lightUpdates, tr_local.tr.pc.c_lightReferences
+                tr_local.tr.pc!!.c_entityUpdates, tr_local.tr.pc!!.c_entityReferences,
+                tr_local.tr.pc!!.c_lightUpdates, tr_local.tr.pc!!.c_lightReferences
             )
         }
-        if (RenderSystem_init.r_showMemory.GetBool()) {
-            val m1 = if (tr_local.frameData != null) tr_local.frameData.memoryHighwater else 0
+        if (RenderSystem_init.r_showMemory!!.GetBool()) {
+            val m1: Int = if (tr_local.frameData != null) tr_local.frameData!!.memoryHighwater else 0
             Common.common.Printf("frameData: %d (%d)\n", tr_main.R_CountFrameData(), m1)
         }
-        if (RenderSystem_init.r_showLightScale.GetBool()) {
-            Common.common.Printf("lightScale: %f\n", tr_local.backEnd.pc.maxLightValue)
+        if (RenderSystem_init.r_showLightScale!!.GetBool()) {
+            Common.common.Printf("lightScale: %f\n", tr_local.backEnd!!.pc.maxLightValue)
         }
 
 //        memset(tr.pc, 0, sizeof(tr.pc));
         tr_local.tr.pc = performanceCounters_t()
         //        memset(backEnd.pc, 0, sizeof(backEnd.pc));
-        tr_local.backEnd.pc = backEndCounters_t()
+        tr_local.backEnd!!.pc = backEndCounters_t()
     }
 
     /*
@@ -145,7 +149,7 @@ object RenderSystem {
      ====================
      */
     fun R_IssueRenderCommands() {
-        if (renderCommand_t.RC_NOP == tr_local.frameData.cmdHead.commandId && TempDump.NOT(tr_local.frameData.cmdHead.next)) {
+        if (renderCommand_t.RC_NOP == tr_local.frameData!!.cmdHead!!.commandId && NOT(tr_local.frameData!!.cmdHead!!.next)) {
             // nothing to issue
             return
         }
@@ -158,8 +162,8 @@ object RenderSystem {
         //
         // r_skipRender is usually more useful, because it will still
         // draw 2D graphics
-        if (!RenderSystem_init.r_skipBackEnd.GetBool()) {
-            tr_backend.RB_ExecuteBackEndCommands(tr_local.frameData.cmdHead)
+        if (!RenderSystem_init.r_skipBackEnd!!.GetBool()) {
+            tr_backend.RB_ExecuteBackEndCommands(tr_local.frameData!!.cmdHead)
         }
         R_ClearCommandChain()
     }
@@ -179,8 +183,8 @@ object RenderSystem {
 //        cmd = R_FrameAlloc(bytes);
 //        cmd.next = null;
         cmd = command_t //our little trick for downcasting. EDIT:??
-        tr_local.frameData.cmdTail.next = cmd
-        tr_local.frameData.cmdTail = cmd
+        tr_local.frameData!!.cmdTail!!.next = cmd
+        tr_local.frameData!!.cmdTail = cmd
         return cmd
     }
 
@@ -194,10 +198,10 @@ object RenderSystem {
      */
     fun R_ClearCommandChain() {
         // clear the command chain
-        tr_local.frameData.cmdTail = emptyCommand_t()
-        tr_local.frameData.cmdHead = tr_local.frameData.cmdTail // R_FrameAlloc(sizeof(frameData.cmdHead));
-        tr_local.frameData.cmdHead.commandId = renderCommand_t.RC_NOP
-        tr_local.frameData.cmdHead.next = null
+        tr_local.frameData!!.cmdTail = emptyCommand_t()
+        tr_local.frameData!!.cmdHead = tr_local.frameData!!.cmdTail // R_FrameAlloc(sizeof(frameData.cmdHead));
+        tr_local.frameData!!.cmdHead!!.commandId = renderCommand_t.RC_NOP
+        tr_local.frameData!!.cmdHead!!.next = null
     }
 
     /*
@@ -207,7 +211,7 @@ object RenderSystem {
      */
     fun R_ViewStatistics(parms: viewDef_s) {
         // report statistics about this view
-        if (!RenderSystem_init.r_showSurfaces.GetBool()) {
+        if (!RenderSystem_init.r_showSurfaces!!.GetBool()) {
             return
         }
         Common.common.Printf("view:%p surfs:%d\n", parms, parms.numDrawSurfs)
@@ -223,14 +227,14 @@ object RenderSystem {
      */
     fun R_AddDrawViewCmd(parms: viewDef_s) {
         var cmd: drawSurfsCommand_t
-        R_GetCommandBuffer(drawSurfsCommand_t().also { cmd = it /*sizeof(cmd)*/ })
+        R_GetCommandBuffer(drawSurfsCommand_t().also({ cmd = it /*sizeof(cmd)*/ }))
         cmd.commandId = renderCommand_t.RC_DRAW_VIEW
         cmd.viewDef = parms
         if (parms.viewEntitys != null) {
             // save the command for r_lockSurfaces debugging
             tr_local.tr.lockSurfacesCmd = cmd
         }
-        tr_local.tr.pc.c_numViews++
+        tr_local.tr.pc!!.c_numViews++
         R_ViewStatistics(parms)
     }
 
@@ -252,20 +256,20 @@ object RenderSystem {
      ======================
      */
     fun R_LockSurfaceScene(parms: viewDef_s) {
-        var cmd: drawSurfsCommand_t
+        var cmd: drawSurfsCommand_t?
         var vModel: viewEntity_s?
 
         // set the matrix for world space to eye space
         tr_main.R_SetViewMatrix(parms)
-        tr_local.tr.lockSurfacesCmd.viewDef!!.worldSpace = parms.worldSpace
+        tr_local.tr.lockSurfacesCmd!!.viewDef!!.worldSpace = parms.worldSpace
 
         // update the view origin and axis, and all
         // the entity matricies
-        vModel = tr_local.tr.lockSurfacesCmd.viewDef!!.viewEntitys
+        vModel = tr_local.tr.lockSurfacesCmd!!.viewDef!!.viewEntitys
         while (vModel != null) {
             tr_main.myGlMultMatrix(
                 vModel.modelMatrix,
-                tr_local.tr.lockSurfacesCmd.viewDef!!.worldSpace.modelViewMatrix,
+                tr_local.tr.lockSurfacesCmd!!.viewDef!!.worldSpace.modelViewMatrix,
                 vModel.modelViewMatrix
             )
             vModel = vModel.next
@@ -273,7 +277,7 @@ object RenderSystem {
 
         // add the stored off surface commands again
 //        cmd = (drawSurfsCommand_t) R_GetCommandBuffer(sizeof(cmd));
-        R_GetCommandBuffer(tr_local.tr.lockSurfacesCmd) //TODO:double check to make sure the casting and casting back preserves our values.
+        R_GetCommandBuffer(tr_local.tr.lockSurfacesCmd!!) //TODO:double check to make sure the casting and casting back preserves our values.
     }
 
     /*
@@ -287,17 +291,17 @@ object RenderSystem {
         Image.globalImages.CheckCvars()
 
         // gamma stuff
-        if (RenderSystem_init.r_gamma.IsModified() || RenderSystem_init.r_brightness.IsModified()) {
-            RenderSystem_init.r_gamma.ClearModified()
-            RenderSystem_init.r_brightness.ClearModified()
+        if (RenderSystem_init.r_gamma!!.IsModified() || RenderSystem_init.r_brightness!!.IsModified()) {
+            RenderSystem_init.r_gamma!!.ClearModified()
+            RenderSystem_init.r_brightness!!.ClearModified()
             RenderSystem_init.R_SetColorMappings()
         }
 
         // check for changes to logging state
-        win_glimp.GLimp_EnableLogging(RenderSystem_init.r_logFile.GetInteger() != 0)
+        GLimp_EnableLogging(RenderSystem_init.r_logFile!!.GetInteger() != 0)
     }
 
-    fun setRenderSystems(renderSystem: idRenderSystem) {
+    fun setRenderSystems(renderSystem: idRenderSystem?) {
         tr_local.tr = renderSystem as idRenderSystemLocal
         RenderSystem.renderSystem = tr_local.tr
     }
@@ -310,110 +314,97 @@ object RenderSystem {
 
      ===============================================================================
      */
-    class glconfig_s {
-        var ARBFragmentProgramAvailable = false
-        var ARBVertexBufferObjectAvailable = false
-        var ARBVertexProgramAvailable = false
-        var allowARB2Path = false
-        var allowNV10Path = false
-        var allowNV20Path = false
+    class glconfig_s() {
+        var ARBFragmentProgramAvailable: Boolean = false
+        var ARBVertexBufferObjectAvailable: Boolean = false
+        var ARBVertexProgramAvailable: Boolean = false
+        var allowARB2Path: Boolean = false
+        var allowNV10Path: Boolean = false
+        var allowNV20Path: Boolean = false
 
         //
-        var allowNV30Path = false
-        var allowR200Path = false
-        var anisotropicAvailable = false
+        var allowNV30Path: Boolean = false
+        var allowR200Path: Boolean = false
+        var anisotropicAvailable: Boolean = false
 
         //
         // ati r200 extensions
-        var atiFragmentShaderAvailable = false
+        var atiFragmentShaderAvailable: Boolean = false
 
         //
         // ati r300
-        var atiTwoSidedStencilAvailable = false
+        var atiTwoSidedStencilAvailable: Boolean = false
 
         //
-        var colorBits = 0
-        var depthBits = 0
-        var stencilBits = 8
-        var cubeMapAvailable = false
-        var depthBoundsTestAvailable = false
+        var colorBits: Int = 0
+        var depthBits: Int = 0
+        var stencilBits: Int = 8
+        var cubeMapAvailable: Boolean = false
+        var depthBoundsTestAvailable: Boolean = false
 
         //
-        var displayFrequency = 0
-        var envDot3Available = false
-        var extensions_string: String = ""
+        var displayFrequency: Int = 0
+        var envDot3Available: Boolean = false
+        var extensions_string: String? = null
 
         //
-        var glVersion // atof( version_string )
-                = 0f
+        var glVersion: Float = 0f // atof( version_string )
 
         //
-        var isFullscreen = false
+        var isFullscreen: Boolean = false
 
         //
-        var isInitialized = false
-        var maxTextureAnisotropy = 0f
-        var maxTextureCoords = 0
-        var maxTextureImageUnits = 0
+        var isInitialized: Boolean = false
+        var maxTextureAnisotropy: Float = 0f
+        var maxTextureCoords: Int = 0
+        var maxTextureImageUnits: Int = 0
 
         //
         //
-        var maxTextureSize // queried from GL
-                = 0
-        var maxTextureUnits = 0
+        var maxTextureSize: Int = 0 // queried from GL
+        var maxTextureUnits: Int = 0
 
         //
-        var multitextureAvailable = false
-        var registerCombinersAvailable = false
-        var renderer_string: String = ""
-        var sharedTexturePaletteAvailable = false
-        var texture3DAvailable = false
-        var textureCompressionAvailable = false
-        var textureEnvAddAvailable = false
-        var textureEnvCombineAvailable = false
-        var textureLODBiasAvailable = false
-        var textureNonPowerOfTwoAvailable = false
-        var twoSidedStencilAvailable = false
-        var vendor_string: String = ""
-        var version_string: String = ""
+        var multitextureAvailable: Boolean = false
+        var registerCombinersAvailable: Boolean = false
+        var renderer_string: String? = null
+        var sharedTexturePaletteAvailable: Boolean = false
+        var texture3DAvailable: Boolean = false
+        var textureCompressionAvailable: Boolean = false
+        var textureEnvAddAvailable: Boolean = false
+        var textureEnvCombineAvailable: Boolean = false
+        var textureLODBiasAvailable: Boolean = false
+        var textureNonPowerOfTwoAvailable: Boolean = false
+        var twoSidedStencilAvailable: Boolean = false
+        var vendor_string: String? = null
+        var version_string: String? = null
 
         //
-        var vidWidth = 0
-        var vidHeight // passed to R_BeginFrame
-                = 0
-        var wgl_extensions_string: String = ""
+        var vidWidth: Int = 0
+        var vidHeight: Int = 0 // passed to R_BeginFrame
+        var wgl_extensions_string: String? = null
     }
 
-    class glyphInfo_t {
-        var glyph // shader with the glyph
-                : idMaterial? = null
-        var height // number of scan lines
-                = 0
-        var imageHeight // height of actual image
-                = 0
-        var imageWidth // width of actual image
-                = 0
-        var s // x offset in image where glyph starts
-                = 0f
-        var s2 = 0f
-        var t // y offset in image where glyph starts
-                = 0f
-        var t2 = 0f
-        var top // top of glyph in buffer
-                = 0
-        var xSkip // x adjustment
-                = 0
-        var bottom // bottom of glyph in buffer
-                = 0
-        var pitch // width for copying
-                = 0
+    class glyphInfo_t() {
+        var glyph: idMaterial? = null // shader with the glyph
+        var height: Int = 0 // number of scan lines
+        var imageHeight: Int = 0 // height of actual image
+        var imageWidth: Int = 0 // width of actual image
+        var s: Float = 0f // x offset in image where glyph starts
+        var s2: Float = 0f
+        var t: Float = 0f // y offset in image where glyph starts
+        var t2: Float = 0f
+        var top: Int = 0 // top of glyph in buffer
+        var xSkip: Int = 0 // x adjustment
+        var bottom: Int = 0 // bottom of glyph in buffer
+        var pitch: Int = 0 // width for copying
 
         // char				shaderName[32];
-        var shaderName: String = ""
+        var shaderName: String? = null
 
         companion object {
             @Transient
-            val SIZE = (Integer.SIZE
+            val SIZE: Int = (Integer.SIZE
                     + Integer.SIZE
                     + Integer.SIZE
                     + Integer.SIZE
@@ -424,43 +415,48 @@ object RenderSystem {
                     + java.lang.Float.SIZE
                     + java.lang.Float.SIZE
                     + java.lang.Float.SIZE
-                    + TempDump.CPP_class.Pointer.SIZE //const idMaterial *	glyph
-                    + Char.SIZE * 32)
+                    + CPP_class.Pointer.SIZE //const idMaterial *	glyph
+                    + (Char.SIZE * 32))
         }
     }
 
-    class fontInfo_t {
-        var glyphScale = 0f
-        var glyphs: Array<glyphInfo_t> = Array(GLYPHS_PER_FONT) { glyphInfo_t() }
+    class fontInfo_t() {
+        var glyphScale: Float = 0f
+        var glyphs: Array<glyphInfo_t?> = arrayOfNulls(GLYPHS_PER_FONT)
         var name: StringBuilder = StringBuilder(64)
 
-        companion object {
-            @Transient
-            val SIZE = (glyphInfo_t.SIZE * GLYPHS_PER_FONT
-                    + java.lang.Float.SIZE
-                    + Char.SIZE * 64)
-
-            @Transient
-            val BYTES = SIZE / java.lang.Byte.SIZE
+        init {
+            for (g in glyphs.indices) {
+                glyphs[g] = glyphInfo_t()
+            }
         }
 
+        companion object {
+            @Transient
+            val SIZE: Int = ((glyphInfo_t.SIZE * GLYPHS_PER_FONT)
+                    + java.lang.Float.SIZE
+                    + (Char.SIZE * 64))
+
+            @Transient
+            val BYTES: Int = SIZE / java.lang.Byte.SIZE
+        }
     }
 
-    class fontInfoEx_t {
+    class fontInfoEx_t() {
         var fontInfoLarge: fontInfo_t = fontInfo_t()
         var fontInfoMedium: fontInfo_t = fontInfo_t()
         var fontInfoSmall: fontInfo_t = fontInfo_t()
-        var maxHeight = 0
-        var maxHeightLarge = 0
-        var maxHeightMedium = 0
-        var maxHeightSmall = 0
-        var maxWidth = 0
-        var maxWidthLarge = 0
-        var maxWidthMedium = 0
-        var maxWidthSmall = 0
+        var maxHeight: Int = 0
+        var maxHeightLarge: Int = 0
+        var maxHeightMedium: Int = 0
+        var maxHeightSmall: Int = 0
+        var maxWidth: Int = 0
+        var maxWidthLarge: Int = 0
+        var maxWidthMedium: Int = 0
+        var maxWidthSmall: Int = 0
 
         // char				name[64];
-        var name: String = ""
+        var name: String? = null
 
         /**
          * memset(font, 0, sizeof(font));
@@ -477,11 +473,11 @@ object RenderSystem {
             maxHeightSmall = maxWidthSmall
             maxWidth = maxHeightSmall
             maxHeight = maxWidth
-            name = ""
+            name = null
         }
     }
 
-    abstract class idRenderSystem {
+    abstract class idRenderSystem() {
         // virtual					~idRenderSystem() {}
         // set up cvars and basic data structures, but don't
         // init OpenGL, so it can also be used for dedicated servers
@@ -508,13 +504,13 @@ object RenderSystem {
         abstract fun EndLevelLoad()
 
         // font support
-        abstract fun RegisterFont(fontName: String, font: fontInfoEx_t): Boolean
+        abstract fun RegisterFont(fontName: String?, font: fontInfoEx_t): Boolean
 
         // GUI drawing just involves shader parameter setting and axial image subsections
         abstract fun SetColor(rgba: idVec4)
         abstract fun SetColor4(r: Float, g: Float, b: Float, a: Float)
         abstract fun DrawStretchPic(
-            verts: Array<idDrawVert>,
+            verts: Array<idDrawVert>?,
             indexes: IntArray?,
             vertCount: Int,
             indexCount: Int,
@@ -528,7 +524,7 @@ object RenderSystem {
 
         @JvmOverloads
         fun DrawStretchPic(
-            verts: Array<idDrawVert>,
+            verts: Array<idDrawVert>?,
             indexes: IntArray?,
             vertCount: Int,
             indexCount: Int,
@@ -554,16 +550,16 @@ object RenderSystem {
         )
 
         abstract fun DrawStretchTri(
-            p1: idVec2,
-            p2: idVec2,
-            p3: idVec2,
-            t1: idVec2,
-            t2: idVec2,
-            t3: idVec2,
+            p1: idVec2?,
+            p2: idVec2?,
+            p3: idVec2?,
+            t1: idVec2?,
+            t2: idVec2?,
+            t3: idVec2?,
             material: idMaterial?
         )
 
-        abstract fun GlobalToNormalizedDeviceCoordinates(global: idVec3, ndc: idVec3)
+        abstract fun GlobalToNormalizedDeviceCoordinates(global: idVec3?, ndc: idVec3?)
         abstract fun GetGLSettings(width: IntArray, height: IntArray)
         abstract fun PrintMemInfo(mi: MemInfo_t)
         abstract fun DrawSmallChar(x: Int, y: Int, ch: Int, material: idMaterial?)
@@ -628,20 +624,21 @@ object RenderSystem {
             CropRenderSize(width, height, makePowerOfTwo, false)
         }
 
-        abstract fun CaptureRenderToImage(imageName: String)
+        abstract fun CaptureRenderToImage(imageName: String?)
 
         // fixAlpha will set all the alpha channel values to 0xff, which allows screen captures
         // to use the default tga loading code without having dimmed down areas in many places
-        abstract fun CaptureRenderToFile(fileName: String, fixAlpha: Boolean /* = false */)
-        fun CaptureRenderToFile(fileName: String) {
+        abstract fun CaptureRenderToFile(fileName: String?, fixAlpha: Boolean /* = false */)
+        fun CaptureRenderToFile(fileName: String?) {
             CaptureRenderToFile(fileName, false)
         }
 
         abstract fun UnCrop()
+        abstract fun GetCardCaps(oldCard: BooleanArray, nv10or20: BooleanArray)
 
         // the image has to be already loaded ( most straightforward way would be through a FindMaterial )
         // texture filter / mipmapping / repeat won't be modified by the upload
         // returns false if the image wasn't found
-        abstract fun UploadImage(imageName: String?, data: ByteBuffer, width: Int, height: Int): Boolean
+        abstract fun UploadImage(imageName: String?, data: ByteBuffer?, width: Int, height: Int): Boolean
     }
 }

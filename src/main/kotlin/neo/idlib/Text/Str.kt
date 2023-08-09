@@ -81,6 +81,7 @@ object Str {
      ============
      */
     //    @Deprecated
+    @JvmStatic
     fun va(fmt: String, vararg args: Any?): String {
 //////	va_list argptr;
 ////        char[] argptr;
@@ -480,16 +481,13 @@ object Str {
             assert(text != null)
             return Icmp(data, text)
         }
-
         fun Icmp(text: idStr): Int {
             return this.Icmp(text.toString())
         }
-
         fun Icmpn(text: String, n: Int): Int {
             assert(text != null)
             return Icmpn(data, text, n)
         }
-
         fun IcmpPrefix(text: String): Int {
             assert(text != null)
             return Icmpn(data, text, text.length)
@@ -1463,7 +1461,7 @@ object Str {
         }
 
         class ShowMemoryUsage_f : cmdFunction_t() {
-            override fun run(args: neo.idlib.CmdArgs.idCmdArgs) {
+            override fun run(args: neo.idlib.CmdArgs.idCmdArgs?) {
 //#ifdef USE_STRING_DATA_ALLOCATOR
                 idLib.common.Printf("%6d KB string memory (%d KB free in %d blocks, %d empty base blocks)\n")
                 //                        stringDataAllocator.GetBaseBlockMemory() >> 10,
@@ -1509,6 +1507,7 @@ object Str {
         class formatList_t(var gran: Int, var count: Int)
         companion object {
             @Transient
+            @JvmField
             val SIZE = (Integer.SIZE
                     + TempDump.CPP_class.Pointer.SIZE //Character.SIZE //pointer.//TODO:ascertain a char pointer size. EDIT: done.
                     + Integer.SIZE
@@ -1552,6 +1551,7 @@ object Str {
                 return i
             }
 
+            @JvmStatic
             fun IsNumeric(s: String): Boolean {
                 return try {
                     s.toDouble()
@@ -1923,6 +1923,8 @@ object Str {
                 } else dest + src
             }
 
+            @JvmStatic
+
             fun Copynz(dest: CharArray, src: String, destsize: Int): CharArray? {
                 return Copynz(dest, 0, src, destsize)
             }
@@ -1934,6 +1936,8 @@ object Str {
          Safe strncpy that ensures a trailing zero
          =============
          */
+            @JvmStatic
+
             fun Copynz(dest: CharArray, offset: Int, src: String?, destsize: Int): CharArray? {
                 if (null == src) {
                     idLib.common.Warning("idStr::Copynz: NULL src")
@@ -1992,6 +1996,7 @@ object Str {
                 }
             }
 
+            @JvmStatic
             fun snPrintf(dest: StringBuffer, size: Int, fmt: String, vararg args: Any): Int {
                 var len: Int
                 val bufferSize = 32000
@@ -2014,6 +2019,7 @@ object Str {
                 return len
             }
 
+            @JvmStatic
             fun snPrintf(dest: Array<String>, size: Int, fmt: String, vararg args: Any): Int {
                 throw TODO_Exception()
                 //	int len;
@@ -2034,10 +2040,12 @@ object Str {
 //	return len;
             }
 
+            @JvmStatic
             fun snPrintf(dest: CharArray, size: Int, fmt: String, vararg args: Any): Int {
                 return snPrintf(0, dest, size, fmt, *args)
             }
 
+            @JvmStatic
             fun snPrintf(offset: Int, dest: CharArray, size: Int, fmt: String, vararg args: Any): Int {
                 var length: Int
                 //            char[] argptr;
@@ -2132,6 +2140,7 @@ object Str {
          ============
          */
             @JvmOverloads
+            @JvmStatic
             fun FindText(
                 str: String,
                 text: String,
@@ -2293,6 +2302,7 @@ object Str {
                 } else c
             }
 
+            @JvmStatic
             fun CharIsPrintable(c: Int): Boolean {
                 // test for regular ascii and western European high-ascii chars
                 return c >= 0x20 && c <= 0x7E || c >= 0xA1 && c <= 0xFF
@@ -2337,6 +2347,7 @@ object Str {
                 return c and 15
             }
 
+            @JvmStatic
             fun ColorForIndex(i: Int): idVec4 {
                 return g_color_table[i and 15]
             }
@@ -2359,6 +2370,7 @@ object Str {
 //#endif
             }
 
+            @JvmStatic
             fun FormatNumber(number: Int): idStr {
                 var number = number
                 val string = idStr()

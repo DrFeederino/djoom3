@@ -247,7 +247,7 @@ object AF {
                 model,
                 animator!!.GetAnim(modifiedAnim)!!.MD5Anim(0),
                 numJoints,
-                joints,
+                joints as Array<idJointMat?>,
                 1,
                 animator!!.ModelDef()!!.GetVisualOffset(),
                 animator!!.RemoveOrigin()
@@ -407,15 +407,15 @@ object AF {
                 body = physicsObj.GetBody(jointMods[i].bodyId)!!
                 animatorPtr!!.GetJointTransform(jointMods[i].jointHandle, time, origin, axis)
                 body.SetWorldOrigin(
-                    renderEntity.origin.plus(
+                    renderEntity!!.origin.plus(
                         origin.plus(
                             jointMods[i].jointBodyOrigin.times(
                                 axis
                             )
-                        ).times(renderEntity.axis)
+                        ).times(renderEntity!!.axis)
                     )
                 )
-                body.SetWorldAxis(jointMods[i].jointBodyAxis.times(axis).times(renderEntity.axis))
+                body.SetWorldAxis(jointMods[i].jointBodyAxis.times(axis).times(renderEntity!!.axis))
                 i++
             }
             if (isActive) {
@@ -469,15 +469,15 @@ object AF {
                 animatorPtr.GetJointTransform(jointMods[i].jointHandle, time, origin, axis)
                 lastOrigin.set(body.GetWorldOrigin())
                 body.SetWorldOrigin(
-                    renderEntity.origin.plus(
+                    renderEntity!!.origin.plus(
                         origin.plus(
                             jointMods[i].jointBodyOrigin.times(
                                 axis
                             )
-                        ).times(renderEntity.axis)
+                        ).times(renderEntity!!.axis)
                     )
                 )
-                body.SetWorldAxis(jointMods[i].jointBodyAxis.times(axis).times(renderEntity.axis))
+                body.SetWorldAxis(jointMods[i].jointBodyAxis.times(axis).times(renderEntity!!.axis))
                 body.SetLinearVelocity(body.GetWorldOrigin().minus(lastOrigin).times(invDelta))
                 i++
             }

@@ -587,7 +587,7 @@ object Misc {
             }
 
             // offset the start time of the shader to sync it to the gameLocal time
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] =
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] =
                 -Math_h.MS2SEC(Game_local.gameLocal.time.toFloat())
             spawnArgs.GetInt("numstates", "1", numStates)
             spawnArgs.GetInt("cycle", "0", cycle)
@@ -595,17 +595,17 @@ object Misc {
 
             // set the state parm
             if (cycle._val != 0) {
-                renderEntity.shaderParms[RenderWorld.SHADERPARM_MODE]++
-                if (renderEntity.shaderParms[RenderWorld.SHADERPARM_MODE] > numStates._val) {
-                    renderEntity.shaderParms[RenderWorld.SHADERPARM_MODE] = 0f
+                renderEntity!!.shaderParms[RenderWorld.SHADERPARM_MODE]++
+                if (renderEntity!!.shaderParms[RenderWorld.SHADERPARM_MODE] > numStates._val) {
+                    renderEntity!!.shaderParms[RenderWorld.SHADERPARM_MODE] = 0f
                 }
             } else if (forceState._val != 0f) {
-                renderEntity.shaderParms[RenderWorld.SHADERPARM_MODE] = forceState._val
+                renderEntity!!.shaderParms[RenderWorld.SHADERPARM_MODE] = forceState._val
             } else {
-                renderEntity.shaderParms[RenderWorld.SHADERPARM_MODE] =
+                renderEntity!!.shaderParms[RenderWorld.SHADERPARM_MODE] =
                     (Game_local.gameLocal.random.RandomInt(numStates._val.toDouble()) + 1).toFloat()
             }
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] =
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] =
                 -Math_h.MS2SEC(Game_local.gameLocal.time.toFloat())
             ActivateTargets(activator)
             if (spawnArgs.GetBool("hideWhenBroken")) {
@@ -669,13 +669,13 @@ object Misc {
                 e.StartSound("snd_explode", gameSoundChannel_t.SND_CHANNEL_ANY, 0, false)
 
                 // Show() calls UpdateVisuals, so we don't need to call it ourselves after setting the shaderParms
-                e.renderEntity.shaderParms[RenderWorld.SHADERPARM_RED] = 1.0f
-                e.renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN] = 1.0f
-                e.renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE] = 1.0f
-                e.renderEntity.shaderParms[RenderWorld.SHADERPARM_ALPHA] = 1.0f
-                e.renderEntity.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] =
+                e.renderEntity!!.shaderParms[RenderWorld.SHADERPARM_RED] = 1.0f
+                e.renderEntity!!.shaderParms[RenderWorld.SHADERPARM_GREEN] = 1.0f
+                e.renderEntity!!.shaderParms[RenderWorld.SHADERPARM_BLUE] = 1.0f
+                e.renderEntity!!.shaderParms[RenderWorld.SHADERPARM_ALPHA] = 1.0f
+                e.renderEntity!!.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] =
                     -Math_h.MS2SEC(Game_local.gameLocal.time.toFloat())
-                e.renderEntity.shaderParms[RenderWorld.SHADERPARM_DIVERSITY] = 0.0f
+                e.renderEntity!!.shaderParms[RenderWorld.SHADERPARM_DIVERSITY] = 0.0f
                 e.Show()
                 e.PostEventMS(EV_Remove, 2000)
                 e.ActivateTargets(activator.value)
@@ -1148,7 +1148,7 @@ object Misc {
 
         override fun GetPhysicsToSoundTransform(origin: idVec3, axis: idMat3): Boolean {
             animator.GetJointTransform(soundJoint, Game_local.gameLocal.time, origin, axis)
-            axis.set(renderEntity.axis)
+            axis.set(renderEntity!!.axis)
             return true
         }
 
@@ -1198,7 +1198,7 @@ object Misc {
             }
 
             // offset the start time of the shader to sync it to the game time
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] =
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] =
                 -Math_h.MS2SEC(Game_local.gameLocal.time.toFloat())
             animator.ForceUpdate()
             UpdateAnimation()
@@ -1249,7 +1249,7 @@ object Misc {
             }
 
             // offset the start time of the shader to sync it to the game time
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] =
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] =
                 -Math_h.MS2SEC(Game_local.gameLocal.time.toFloat())
             animator.ForceUpdate()
             UpdateAnimation()
@@ -1355,9 +1355,9 @@ object Misc {
             }
             StartSound("snd_missile", gameSoundChannel_t.SND_CHANNEL_WEAPON, 0, false)
             animator.GetJointTransform(launchjoint.value, Game_local.gameLocal.time, launchPos, axis)
-            launchPos.set(renderEntity.origin.plus(launchPos.times(renderEntity.axis)))
+            launchPos.set(renderEntity!!.origin.plus(launchPos.times(renderEntity!!.axis)))
             animator.GetJointTransform(targetjoint.value, Game_local.gameLocal.time, targetPos, axis)
-            targetPos.set(renderEntity.origin.plus(targetPos.times(renderEntity.axis)))
+            targetPos.set(renderEntity!!.origin.plus(targetPos.times(renderEntity!!.axis)))
             dir.set(targetPos.minus(launchPos))
             dir.Normalize()
             Game_local.gameLocal.SpawnEntityDef(projectileDef, ent, false)
@@ -1485,7 +1485,7 @@ object Misc {
             val model = idStr(spawnArgs.GetString("model"))
             if (model.Find(".prt") >= 0) {
                 // we want the parametric particles out of sync with each other
-                renderEntity.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] =
+                renderEntity!!.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] =
                     Game_local.gameLocal.random.RandomInt(32767.0).toFloat()
             }
             fadeFrom.set(1f, 1f, 1f, 1f)
@@ -1527,16 +1527,16 @@ object Misc {
         override fun Think() {
             super.Think()
             if (thinkFlags and Entity.TH_THINK != 0) {
-                if (runGui && renderEntity.gui[0] != null) {
+                if (runGui && renderEntity!!.gui[0] != null) {
                     val player = Game_local.gameLocal.GetLocalPlayer()
                     if (player != null) {
                         if (!player.objectiveSystemOpen) {
-                            renderEntity.gui[0]!!.StateChanged(Game_local.gameLocal.time, true)
-                            if (renderEntity.gui[1] != null) {
-                                renderEntity.gui[1]!!.StateChanged(Game_local.gameLocal.time, true)
+                            renderEntity!!.gui[0]!!.StateChanged(Game_local.gameLocal.time, true)
+                            if (renderEntity!!.gui[1] != null) {
+                                renderEntity!!.gui[1]!!.StateChanged(Game_local.gameLocal.time, true)
                             }
-                            if (renderEntity.gui[2] != null) {
-                                renderEntity.gui[2]!!.StateChanged(Game_local.gameLocal.time, true)
+                            if (renderEntity!!.gui[2] != null) {
+                                renderEntity!!.gui[2]!!.StateChanged(Game_local.gameLocal.time, true)
                             }
                         }
                     }
@@ -1598,13 +1598,13 @@ object Misc {
                     Hide()
                 }
             }
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] = -Math_h.MS2SEC(spawnTime.toFloat())
-            renderEntity.shaderParms[5] = if (active) 1f else 0f
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] = -Math_h.MS2SEC(spawnTime.toFloat())
+            renderEntity!!.shaderParms[5] = if (active) 1f else 0f
             // this change should be a good thing, it will automatically turn on
             // lights etc.. when triggered so that does not have to be specifically done
             // with trigger parms.. it MIGHT break things so need to keep an eye on it
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_MODE] =
-                if (renderEntity.shaderParms[RenderWorld.SHADERPARM_MODE] != 0f) 0.0f else 1.0f
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_MODE] =
+                if (renderEntity!!.shaderParms[RenderWorld.SHADERPARM_MODE] != 0f) 0.0f else 1.0f
             BecomeActive(Entity.TH_UPDATEVISUALS)
         }
 
@@ -1664,7 +1664,7 @@ object Misc {
             super.Spawn()
             if (spawnArgs.GetBool("start_off")) {
                 hidden._val = (true)
-                renderEntity.shaderParms[RenderWorld.SHADERPARM_PARTICLE_STOPTIME] = Math_h.MS2SEC(1f)
+                renderEntity!!.shaderParms[RenderWorld.SHADERPARM_PARTICLE_STOPTIME] = Math_h.MS2SEC(1f)
                 UpdateVisuals()
             } else {
                 hidden._val = (false)
@@ -1673,12 +1673,12 @@ object Misc {
 
         open fun Event_Activate(activator: idEventArg<idEntity>) {
             if (hidden._val || spawnArgs.GetBool("cycleTrigger")) {
-                renderEntity.shaderParms[RenderWorld.SHADERPARM_PARTICLE_STOPTIME] = 0f
-                renderEntity.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] =
+                renderEntity!!.shaderParms[RenderWorld.SHADERPARM_PARTICLE_STOPTIME] = 0f
+                renderEntity!!.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] =
                     -Math_h.MS2SEC(Game_local.gameLocal.time.toFloat())
                 hidden._val = (false)
             } else {
-                renderEntity.shaderParms[RenderWorld.SHADERPARM_PARTICLE_STOPTIME] =
+                renderEntity!!.shaderParms[RenderWorld.SHADERPARM_PARTICLE_STOPTIME] =
                     Math_h.MS2SEC(Game_local.gameLocal.time.toFloat())
                 hidden._val = (true)
             }
@@ -1687,14 +1687,14 @@ object Misc {
 
         override fun WriteToSnapshot(msg: idBitMsgDelta) {
             msg.WriteBits(if (hidden._val) 1 else 0, 1)
-            msg.WriteFloat(renderEntity.shaderParms[RenderWorld.SHADERPARM_PARTICLE_STOPTIME])
-            msg.WriteFloat(renderEntity.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET])
+            msg.WriteFloat(renderEntity!!.shaderParms[RenderWorld.SHADERPARM_PARTICLE_STOPTIME])
+            msg.WriteFloat(renderEntity!!.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET])
         }
 
         override fun ReadFromSnapshot(msg: idBitMsgDelta) {
             hidden._val = (msg.ReadBits(1) != 0)
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_PARTICLE_STOPTIME] = msg.ReadFloat()
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] = msg.ReadFloat()
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_PARTICLE_STOPTIME] = msg.ReadFloat()
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] = msg.ReadFloat()
             if (msg.HasChanged()) {
                 UpdateVisuals()
             }
@@ -2129,7 +2129,7 @@ object Misc {
             super.Spawn()
             val width = CFloat()
             if (spawnArgs.GetFloat("width", "0", width)) {
-                renderEntity.shaderParms[RenderWorld.SHADERPARM_BEAM_WIDTH] = width._val
+                renderEntity!!.shaderParms[RenderWorld.SHADERPARM_BEAM_WIDTH] = width._val
             }
             SetModel("_BEAM")
             Hide()
@@ -2166,10 +2166,10 @@ object Misc {
         }
 
         fun SetBeamTarget(origin: idVec3) {
-            if (renderEntity.shaderParms[RenderWorld.SHADERPARM_BEAM_END_X] != origin.x || renderEntity.shaderParms[RenderWorld.SHADERPARM_BEAM_END_Y] != origin.y || renderEntity.shaderParms[RenderWorld.SHADERPARM_BEAM_END_Z] != origin.z) {
-                renderEntity.shaderParms[RenderWorld.SHADERPARM_BEAM_END_X] = origin.x
-                renderEntity.shaderParms[RenderWorld.SHADERPARM_BEAM_END_Y] = origin.y
-                renderEntity.shaderParms[RenderWorld.SHADERPARM_BEAM_END_Z] = origin.z
+            if (renderEntity!!.shaderParms[RenderWorld.SHADERPARM_BEAM_END_X] != origin.x || renderEntity!!.shaderParms[RenderWorld.SHADERPARM_BEAM_END_Y] != origin.y || renderEntity!!.shaderParms[RenderWorld.SHADERPARM_BEAM_END_Z] != origin.z) {
+                renderEntity!!.shaderParms[RenderWorld.SHADERPARM_BEAM_END_X] = origin.x
+                renderEntity!!.shaderParms[RenderWorld.SHADERPARM_BEAM_END_Y] = origin.y
+                renderEntity!!.shaderParms[RenderWorld.SHADERPARM_BEAM_END_Z] = origin.z
                 UpdateVisuals()
             }
         }
@@ -2188,18 +2188,18 @@ object Misc {
             GetPhysics().WriteToSnapshot(msg)
             WriteBindToSnapshot(msg)
             WriteColorToSnapshot(msg)
-            msg.WriteFloat(renderEntity.shaderParms[RenderWorld.SHADERPARM_BEAM_END_X])
-            msg.WriteFloat(renderEntity.shaderParms[RenderWorld.SHADERPARM_BEAM_END_Y])
-            msg.WriteFloat(renderEntity.shaderParms[RenderWorld.SHADERPARM_BEAM_END_Z])
+            msg.WriteFloat(renderEntity!!.shaderParms[RenderWorld.SHADERPARM_BEAM_END_X])
+            msg.WriteFloat(renderEntity!!.shaderParms[RenderWorld.SHADERPARM_BEAM_END_Y])
+            msg.WriteFloat(renderEntity!!.shaderParms[RenderWorld.SHADERPARM_BEAM_END_Z])
         }
 
         override fun ReadFromSnapshot(msg: idBitMsgDelta) {
             GetPhysics().ReadFromSnapshot(msg)
             ReadBindFromSnapshot(msg)
             ReadColorFromSnapshot(msg)
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_BEAM_END_X] = msg.ReadFloat()
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_BEAM_END_Y] = msg.ReadFloat()
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_BEAM_END_Z] = msg.ReadFloat()
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_BEAM_END_X] = msg.ReadFloat()
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_BEAM_END_Y] = msg.ReadFloat()
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_BEAM_END_Z] = msg.ReadFloat()
             if (msg.HasChanged()) {
                 UpdateVisuals()
             }

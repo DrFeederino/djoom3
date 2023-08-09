@@ -13,7 +13,7 @@ import neo.Game.Script.Script_Thread.idThread
 import neo.Renderer.Material
 import neo.Renderer.ModelManager
 import neo.Renderer.RenderWorld
-import neo.Renderer.RenderWorld.Companion.SHADERPARM_DIVERSITY
+import neo.Renderer.RenderWorld.SHADERPARM_DIVERSITY
 import neo.Renderer.RenderWorld.renderLight_s
 import neo.TempDump
 import neo.framework.Common
@@ -196,7 +196,7 @@ object Light {
             // editor or dmap light parsing
             // also put the light texture on the model, so light flares
             // can get the current intensity of the light
-            renderEntity.referenceShader = renderLight.shader
+            renderEntity!!.referenceShader = renderLight.shader
             lightDefHandle = -1 // no static version yet
 
             // see if an optimized shadow volume exists
@@ -405,10 +405,10 @@ object Light {
             // reference the sound for shader synced effects
             if (lightParent != null) {
                 renderLight.referenceSound = lightParent!!.GetSoundEmitter()
-                renderEntity.referenceSound = lightParent!!.GetSoundEmitter()
+                renderEntity!!.referenceSound = lightParent!!.GetSoundEmitter()
             } else {
                 renderLight.referenceSound = refSound.referenceSound
-                renderEntity.referenceSound = refSound.referenceSound
+                renderEntity!!.referenceSound = refSound.referenceSound
             }
 
             // update the renderLight and renderEntity to render the light and flare
@@ -439,7 +439,7 @@ object Light {
         override fun SetColor(color: idVec4) {
             baseColor.set(color.ToVec3())
             renderLight.shaderParms[RenderWorld.SHADERPARM_ALPHA] = color[3]
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_ALPHA] = color[3]
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_ALPHA] = color[3]
             SetLightLevel()
         }
 
@@ -479,10 +479,10 @@ object Light {
             renderLight.shaderParms[RenderWorld.SHADERPARM_GREEN] = parm1
             renderLight.shaderParms[RenderWorld.SHADERPARM_BLUE] = parm2
             renderLight.shaderParms[RenderWorld.SHADERPARM_ALPHA] = parm3
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_RED] = parm0
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN] = parm1
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE] = parm2
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_ALPHA] = parm3
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_RED] = parm0
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_GREEN] = parm1
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_BLUE] = parm2
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_ALPHA] = parm3
             PresentLightDefChange()
             PresentModelDefChange()
         }
@@ -565,20 +565,20 @@ object Light {
                 ServerSendEvent(EVENT_BECOMEBROKEN, null, true, -1)
                 if (spawnArgs.GetString("def_damage", "", damageDefName)) {
                     val origin =
-                        idVec3(renderEntity.origin.plus(renderEntity.bounds.GetCenter().times(renderEntity.axis)))
+                        idVec3(renderEntity!!.origin.plus(renderEntity!!.bounds.GetCenter().times(renderEntity!!.axis)))
                     Game_local.gameLocal.RadiusDamage(origin, activator, activator, this, this, damageDefName[0])
                 }
             }
             ActivateTargets(activator)
 
             // offset the start time of the shader to sync it to the game time
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] =
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] =
                 -Math_h.MS2SEC(Game_local.gameLocal.time.toFloat())
             renderLight.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] =
                 -Math_h.MS2SEC(Game_local.gameLocal.time.toFloat())
 
             // set the state parm
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_MODE] = 1f
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_MODE] = 1f
             renderLight.shaderParms[RenderWorld.SHADERPARM_MODE] = 1f
 
             // if the light has a sound, either start the alternate (broken) sound, or stop the sound
@@ -622,9 +622,9 @@ object Light {
             renderLight.shaderParms[RenderWorld.SHADERPARM_RED] = color[0]
             renderLight.shaderParms[RenderWorld.SHADERPARM_GREEN] = color[1]
             renderLight.shaderParms[RenderWorld.SHADERPARM_BLUE] = color[2]
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_RED] = color[0]
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN] = color[1]
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE] = color[2]
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_RED] = color[0]
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_GREEN] = color[1]
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_BLUE] = color[2]
             PresentLightDefChange()
             PresentModelDefChange()
         }
@@ -747,16 +747,16 @@ object Light {
         }
 
         private fun PresentModelDefChange() {
-            if (null == renderEntity.hModel || IsHidden()) {
+            if (null == renderEntity!!.hModel || IsHidden()) {
                 return
             }
 
             // add to refresh list
             if (modelDefHandle == -1) {
-                modelDefHandle = Game_local.gameRenderWorld.AddEntityDef(renderEntity)
+                modelDefHandle = Game_local.gameRenderWorld.AddEntityDef(renderEntity!!)
                 val a = 0
             } else {
-                Game_local.gameRenderWorld.UpdateEntityDef(modelDefHandle, renderEntity)
+                Game_local.gameRenderWorld.UpdateEntityDef(modelDefHandle, renderEntity!!)
             }
         }
 
@@ -862,7 +862,7 @@ object Light {
                     light.FreeSoundEmitter(true)
 
                     // manually set the refSound to this light's refSound
-                    light.renderEntity.referenceSound = renderEntity.referenceSound
+                    light.renderEntity!!.referenceSound = renderEntity!!.referenceSound
 
                     // update the renderEntity to the renderer
                     light.UpdateVisuals()

@@ -2,30 +2,48 @@ package neo.ui
 
 import neo.Renderer.Material
 import neo.Renderer.Material.idMaterial
-import neo.TempDump
+import neo.TempDump.etoi
 import neo.framework.Common
 import neo.framework.DeclManager
-import neo.framework.KeyInput
-import neo.framework.KeyInput.idKeyInput
-import neo.idlib.Lib.idLib
-import neo.idlib.Text.Lexer
+import neo.framework.KeyInput.K_CTRL
+import neo.framework.KeyInput.K_DOWNARROW
+import neo.framework.KeyInput.K_ENTER
+import neo.framework.KeyInput.K_KP_ENTER
+import neo.framework.KeyInput.K_MOUSE1
+import neo.framework.KeyInput.K_MOUSE2
+import neo.framework.KeyInput.K_MWHEELDOWN
+import neo.framework.KeyInput.K_MWHEELUP
+import neo.framework.KeyInput.K_PGDN
+import neo.framework.KeyInput.K_PGUP
+import neo.framework.KeyInput.K_UPARROW
+import neo.framework.KeyInput.idKeyInput.IsDown
+import neo.idlib.Text.Lexer.LEXFL_NOFATALERRORS
+import neo.idlib.Text.Lexer.LEXFL_NOSTRINGCONCAT
+import neo.idlib.Text.Lexer.LEXFL_NOSTRINGESCAPECHARS
 import neo.idlib.Text.Parser.idParser
-import neo.idlib.Text.Str
 import neo.idlib.Text.Str.idStr
+import neo.idlib.Text.Str.idStr.Companion.CharIsPrintable
+import neo.idlib.Text.Str.idStr.Companion.Icmp
+import neo.idlib.Text.Str.idStr.Companion.Icmpn
+import neo.idlib.Text.Str.va
 import neo.idlib.Text.Token.idToken
 import neo.idlib.containers.CBool
+import neo.idlib.containers.HashTable.idHashTable
 import neo.idlib.containers.List.idList
 import neo.idlib.containers.idStrList
 import neo.idlib.math.Vector.idVec2
 import neo.idlib.math.Vector.idVec4
+import neo.sys.sys_public.sys
 import neo.sys.sys_public.sysEventType_t
 import neo.sys.sys_public.sysEvent_s
 import neo.ui.DeviceContext.idDeviceContext
 import neo.ui.DeviceContext.idDeviceContext.ALIGN
 import neo.ui.Rectangle.idRectangle
+import neo.ui.SimpleWindow.drawWin_t
 import neo.ui.SliderWindow.idSliderWindow
 import neo.ui.UserInterfaceLocal.idUserInterfaceLocal
 import neo.ui.Window.idWindow
+import neo.ui.Winvar.idWinVar
 
 /**
  *
@@ -51,7 +69,7 @@ object ListWindow {
     // };
     class idTabRect {
         var align = 0
-        var iconSize: idVec2 = idVec2()
+        var iconSize = idVec2()
         var iconVOffset = 0f
         var type = 0
         var valign = 0
@@ -62,25 +80,25 @@ object ListWindow {
     class idListWindow : idWindow {
         //
         private var clickTime = 0
-        private val currentSel: idList<Int> = idList()
+        private val currentSel = idList<Int>()
         private var horizontal = false
-        private val iconMaterials: HashMap<String, idMaterial> = HashMap()
+        private val iconMaterials = idHashTable<idMaterial>()
 
         //
-        private val listItems: idStrList = idStrList()
-        private val listName: idStr = idStr()
+        private val listItems = idStrList()
+        private val listName = idStr()
         private var multipleSel = false
-        private lateinit var scroller: idSliderWindow
+        private var scroller: idSliderWindow? = null
         private var sizeBias = 0f
-        private val tabAlignStr: idStr = idStr()
-        private val tabIconSizeStr: idStr = idStr()
-        private val tabIconVOffsetStr: idStr = idStr()
-        private val tabInfo: idList<idTabRect> = idList()
-        private val tabStopStr: idStr = idStr()
-        private val tabTypeStr: idStr = idStr()
-        private val tabVAlignStr: idStr = idStr()
+        private val tabAlignStr = idStr()
+        private val tabIconSizeStr = idStr()
+        private val tabIconVOffsetStr = idStr()
+        private val tabInfo = idList<idTabRect>()
+        private val tabStopStr = idStr()
+        private val tabTypeStr = idStr()
+        private val tabVAlignStr = idStr()
         private var top = 0
-        private val typed: idStr = idStr()
+        private val typed = idStr()
 
         //
         private var typedTime = 0
@@ -92,43 +110,43 @@ object ListWindow {
             CommonInit()
         }
 
-        constructor(dc: idDeviceContext, gui: idUserInterfaceLocal) : super(dc, gui) {
+        constructor(dc: idDeviceContext?, gui: idUserInterfaceLocal?) : super(dc, gui) {
             this.dc = dc
             this.gui = gui
             CommonInit()
         }
 
-        override fun HandleEvent(event: sysEvent_s, updateVisuals: CBool): String {
+        override fun HandleEvent(event: sysEvent_s, updateVisuals: CBool?): String? {
             // need to call this to allow proper focus and capturing on embedded children
             val ret = super.HandleEvent(event, updateVisuals)
             val vert = GetMaxCharHeight()
             val numVisibleLines = (textRect.h / vert).toInt()
             var key = event.evValue
-            if (event.evType == sysEventType_t.SE_KEY) {
+            if (event.evType === sysEventType_t.SE_KEY) {
                 if (0 == event.evValue2) {
                     // We only care about key down, not up
                     return ret
                 }
-                if (key == KeyInput.K_MOUSE1 || key == KeyInput.K_MOUSE2) {
+                if (key == K_MOUSE1 || key == K_MOUSE2) {
                     // If the user clicked in the scroller, then ignore it
-                    if (scroller.Contains(gui!!.CursorX(), gui!!.CursorY())) {
+                    if (scroller!!.Contains(gui!!.CursorX(), gui!!.CursorY())) {
                         return ret
                     }
                 }
-                if (key == KeyInput.K_ENTER || key == KeyInput.K_KP_ENTER) {
-                    RunScript(TempDump.etoi(ON.ON_ENTER))
+                if (key == K_ENTER || key == K_KP_ENTER) {
+                    RunScript(etoi(ON.ON_ENTER))
                     return cmd.toString()
                 }
-                if (key == KeyInput.K_MWHEELUP) {
-                    key = KeyInput.K_UPARROW
-                } else if (key == KeyInput.K_MWHEELDOWN) {
-                    key = KeyInput.K_DOWNARROW
+                if (key == K_MWHEELUP) {
+                    key = K_UPARROW
+                } else if (key == K_MWHEELDOWN) {
+                    key = K_DOWNARROW
                 }
-                if (key == KeyInput.K_MOUSE1) {
+                if (key == K_MOUSE1) {
                     if (Contains(gui!!.CursorX(), gui!!.CursorY())) {
                         val cur = ((gui!!.CursorY() - actualY - pixelOffset) / vert).toInt() + top
                         if (cur >= 0 && cur < listItems.size()) {
-                            if (multipleSel && idKeyInput.IsDown(KeyInput.K_CTRL)) {
+                            if (multipleSel && IsDown(K_CTRL)) {
                                 if (IsSelected(cur)) {
                                     ClearSelection(cur)
                                 } else {
@@ -137,7 +155,7 @@ object ListWindow {
                             } else {
                                 if (IsSelected(cur) && gui!!.GetTime() < clickTime + doubleClickSpeed) {
                                     // Double-click causes ON_ENTER to get run
-                                    RunScript(TempDump.etoi(ON.ON_ENTER))
+                                    RunScript(etoi(ON.ON_ENTER))
                                     return cmd.toString()
                                 }
                                 SetCurrentSel(cur)
@@ -147,15 +165,15 @@ object ListWindow {
                             SetCurrentSel(listItems.size() - 1)
                         }
                     }
-                } else if (key == KeyInput.K_UPARROW || key == KeyInput.K_PGUP || key == KeyInput.K_DOWNARROW || key == KeyInput.K_PGDN) {
+                } else if (key == K_UPARROW || key == K_PGUP || key == K_DOWNARROW || key == K_PGDN) {
                     var numLines = 1
-                    if (key == KeyInput.K_PGUP || key == KeyInput.K_PGDN) {
+                    if (key == K_PGUP || key == K_PGDN) {
                         numLines = numVisibleLines / 2
                     }
-                    if (key == KeyInput.K_UPARROW || key == KeyInput.K_PGUP) {
+                    if (key == K_UPARROW || key == K_PGUP) {
                         numLines = -numLines
                     }
-                    if (idKeyInput.IsDown(KeyInput.K_CTRL)) {
+                    if (IsDown(K_CTRL)) {
                         top += numLines
                     } else {
                         SetCurrentSel(GetCurrentSel() + numLines)
@@ -163,8 +181,8 @@ object ListWindow {
                 } else {
                     return ret
                 }
-            } else if (event.evType == sysEventType_t.SE_CHAR) {
-                if (!idStr.Companion.CharIsPrintable(key)) {
+            } else if (event.evType === sysEventType_t.SE_CHAR) {
+                if (!CharIsPrintable(key)) {
                     return ret
                 }
                 if (gui!!.GetTime() > typedTime + 1000) {
@@ -173,7 +191,7 @@ object ListWindow {
                 typedTime = gui!!.GetTime()
                 typed.Append(key.toChar())
                 for (i in 0 until listItems.size()) {
-                    if (idStr.Companion.Icmpn(typed, listItems[i], typed.Length()) == 0) {
+                    if (Icmpn(typed, listItems[i], typed.Length()) == 0) {
                         SetCurrentSel(i)
                         break
                     }
@@ -187,8 +205,8 @@ object ListWindow {
             if (GetCurrentSel() >= listItems.size()) {
                 SetCurrentSel(listItems.size() - 1)
             }
-            if (scroller.GetHigh() > 0.0f) {
-                if (!idKeyInput.IsDown(KeyInput.K_CTRL)) {
+            if (scroller!!.GetHigh() > 0.0f) {
+                if (!IsDown(K_CTRL)) {
                     if (top > GetCurrentSel() - 1) {
                         top = GetCurrentSel() - 1
                     }
@@ -202,24 +220,24 @@ object ListWindow {
                 if (top < 0) {
                     top = 0
                 }
-                scroller.SetValue(top.toFloat())
+                scroller!!.SetValue(top.toFloat())
             } else {
                 top = 0
-                scroller.SetValue(0.0f)
+                scroller!!.SetValue(0.0f)
             }
-            if (key != KeyInput.K_MOUSE1) {
+            if (key != K_MOUSE1) {
                 // Send a fake mouse click event so onAction gets run in our parents
-                val ev = idLib.sys.GenerateMouseButtonEvent(1, true)
+                val ev: sysEvent_s = sys.GenerateMouseButtonEvent(1, true)
                 super.HandleEvent(ev, updateVisuals)
             }
             if (currentSel.Num() > 0) {
                 for (i in 0 until currentSel.Num()) {
-                    gui!!.SetStateInt(Str.va("%s_sel_%d", listName, i), currentSel[i])
+                    gui!!.SetStateInt(va("%s_sel_%d", listName, i), currentSel[i])
                 }
             } else {
-                gui!!.SetStateInt(Str.va("%s_sel_0", listName), 0)
+                gui!!.SetStateInt(va("%s_sel_0", listName), 0)
             }
-            gui!!.SetStateInt(Str.va("%s_numsel", listName), currentSel.Num())
+            gui!!.SetStateInt(va("%s_numsel", listName), currentSel.Num())
             return ret
         }
 
@@ -233,11 +251,11 @@ object ListWindow {
                     tabStopStr.toString(),
                     tabStopStr.Length(),
                     "tabstops",
-                    Lexer.LEXFL_NOFATALERRORS or Lexer.LEXFL_NOSTRINGCONCAT or Lexer.LEXFL_NOSTRINGESCAPECHARS
+                    LEXFL_NOFATALERRORS or LEXFL_NOSTRINGCONCAT or LEXFL_NOSTRINGESCAPECHARS
                 )
                 val tok = idToken()
                 while (src.ReadToken(tok)) {
-                    if (tok.toString() == ",") {
+                    if (tok.equals(",")) {
                         continue
                     }
                     tabStops.Append(tok.toString().toInt())
@@ -248,11 +266,11 @@ object ListWindow {
                     tabAlignStr.toString(),
                     tabAlignStr.Length(),
                     "tabaligns",
-                    Lexer.LEXFL_NOFATALERRORS or Lexer.LEXFL_NOSTRINGCONCAT or Lexer.LEXFL_NOSTRINGESCAPECHARS
+                    LEXFL_NOFATALERRORS or LEXFL_NOSTRINGCONCAT or LEXFL_NOSTRINGESCAPECHARS
                 )
                 val tok = idToken()
                 while (src.ReadToken(tok)) {
-                    if (tok.toString() == ",") {
+                    if (tok.equals(",")) {
                         continue
                     }
                     tabAligns.Append(tok.toString().toInt())
@@ -264,11 +282,11 @@ object ListWindow {
                     tabVAlignStr.toString(),
                     tabVAlignStr.Length(),
                     "tabvaligns",
-                    Lexer.LEXFL_NOFATALERRORS or Lexer.LEXFL_NOSTRINGCONCAT or Lexer.LEXFL_NOSTRINGESCAPECHARS
+                    LEXFL_NOFATALERRORS or LEXFL_NOSTRINGCONCAT or LEXFL_NOSTRINGESCAPECHARS
                 )
                 val tok = idToken()
                 while (src.ReadToken(tok)) {
-                    if (tok.toString() == ",") {
+                    if (tok.equals(",")) {
                         continue
                     }
                     tabVAligns.Append(tok.toString().toInt())
@@ -280,11 +298,11 @@ object ListWindow {
                     tabTypeStr.toString(),
                     tabTypeStr.Length(),
                     "tabtypes",
-                    Lexer.LEXFL_NOFATALERRORS or Lexer.LEXFL_NOSTRINGCONCAT or Lexer.LEXFL_NOSTRINGESCAPECHARS
+                    LEXFL_NOFATALERRORS or LEXFL_NOSTRINGCONCAT or LEXFL_NOSTRINGESCAPECHARS
                 )
                 val tok = idToken()
                 while (src.ReadToken(tok)) {
-                    if (tok.toString() == ",") {
+                    if (tok.equals(",")) {
                         continue
                     }
                     tabTypes.Append(tok.toString().toInt())
@@ -296,11 +314,11 @@ object ListWindow {
                     tabIconSizeStr.toString(),
                     tabIconSizeStr.Length(),
                     "tabiconsizes",
-                    Lexer.LEXFL_NOFATALERRORS or Lexer.LEXFL_NOSTRINGCONCAT or Lexer.LEXFL_NOSTRINGESCAPECHARS
+                    LEXFL_NOFATALERRORS or LEXFL_NOSTRINGCONCAT or LEXFL_NOSTRINGESCAPECHARS
                 )
                 val tok = idToken()
                 while (src.ReadToken(tok)) {
-                    if (tok.toString() == ",") {
+                    if (tok.equals(",")) {
                         continue
                     }
                     val size = idVec2()
@@ -317,11 +335,11 @@ object ListWindow {
                     tabIconVOffsetStr.toString(),
                     tabIconVOffsetStr.Length(),
                     "tabiconvoffsets",
-                    Lexer.LEXFL_NOFATALERRORS or Lexer.LEXFL_NOSTRINGCONCAT or Lexer.LEXFL_NOSTRINGESCAPECHARS
+                    LEXFL_NOFATALERRORS or LEXFL_NOSTRINGCONCAT or LEXFL_NOSTRINGESCAPECHARS
                 )
                 val tok = idToken()
                 while (src.ReadToken(tok)) {
-                    if (tok.toString() == ",") {
+                    if (tok.equals(",")) {
                         continue
                     }
                     tabIconVOffsets.Append(tok.toString().toFloat())
@@ -360,7 +378,7 @@ object ListWindow {
         }
 
         override fun Draw(time: Int, x: Float, y: Float) {
-            var color: idVec4
+            var color: idVec4?
             val work = idStr()
             val count = listItems.size()
             val rect = idRectangle(textRect)
@@ -368,7 +386,7 @@ object ListWindow {
             val lineHeight = GetMaxCharHeight()
             var bottom = textRect.Bottom()
             var width = textRect.w
-            if (scroller.GetHigh() > 0.0f) {
+            if (scroller!!.GetHigh() > 0.0f) {
                 if (horizontal) {
                     bottom -= sizeBias
                 } else {
@@ -385,7 +403,7 @@ object ListWindow {
                     dc!!.DrawFilledRect(rect.x, rect.y + pixelOffset, rect.w, rect.h, borderColor.data)
                     if (flags and Window.WIN_FOCUS != 0) {
                         val color2 = borderColor.data
-                        color2.w = 1.0f
+                        color2!!.w = 1.0f
                         dc!!.DrawRect(rect.x, rect.y + pixelOffset, rect.w, rect.h, 1.0f, color2)
                     }
                 }
@@ -407,7 +425,7 @@ object ListWindow {
                             Common.common.Warning(
                                 "idListWindow::Draw: gui '%s' window '%s' tabInfo.Num() exceeded",
                                 gui!!.GetSourceFile(),
-                                name
+                                name!!
                             )
                             break
                         }
@@ -418,28 +436,30 @@ object ListWindow {
                         if (tabInfo[tab].type == TAB_TYPE_TEXT) {
                             dc!!.DrawText(work, scale, tabInfo[tab].align, color, rect, false, -1)
                         } else if (tabInfo[tab].type == TAB_TYPE_ICON) {
-                            var hashMat: idMaterial?
+                            val hashMat = arrayOf<idMaterial?>(null)
                             var iconMat: idMaterial?
 
                             // leaving the icon name empty doesn't draw anything
-                            if (!work.IsEmpty()) {
-                                hashMat = iconMaterials[work.toString()]
-                                iconMat = hashMat ?: DeclManager.declManager.FindMaterial("_default")
+                            if (work != null && !work.IsEmpty()) {
+                                iconMat = if (iconMaterials.Get(work.toString(), hashMat) == false) {
+                                    DeclManager.declManager.FindMaterial("_default")
+                                } else {
+                                    hashMat[0]
+                                }
                                 val iconRect = idRectangle()
                                 iconRect.w = tabInfo[tab].iconSize.x
                                 iconRect.h = tabInfo[tab].iconSize.y
-                                if (tabInfo[tab].align == TempDump.etoi(ALIGN.ALIGN_LEFT)) {
+                                if (tabInfo[tab].align == etoi(ALIGN.ALIGN_LEFT)) {
                                     iconRect.x = rect.x
-                                } else if (tabInfo[tab].align == TempDump.etoi(ALIGN.ALIGN_CENTER)) {
+                                } else if (tabInfo[tab].align == etoi(ALIGN.ALIGN_CENTER)) {
                                     iconRect.x = rect.x + rect.w / 2.0f - iconRect.w / 2.0f
-                                } else if (tabInfo[tab].align == TempDump.etoi(ALIGN.ALIGN_RIGHT)) {
+                                } else if (tabInfo[tab].align == etoi(ALIGN.ALIGN_RIGHT)) {
                                     iconRect.x = rect.x + rect.w - iconRect.w
                                 }
                                 if (tabInfo[tab].valign == 0) { //Top
                                     iconRect.y = rect.y + tabInfo[tab].iconVOffset
                                 } else if (tabInfo[tab].valign == 1) { //Center
-                                    iconRect.y =
-                                        rect.y + rect.h / 2.0f - iconRect.h / 2.0f + tabInfo[tab].iconVOffset
+                                    iconRect.y = rect.y + rect.h / 2.0f - iconRect.h / 2.0f + tabInfo[tab].iconVOffset
                                 } else if (tabInfo[tab].valign == 2) { //Bottom
                                     iconRect.y = rect.y + rect.h - iconRect.h + tabInfo[tab].iconVOffset
                                 }
@@ -448,7 +468,7 @@ object ListWindow {
                                     iconRect.y,
                                     iconRect.w,
                                     iconRect.h,
-                                    iconMat!!,
+                                    iconMat,
                                     idVec4(1.0f, 1.0f, 1.0f, 1.0f),
                                     1.0f,
                                     1.0f
@@ -482,12 +502,24 @@ object ListWindow {
             }
         }
 
-        override fun HandleBuddyUpdate(buddy: idWindow) {
-            top = scroller.GetValue().toInt()
+        override fun HandleBuddyUpdate(buddy: idWindow?) {
+            top = scroller!!.GetValue().toInt()
         }
 
         override fun StateChanged(redraw: Boolean /*= false*/) {
             UpdateList()
+        }
+
+        override fun  /*size_t*/Allocated(): Int {
+            return super.Allocated()
+        }
+
+        override fun GetWinVarByName(
+            _name: String?,
+            winLookup: Boolean /*= false*/,
+            owner: Array<drawWin_t?>? /*= NULL*/
+        ): idWinVar? {
+            return super.GetWinVarByName(_name, winLookup, owner)
         }
 
         fun UpdateList() {
@@ -495,7 +527,7 @@ object ListWindow {
             var strName: idStr
             listItems.clear()
             for (i in 0 until Window.MAX_LIST_ITEMS) {
-                if (gui!!.State().GetString(Str.va("%s_item_%d", listName, i), "", str)) {
+                if (gui!!.State().GetString(va("%s_item_%d", listName, i), "", str)) {
                     if (str.Length() != 0) {
                         listItems.add(str)
                     }
@@ -506,64 +538,64 @@ object ListWindow {
             val vert = GetMaxCharHeight()
             val fit = (textRect.h / vert).toInt()
             if (listItems.size() < fit) {
-                scroller.SetRange(0.0f, 0.0f, 1.0f)
+                scroller!!.SetRange(0.0f, 0.0f, 1.0f)
             } else {
-                scroller.SetRange(0.0f, listItems.size() - fit + 1.0f, 1.0f)
+                scroller!!.SetRange(0.0f, listItems.size() - fit + 1.0f, 1.0f)
             }
-            SetCurrentSel(gui!!.State().GetInt(Str.va("%s_sel_0", listName)))
-            var value = scroller.GetValue()
+            SetCurrentSel(gui!!.State().GetInt(va("%s_sel_0", listName)))
+            var value = scroller!!.GetValue()
             if (value > listItems.size() - 1) {
                 value = (listItems.size() - 1).toFloat()
             }
             if (value < 0.0f) {
                 value = 0.0f
             }
-            scroller.SetValue(value)
+            scroller!!.SetValue(value)
             top = value.toInt()
             typedTime = 0
             clickTime = 0
             typed.set("")
         }
 
-        override fun ParseInternalVar(_name: String, src: idParser): Boolean {
-            if (idStr.Companion.Icmp(_name, "horizontal") == 0) {
+        override fun ParseInternalVar(_name: String?, src: idParser): Boolean {
+            if (Icmp(_name!!, "horizontal") == 0) {
                 horizontal = src.ParseBool()
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "listname") == 0) {
+            if (Icmp(_name, "listname") == 0) {
                 ParseString(src, listName)
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "tabstops") == 0) {
+            if (Icmp(_name, "tabstops") == 0) {
                 ParseString(src, tabStopStr)
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "tabaligns") == 0) {
+            if (Icmp(_name, "tabaligns") == 0) {
                 ParseString(src, tabAlignStr)
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "multipleSel") == 0) {
+            if (Icmp(_name, "multipleSel") == 0) {
                 multipleSel = src.ParseBool()
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "tabvaligns") == 0) {
+            if (Icmp(_name, "tabvaligns") == 0) {
                 ParseString(src, tabVAlignStr)
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "tabTypes") == 0) {
+            if (Icmp(_name, "tabTypes") == 0) {
                 ParseString(src, tabTypeStr)
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "tabIconSizes") == 0) {
+            if (Icmp(_name, "tabIconSizes") == 0) {
                 ParseString(src, tabIconSizeStr)
                 return true
             }
-            if (idStr.Companion.Icmp(_name, "tabIconVOffset") == 0) {
+            if (Icmp(_name, "tabIconVOffset") == 0) {
                 ParseString(src, tabIconVOffsetStr)
                 return true
             }
             val strName = idStr(_name)
-            if (idStr.Companion.Icmp(strName.Left(4), "mtr_") == 0) {
+            if (Icmp(strName.Left(4), "mtr_") == 0) {
                 val matName = idStr()
                 val mat: idMaterial?
                 ParseString(src, matName)
@@ -572,7 +604,7 @@ object ListWindow {
                 if (mat != null && !mat.TestMaterialFlag(Material.MF_DEFAULTED)) {
                     mat.SetSort(Material.SS_GUI.toFloat())
                 }
-                iconMaterials[_name] = mat
+                iconMaterials.Set(_name, mat)
                 return true
             }
             return super.ParseInternalVar(_name, src)
@@ -586,7 +618,7 @@ object ListWindow {
             top = 0
             sizeBias = 0f
             horizontal = false
-            scroller = idSliderWindow(dc!!, gui!!)
+            scroller = idSliderWindow(dc, gui)
             multipleSel = false
         }
 
@@ -621,7 +653,7 @@ object ListWindow {
                 scrollRect.w = sizeBias
                 scrollRect.h = clientRect.h
             }
-            scroller.InitWithDefaults(
+            scroller!!.InitWithDefaults(
                 scrollerName,
                 scrollRect,
                 foreColor.data,
@@ -631,8 +663,8 @@ object ListWindow {
                 !horizontal,
                 true
             )
-            InsertChild(scroller, null)
-            scroller.SetBuddy(this)
+            InsertChild(scroller!!, null)
+            scroller!!.SetBuddy(this)
         }
 
         private fun SetCurrentSel(sel: Int) {

@@ -40,9 +40,9 @@ class CmdArgs {
         }
 
         //
-        fun oSet(args: CmdArgs.idCmdArgs) {
+        fun oSet(args: CmdArgs.idCmdArgs?) {
             var i: Int
-            argc = args.argc
+            argc = args!!.argc
             //	memcpy( tokenized, args.tokenized, MAX_COMMAND_STRING );
             System.arraycopy(args.tokenized, 0, tokenized, 0, MAX_COMMAND_STRING)
             //            for (i = 0; i < argc; i++) {

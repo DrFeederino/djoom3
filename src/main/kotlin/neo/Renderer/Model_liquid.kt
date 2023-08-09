@@ -1,5 +1,6 @@
 package neo.Renderer
 
+import neo.Game.Animation.Anim_Blend
 import neo.Renderer.Material.idMaterial
 import neo.Renderer.Model.dynamicModel_t
 import neo.Renderer.Model.idRenderModel
@@ -10,21 +11,25 @@ import neo.Renderer.RenderWorld.renderEntity_s
 import neo.Renderer.tr_local.deformInfo_s
 import neo.Renderer.tr_local.viewDef_s
 import neo.Renderer.tr_trisurf.R_DeriveTangents
-import neo.TempDump
+import neo.TempDump.NOT
 import neo.framework.DeclManager
-import neo.framework.FileSystem_h
+import neo.framework.FileSystem_h.fileSystem
 import neo.idlib.BV.Bounds.idBounds
 import neo.idlib.Lib.idException
-import neo.idlib.Text.Lexer
+import neo.idlib.Text.Lexer.LEXFL_ALLOWPATHNAMES
+import neo.idlib.Text.Lexer.LEXFL_NOSTRINGESCAPECHARS
 import neo.idlib.Text.Parser.idParser
 import neo.idlib.Text.Str.idStr
 import neo.idlib.Text.Token.idToken
 import neo.idlib.containers.List.idList
+import neo.idlib.containers.List.idSwap
 import neo.idlib.geometry.DrawVert.idDrawVert
-import neo.idlib.math.Math_h
+import neo.idlib.math.Math_h.SEC2MS
 import neo.idlib.math.Math_h.idMath
+import neo.idlib.math.Math_h.idMath.Cos16
+import neo.idlib.math.Math_h.idMath.Sqrt
 import neo.idlib.math.Random.idRandom
-import neo.idlib.math.Simd
+import neo.idlib.math.Simd.SIMDProcessor
 import neo.idlib.math.Vector.idVec3
 import java.util.*
 
@@ -32,8 +37,8 @@ import java.util.*
  *
  */
 object Model_liquid {
-    const val LIQUID_MAX_SKIP_FRAMES = 5
-    const val LIQUID_MAX_TYPES = 3
+    val LIQUID_MAX_SKIP_FRAMES: Int = 5
+    val LIQUID_MAX_TYPES: Int = 3
 
     //    
     /*
@@ -43,19 +48,18 @@ object Model_liquid {
 
      ===============================================================================
      */
-    class idRenderModelLiquid : idRenderModelStatic() {
+    class idRenderModelLiquid() : idRenderModelStatic() {
         //
-        var nextDropTime = 0
-        private var deformInfo // used to create srfTriangles_s from base frames and new vertexes
-                : deformInfo_s? = null
+        var nextDropTime: Int = 0
+        private var deformInfo: deformInfo_s? = null // used to create srfTriangles_s from base frames and new vertexes
 
         //
         //
-        private var density = 0.97f
-        private var drop_delay = 1000f
-        private var drop_height = 4f
-        private var drop_radius = 4
-        private var liquid_type = 0
+        private var density: Float = 0.97f
+        private var drop_delay: Float = 1000f
+        private var drop_height: Float = 4f
+        private var drop_radius: Int = 4
+        private var liquid_type: Int = 0
         private lateinit var page1: Array<Float>
         private lateinit var page2: Array<Float>
 
@@ -63,34 +67,42 @@ object Model_liquid {
         private val pages: idList<Float> = idList()
 
         //
-        private val random: idRandom = idRandom()
-        private var scale_x = 256.0f
-        private var scale_y = 256.0f
-        private var seed: Int
+        private val random: idRandom? = null
+        private var scale_x: Float = 256.0f
+        private var scale_y: Float = 256.0f
+        private var seed: Int = 0
 
         //
         private var shader: idMaterial?
-        private var time: Int
-        private var update_tics: Int
+        private var time: Int = 0
+        private var update_tics: Int = 33
 
         //
         private val verts: idList<idDrawVert> = idList()
-        private var verts_x = 32
-        private var verts_y = 32
+        private var verts_x: Int = 32
+        private var verts_y: Int = 32
+
+        //
+        //
+        init {
+            shader = DeclManager.declManager.FindMaterial((null as String?)!!)
+            // ~30 hz
+            random!!.SetSeed(0)
+        }
 
         @Throws(idException::class)
-        override fun InitFromFile(fileName: String) {
+        public override fun InitFromFile(fileName: String?) {
             var i: Int
             var x: Int
             var y: Int
-            val token = idToken()
-            val parser = idParser(Lexer.LEXFL_ALLOWPATHNAMES or Lexer.LEXFL_NOSTRINGESCAPECHARS)
-            val tris = idList<Int>()
+            val token: idToken = idToken()
+            val parser: idParser = idParser(LEXFL_ALLOWPATHNAMES or LEXFL_NOSTRINGESCAPECHARS)
+            val tris: idList<Int> = idList()
             var size_x: Float
             var size_y: Float
             var rate: Float
-            name = idStr(fileName)
-            if (!parser.LoadFile(fileName)) {
+            name = idStr((fileName)!!)
+            if (!parser.LoadFile((fileName)!!)) {
                 MakeDefaultModel()
                 return
             }
@@ -119,7 +131,7 @@ object Model_liquid {
                     }
                 } else if (0 == token.Icmp("liquid_type")) {
                     liquid_type = parser.ParseInt() - 1
-                    if (liquid_type < 0 || liquid_type >= Model_liquid.LIQUID_MAX_TYPES) {
+                    if ((liquid_type < 0) || (liquid_type >= LIQUID_MAX_TYPES)) {
                         parser.Warning("Invalid liquid_type.  Using default model.")
                         MakeDefaultModel()
                         return
@@ -131,7 +143,7 @@ object Model_liquid {
                 } else if (0 == token.Icmp("drop_radius")) {
                     drop_radius = parser.ParseInt()
                 } else if (0 == token.Icmp("drop_delay")) {
-                    drop_delay = Math_h.SEC2MS(parser.ParseFloat())
+                    drop_delay = SEC2MS(parser.ParseFloat())
                 } else if (0 == token.Icmp("shader")) {
                     parser.ReadToken(token)
                     shader = DeclManager.declManager.FindMaterial(token)
@@ -139,7 +151,7 @@ object Model_liquid {
                     seed = parser.ParseInt()
                 } else if (0 == token.Icmp("update_rate")) {
                     rate = parser.ParseFloat()
-                    if (rate <= 0.0f || rate > 60.0f) {
+                    if ((rate <= 0.0f) || (rate > 60.0f)) {
                         parser.Warning("Invalid update_rate.  Must be between 0 and 60.  Using default model.")
                         MakeDefaultModel()
                         return
@@ -154,9 +166,8 @@ object Model_liquid {
             scale_x = size_x / (verts_x - 1)
             scale_y = size_y / (verts_y - 1)
             pages.SetNum(2 * verts_x * verts_y)
-            page1 = pages.getList(Array<Float>::class.java)!!
+            page1 = pages.getList()
             page2 = Arrays.copyOfRange(page1, verts_x * verts_y, page1.size)
-
             verts.SetNum(verts_x * verts_y)
             i = 0
             y = 0
@@ -194,32 +205,26 @@ object Model_liquid {
             // build the information that will be common to all animations of this mesh:
             // sil edge connectivity and normal / tangent generation information
             deformInfo =
-                tr_trisurf.R_BuildDeformInfo(
-                    verts.Num(),
-                    verts.getList(Array<idDrawVert?>::class.java),
-                    tris.Num(),
-                    tris,
-                    true
-                )
-            bounds.Clear()
-            bounds.AddPoint(idVec3(0.0f, 0.0f, drop_height * -10.0f))
-            bounds.AddPoint(idVec3((verts_x - 1) * scale_x, (verts_y - 1) * scale_y, drop_height * 10.0f))
+                tr_trisurf.R_BuildDeformInfo(verts.Num(), verts.getList() as Array<idDrawVert?>, tris.Num(), tris, true)
+            bounds!!.Clear()
+            bounds!!.AddPoint(idVec3(0.0f, 0.0f, drop_height * -10.0f))
+            bounds!!.AddPoint(idVec3((verts_x - 1) * scale_x, (verts_y - 1) * scale_y, drop_height * 10.0f))
 
             // set the timestamp for reloadmodels
-            FileSystem_h.fileSystem.ReadFile(name, null, timeStamp)
+            fileSystem.ReadFile(name, null, timeStamp)
             Reset()
         }
 
-        override fun IsDynamicModel(): dynamicModel_t {
+        public override fun IsDynamicModel(): dynamicModel_t {
             return dynamicModel_t.DM_CONTINUOUS
         }
 
-        override fun InstantiateDynamicModel(
-            ent: renderEntity_s,
+        public override fun InstantiateDynamicModel(
+            ent: renderEntity_s?,
             view: viewDef_s?,
             cachedModel: idRenderModel?
         ): idRenderModel? {
-            var cachedModel = cachedModel
+            var cachedModel: idRenderModel? = cachedModel
             val staticModel: idRenderModelStatic
             var frames: Int
             val t: Int
@@ -228,21 +233,21 @@ object Model_liquid {
 //		delete cachedModel;
                 cachedModel = null
             }
-            if (TempDump.NOT(deformInfo)) {
+            if (NOT(deformInfo)) {
                 return null
             }
-            t = if (null == view) {
-                0
+            if (NOT(view)) {
+                t = 0
             } else {
-                view.renderView.time
+                t = view!!.renderView.time
             }
 
             // update the liquid model
             frames = (t - time) / update_tics
-            if (frames > Model_liquid.LIQUID_MAX_SKIP_FRAMES) {
+            if (frames > LIQUID_MAX_SKIP_FRAMES) {
                 // don't let time accumalate when skipping frames
-                time += update_tics * (frames - Model_liquid.LIQUID_MAX_SKIP_FRAMES)
-                frames = Model_liquid.LIQUID_MAX_SKIP_FRAMES
+                time += update_tics * (frames - LIQUID_MAX_SKIP_FRAMES)
+                frames = LIQUID_MAX_SKIP_FRAMES
             }
             while (frames > 0) {
                 Update()
@@ -251,19 +256,19 @@ object Model_liquid {
 
             // create the surface
             lerp = (t - time).toFloat() / update_tics.toFloat()
-            val surf = GenerateSurface(lerp)
+            val surf: modelSurface_s = GenerateSurface(lerp)
             staticModel = idRenderModelStatic()
             staticModel.AddSurface(surf)
             staticModel.bounds = idBounds(surf.geometry!!.bounds)
             return staticModel
         }
 
-        override fun Bounds(ent: renderEntity_s?): idBounds {
+        public override fun Bounds(ent: renderEntity_s?): idBounds {
             // FIXME: need to do this better
-            return bounds
+            return (bounds)!!
         }
 
-        override fun Reset() {
+        public override fun Reset() {
             var i: Int
             var x: Int
             var y: Int
@@ -272,9 +277,9 @@ object Model_liquid {
             }
             nextDropTime = 0
             time = 0
-            random.SetSeed(seed)
-            page1 = pages.getList(Array<Float>::class.java)!!
-            page2 = page1.copyOfRange(verts_x * verts_y, page1.size)
+            random!!.SetSeed(seed)
+            page1 = pages.getList()
+            page2 = Arrays.copyOfRange(page1, verts_x * verts_y, page1.size)
             i = 0
             y = 0
             while (y < verts_y) {
@@ -306,7 +311,7 @@ object Model_liquid {
             bottom = (bounds[1].y / scale_y).toInt()
             down = bounds[0].z
             up = bounds[1].z
-            if (right < 1 || left >= verts_x || bottom < 1 || top >= verts_x) {
+            if ((right < 1) || (left >= verts_x) || (bottom < 1) || (top >= verts_x)) {
                 return
             }
 
@@ -342,7 +347,7 @@ object Model_liquid {
             var i: Int
             val base: Int
             var vert: idDrawVert
-            val surf = modelSurface_s()
+            val surf: modelSurface_s = modelSurface_s()
             val inv_lerp: Float
             inv_lerp = 1.0f - lerp
             vert = verts[0]
@@ -351,33 +356,36 @@ object Model_liquid {
                 vert.xyz.z = page1[i] * lerp + page2[i] * inv_lerp
                 vert = verts[++i]
             }
-            val deformInfo = deformInfo!!
-            tr_local.tr.pc.c_deformedSurfaces++
-            tr_local.tr.pc.c_deformedVerts += deformInfo.numOutputVerts
-            tr_local.tr.pc.c_deformedIndexes += deformInfo.numIndexes
+            tr_local.tr.pc!!.c_deformedSurfaces++
+            tr_local.tr.pc!!.c_deformedVerts += deformInfo!!.numOutputVerts
+            tr_local.tr.pc!!.c_deformedIndexes += deformInfo!!.numIndexes
             tri = tr_trisurf.R_AllocStaticTriSurf()
 
             // note that some of the data is references, and should not be freed
             tri.deformedSurface = true
-            tri.numIndexes = deformInfo.numIndexes
-            tri.indexes = deformInfo.indexes
-            tri.silIndexes = deformInfo.silIndexes
-            tri.numMirroredVerts = deformInfo.numMirroredVerts
-            tri.mirroredVerts = deformInfo.mirroredVerts
-            tri.numDupVerts = deformInfo.numDupVerts
-            tri.dupVerts = deformInfo.dupVerts
-            tri.numSilEdges = deformInfo.numSilEdges
-            tri.silEdges = deformInfo.silEdges
-            tri.dominantTris = deformInfo.dominantTris
-            tri.numVerts = deformInfo.numOutputVerts
+            tri.numIndexes = deformInfo!!.numIndexes
+            tri.indexes = deformInfo!!.indexes
+            tri.silIndexes = deformInfo!!.silIndexes
+            tri.numMirroredVerts = deformInfo!!.numMirroredVerts
+            tri.mirroredVerts = deformInfo!!.mirroredVerts
+            tri.numDupVerts = deformInfo!!.numDupVerts
+            tri.dupVerts = deformInfo!!.dupVerts
+            tri.numSilEdges = deformInfo!!.numSilEdges
+            tri.silEdges = deformInfo!!.silEdges as Array<Model.silEdge_t?>
+            tri.dominantTris = deformInfo!!.dominantTris as Array<Model.dominantTri_s?>
+            tri.numVerts = deformInfo!!.numOutputVerts
             tr_trisurf.R_AllocStaticTriSurfVerts(tri, tri.numVerts)
-            Simd.SIMDProcessor.Memcpy(tri.verts!!, verts, deformInfo.numSourceVerts)
+            SIMDProcessor.Memcpy(
+                tri.verts as Array<Anim_Blend.idAnimBlend>,
+                verts.getList(),
+                deformInfo!!.numSourceVerts
+            )
 
             // replicate the mirror seam vertexes
-            base = deformInfo.numOutputVerts - deformInfo.numMirroredVerts
+            base = deformInfo!!.numOutputVerts - deformInfo!!.numMirroredVerts
             i = 0
-            while (i < deformInfo.numMirroredVerts) {
-                tri.verts!![base + i] = tri.verts!![deformInfo.mirroredVerts!![i]]
+            while (i < deformInfo!!.numMirroredVerts) {
+                tri.verts!![base + i] = tri.verts!![deformInfo!!.mirroredVerts!![i]]
                 i++
             }
             tr_trisurf.R_BoundTriSurf(tri)
@@ -386,7 +394,7 @@ object Model_liquid {
             // R_DeriveTangents() to get normals, tangents, and face planes.  If it only
             // needs shadows generated, it will only have to generate face planes.  If it only
             // has ambient drawing, or is culled, no additional work will be necessary
-            if (!RenderSystem_init.r_useDeferredTangents.GetBool()) {
+            if (!RenderSystem_init.r_useDeferredTangents!!.GetBool()) {
                 // set face planes, vertex normals, tangents
                 R_DeriveTangents(tri)
             }
@@ -396,8 +404,8 @@ object Model_liquid {
         }
 
         private fun WaterDrop(x: Int, y: Int, page: Array<Float>) {
-            var x = x
-            var y = y
+            var x: Int = x
+            var y: Int = y
             var cx: Int
             var cy: Int
             var left: Int
@@ -405,14 +413,14 @@ object Model_liquid {
             var right: Int
             var bottom: Int
             var square: Int
-            val radsquare = drop_radius * drop_radius
-            val invlength = 1.0f / radsquare.toFloat()
+            val radsquare: Int = drop_radius * drop_radius
+            val invlength: Float = 1.0f / radsquare.toFloat()
             var dist: Float
             if (x < 0) {
-                x = 1 + drop_radius + random.RandomInt((verts_x - 2 * drop_radius - 1).toDouble())
+                x = 1 + drop_radius + random!!.RandomInt((verts_x - (2 * drop_radius) - 1).toDouble())
             }
             if (y < 0) {
-                y = 1 + drop_radius + random.RandomInt((verts_y - 2 * drop_radius - 1).toDouble())
+                y = 1 + drop_radius + random!!.RandomInt((verts_y - (2 * drop_radius) - 1).toDouble())
             }
             left = -drop_radius
             right = drop_radius
@@ -421,16 +429,16 @@ object Model_liquid {
 
             // Perform edge clipping...
             if (x - drop_radius < 1) {
-                left -= x - drop_radius - 1
+                left -= (x - drop_radius - 1)
             }
             if (y - drop_radius < 1) {
-                top -= y - drop_radius - 1
+                top -= (y - drop_radius - 1)
             }
             if (x + drop_radius > verts_x - 1) {
-                right -= x + drop_radius - verts_x + 1
+                right -= (x + drop_radius - verts_x + 1)
             }
             if (y + drop_radius > verts_y - 1) {
-                bottom -= y + drop_radius - verts_y + 1
+                bottom -= (y + drop_radius - verts_y + 1)
             }
             cy = top
             while (cy < bottom) {
@@ -438,21 +446,13 @@ object Model_liquid {
                 while (cx < right) {
                     square = cy * cy + cx * cx
                     if (square < radsquare) {
-                        dist = idMath.Sqrt(square.toFloat() * invlength)
-                        page[verts_x * (cy + y) + cx + x] += idMath.Cos16(dist * idMath.PI * 0.5f) * drop_height
+                        dist = Sqrt(square.toFloat() * invlength)
+                        page[(verts_x * (cy + y)) + cx + x] += Cos16(dist * idMath.PI * 0.5f) * drop_height
                     }
                     cx++
                 }
                 cy++
             }
-        }
-
-        fun Array<Float>.swap(anotherList: Array<Float>) {
-            val length = size
-            val c = FloatArray(length)
-            System.arraycopy(this, 0, c, 0, length)
-            System.arraycopy(anotherList, 0, this, 0, length)
-            System.arraycopy(c, 0, anotherList, 0, length)
         }
 
         private fun Update() {
@@ -462,7 +462,7 @@ object Model_liquid {
             var p1: Int
             var value: Float
             time += update_tics
-            page1.swap(page2)
+            idSwap(page1, page2)
             if (time > nextDropTime) {
                 WaterDrop(-1, -1, page2)
                 nextDropTime = (time + drop_delay).toInt()
@@ -482,15 +482,15 @@ object Model_liquid {
                         p1 += verts_x
                         x = 1
                         while (x < verts_x - 1) {
-                            value = ((page2[p2 + x + verts_x]
+                            value = (((page2[p2 + x + verts_x]
                                     + page2[p2 + x - verts_x]
                                     + page2[p2 + x + 1]
                                     + page2[p2 + x - 1]
-                                    + page2[p2 + x - verts_x - 1]
+                                    + page2[(p2 + x) - verts_x - 1]
                                     + page2[p2 + x - verts_x + 1]
                                     + page2[p2 + x + verts_x - 1]
                                     + page2[p2 + x + verts_x + 1]
-                                    + page2[p2 + x]) * (2.0f / 9.0f)
+                                    + page2[p2 + x])) * (2.0f / 9.0f)
                                     - page1[p1 + x])
                             page1[p1 + x] = value * density
                             x++
@@ -498,6 +498,7 @@ object Model_liquid {
                         y++
                     }
                 }
+
                 1 -> {
                     y = 1
                     while (y < verts_y - 1) {
@@ -505,14 +506,14 @@ object Model_liquid {
                         p1 += verts_x
                         x = 1
                         while (x < verts_x - 1) {
-                            value = ((page2[p2 + x + verts_x]
+                            value = (((page2[p2 + x + verts_x]
                                     + page2[p2 + x - verts_x]
                                     + page2[p2 + x + 1]
                                     + page2[p2 + x - 1]
-                                    + page2[p2 + x - verts_x - 1]
+                                    + page2[(p2 + x) - verts_x - 1]
                                     + page2[p2 + x - verts_x + 1]
                                     + page2[p2 + x + verts_x - 1]
-                                    + page2[p2 + x + verts_x + 1]) * 0.25f
+                                    + page2[p2 + x + verts_x + 1])) * 0.25f
                                     - page1[p1 + x])
                             page1[p1 + x] = value * density
                             x++
@@ -520,6 +521,7 @@ object Model_liquid {
                         y++
                     }
                 }
+
                 2 -> {
                     y = 1
                     while (y < verts_y - 1) {
@@ -527,15 +529,15 @@ object Model_liquid {
                         p1 += verts_x
                         x = 1
                         while (x < verts_x - 1) {
-                            value = (page2[p2 + x + verts_x]
+                            value = ((page2[p2 + x + verts_x]
                                     + page2[p2 + x - verts_x]
                                     + page2[p2 + x + 1]
                                     + page2[p2 + x - 1]
-                                    + page2[p2 + x - verts_x - 1]
+                                    + page2[(p2 + x) - verts_x - 1]
                                     + page2[p2 + x - verts_x + 1]
                                     + page2[p2 + x + verts_x - 1]
                                     + page2[p2 + x + verts_x + 1]
-                                    + page2[p2 + x]) * (1.0f / 9.0f)
+                                    + page2[p2 + x])) * (1.0f / 9.0f)
                             page1[p1 + x] = value * density
                             x++
                         }
@@ -543,16 +545,6 @@ object Model_liquid {
                     }
                 }
             }
-        }
-
-        //
-        //
-        init {
-            shader = DeclManager.declManager.FindMaterial("")
-            update_tics = 33 // ~30 hz
-            time = 0
-            seed = 0
-            random.SetSeed(0)
         }
     }
 }

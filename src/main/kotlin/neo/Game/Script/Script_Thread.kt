@@ -681,7 +681,7 @@ object Script_Thread {
          ================
          */
         class ListThreads_f private constructor() : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs) {
+            override fun run(args: CmdArgs.idCmdArgs?) {
                 var i: Int
                 val n: Int
                 n = threadList.Num()

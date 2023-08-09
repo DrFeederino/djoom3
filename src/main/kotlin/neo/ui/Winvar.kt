@@ -1,12 +1,12 @@
 package neo.ui
 
 import neo.Renderer.Material.idMaterial
-import neo.TempDump
+import neo.TempDump.atoi
 import neo.framework.DeclManager
 import neo.framework.File_h.idFile
 import neo.idlib.Dict_h.idDict
-import neo.idlib.Text.Str
 import neo.idlib.Text.Str.idStr
+import neo.idlib.Text.Str.va
 import neo.idlib.containers.List.idList
 import neo.idlib.math.Vector.idVec2
 import neo.idlib.math.Vector.idVec3
@@ -21,26 +21,26 @@ import java.util.*
 object Winvar {
     val MIN_ONE: idWinVar = idWinInt(-1)
     val MIN_TWO: idWinVar = idWinInt(-2)
-    val VAR_GUIPREFIX: String = "gui::"
-    val VAR_GUIPREFIX_LEN = VAR_GUIPREFIX.length
+    const val VAR_GUIPREFIX = "gui::"
+    const val VAR_GUIPREFIX_LEN = VAR_GUIPREFIX.length
 
-    abstract class idWinVar     // public   ~idWinVar();
+    abstract class idWinVar // public   ~idWinVar();
     {
         private val DBG_count = DBG_counter++
         var DEBUG_COUNTER = 0
         protected var eval = true
         protected var guiDict: idDict? = null
         protected var name: String? = null
-        fun SetGuiInfo(gd: idDict, _name: String) {
+        fun SetGuiInfo(gd: idDict?, _name: String?) {
             guiDict = gd
             SetName(_name)
         }
 
-        fun GetName(): String? {
+        fun GetName(): String {
             return if (name != null) {
                 if (guiDict != null && name!![0] == '*') {
                     guiDict!!.GetString(name!!.substring(1))
-                } else name
+                } else name!!
             } else ""
         }
 
@@ -55,8 +55,8 @@ object Winvar {
         }
 
         // idWinVar &operator=( final idWinVar other );
-        fun set(other: idWinVar): idWinVar {
-            guiDict = other.guiDict
+        fun set(other: idWinVar?): idWinVar {
+            guiDict = other!!.guiDict
             SetName(other.name)
             return this
         }
@@ -69,29 +69,29 @@ object Winvar {
             return guiDict != null
         }
 
-        open fun Init(_name: String, win: idWindow) {
-            var key = idStr(_name)
+        open fun Init(_name: String?, win: idWindow?) {
+            var key = idStr(_name!!)
             guiDict = null
             val len = key.Length()
             if (len > 5 && _name.startsWith("gui:")) {
                 DBG_Init++
                 key = key.Right(len - VAR_GUIPREFIX_LEN)
-                SetGuiInfo(win.GetGui().GetStateDict(), key.toString())
+                SetGuiInfo(win!!.GetGui().GetStateDict(), key.toString())
                 win.AddUpdateVar(this)
             } else {
-                set(_name)
+                Set(_name)
             }
         }
 
-        abstract fun set(`val`: String)
-        fun set(`val`: idStr) {
-            set(`val`.toString())
+        abstract fun Set(`val`: String?)
+        fun Set(`val`: idStr) {
+            Set(`val`.toString())
         }
 
         abstract fun Update()
-        abstract fun c_str(): String
+        abstract fun c_str(): String?
         open fun  /*size_t*/Size(): Int {
-            return name?.length ?: 0
+            return if (name != null) name!!.length else 0
         }
 
         abstract fun WriteToSaveGame(savefile: idFile)
@@ -117,37 +117,37 @@ object Winvar {
             private var DBG_counter = 0
 
             @Deprecated("calling this function in idWindow::EmitOp hides the loading bar progress.")
-            fun clone(cloneVal: idWinVar?): idWinVar? {
-                if (cloneVal == null) return null
-                if (cloneVal.name != null && cloneVal.name!!.isEmpty()) {
+            fun clone(`var`: idWinVar?): idWinVar? {
+                if (`var` == null) return null
+                if (`var`.name != null && `var`.name!!.isEmpty()) {
                     val a = 1
                 }
-                if (cloneVal is idWinBool) {
-                    return idWinBool(cloneVal)
+                if (`var` is idWinBool) {
+                    return idWinBool(`var`)
                 }
-                if (cloneVal is idWinBackground) {
-                    return idWinBackground(cloneVal)
+                if (`var` is idWinBackground) {
+                    return idWinBackground(`var`)
                 }
-                if (cloneVal is idWinFloat) {
-                    return idWinFloat(cloneVal)
+                if (`var` is idWinFloat) {
+                    return idWinFloat(`var`)
                 }
-                if (cloneVal is idWinInt) {
-                    return idWinInt(cloneVal.data)
+                if (`var` is idWinInt) {
+                    return idWinInt(`var`.data)
                 }
-                if (cloneVal is idWinRectangle) {
-                    return idWinRectangle(cloneVal)
+                if (`var` is idWinRectangle) {
+                    return idWinRectangle(`var`)
                 }
-                if (cloneVal is idWinStr) {
-                    return idWinStr(cloneVal)
+                if (`var` is idWinStr) {
+                    return idWinStr(`var`)
                 }
-                if (cloneVal is idWinVec2) {
-                    return idWinVec2(cloneVal.data)
+                if (`var` is idWinVec2) {
+                    return idWinVec2(`var`.data)
                 }
-                if (cloneVal is idWinVec3) {
-                    return idWinVec3(cloneVal)
+                if (`var` is idWinVec3) {
+                    return idWinVec3(`var`)
                 }
-                if (cloneVal is idWinVec4) {
-                    return idWinVec4(cloneVal)
+                if (`var` is idWinVec4) {
+                    return idWinVec4(`var`)
                 }
                 throw UnsupportedOperationException()
             }
@@ -171,7 +171,7 @@ object Winvar {
         }
 
         // ~idWinBool() {};
-        override fun Init(_name: String, win: idWindow) {
+        override fun Init(_name: String?, win: idWindow?) {
             super.Init(_name, win)
             if (guiDict != null) {
                 data = guiDict!!.GetBool(GetName())
@@ -196,15 +196,17 @@ object Winvar {
             return data == other
         }
 
-        fun oSet(other: Boolean): Boolean {
+        fun set(other: Boolean): Boolean {
             data = other
-            guiDict?.SetBool(GetName(), data)
+            if (guiDict != null) {
+                guiDict!!.SetBool(GetName(), data)
+            }
             return data
         }
 
-        fun oSet(other: idWinBool): idWinBool {
+        fun set(other: idWinBool?): idWinBool {
             super.set(other)
-            data = other.data
+            data = other!!.data
             return this
         }
 
@@ -212,20 +214,22 @@ object Winvar {
             return data
         }
 
-        override fun set(`val`: String) {
-            data = TempDump.atoi(`val`) != 0
-            guiDict?.SetBool(GetName(), data)
+        override fun Set(`val`: String?) {
+            data = atoi(`val`!!) != 0
+            if (guiDict != null) {
+                guiDict!!.SetBool(GetName(), data)
+            }
         }
 
         override fun Update() {
-            val s = GetName()!!
-            if (guiDict != null && s.isNotEmpty()) {
+            val s = GetName()
+            if (guiDict != null && s[0] != '\u0000') {
                 data = guiDict!!.GetBool(s)
             }
         }
 
-        override fun c_str(): String {
-            return Str.va("%d", data)
+        override fun c_str(): String? {
+            return va("%d", data)
         }
 
         // SaveGames
@@ -245,27 +249,27 @@ object Winvar {
     }
 
     open class idWinStr : idWinVar {
-        val data: idStr = idStr()
+        var data: idStr? = idStr()
 
         //
         //
         constructor() : super()
 
         //	// ~idWinStr() {};
-        constructor(a: String) : this() {
-            data.set(a)
+        constructor(a: String?) : this() {
+            data = idStr(a!!)
         }
 
         //copy constructor
         internal constructor(other: idWinStr) {
             super.set(other)
-            data.set(other.data)
+            data = idStr(other.data!!)
         }
 
-        override fun Init(_name: String, win: idWindow) {
+        override fun Init(_name: String?, win: idWindow?) {
             super.Init(_name, win)
             if (guiDict != null) {
-                data.set(guiDict!!.GetString(GetName()))
+                data = idStr(guiDict!!.GetString(GetName()))
             }
         }
 
@@ -300,72 +304,74 @@ object Winvar {
             return false
         }
 
-        open fun oSet(other: idStr): idStr {
-            data.set(other)
-            guiDict?.Set(GetName(), data)
+        open fun set(other: idStr?): idStr? {
+            data = other
+            if (guiDict != null) {
+                guiDict!!.Set(GetName(), data!!)
+            }
             return data
         }
 
-        fun oSet(other: idWinStr): idWinStr {
+        fun set(other: idWinStr?): idWinStr {
             super.set(other)
-            data.set(other.data)
+            data = other!!.data
             return this
         }
 
         //public	operator const char *() {//TODO:wtF?
         open fun oCastChar(): CharArray { //TODO:wtF?
-            return data.c_str()
+            return data!!.c_str()
         }
 
         //	public operator const idStr &() {
         fun LengthWithoutColors(): Int {
-            if (guiDict != null && name != null && name!!.isNotEmpty()) {
-                data.set(guiDict!!.GetString(GetName()))
+            if (guiDict != null && name != null && !name!!.isEmpty()) {
+                data!!.set(guiDict!!.GetString(GetName()))
             }
-            return data.LengthWithoutColors()
+            return data!!.LengthWithoutColors()
         }
 
         open fun Length(): Int {
             if (guiDict != null && name != null && !name!!.isEmpty()) {
-                data.set(guiDict!!.GetString(GetName()))
+                data!!.set(guiDict!!.GetString(GetName()))
             }
-            return data.Length()
+            return data!!.Length()
         }
 
         fun RemoveColors() {
             if (guiDict != null && name != null && !name!!.isEmpty()) {
-                data.set(guiDict!!.GetString(GetName()))
+                data!!.set(guiDict!!.GetString(GetName()))
             }
-            data.RemoveColors()
+            data!!.RemoveColors()
         }
 
-        override fun c_str(): String {
+        override fun c_str(): String? {
             return data.toString()
         }
 
-        override fun set(`val`: String) {
-            data.set(`val`)
+        override fun Set(`val`: String?) {
+            data!!.set(`val`)
             if (guiDict != null) {
-                guiDict!!.Set(GetName(), data)
+                guiDict!!.Set(GetName(), data!!)
             }
         }
 
         override fun Update() {
-            val s = GetName()!!
-            if (guiDict != null && s.isNotEmpty()) {
-                data.set(guiDict!!.GetString(s))
+            val s = GetName()
+            if (guiDict != null && !s.isEmpty()) {
+                data!!.set(guiDict!!.GetString(s))
             }
         }
 
         override fun  /*size_t*/Size(): Int {
             val sz = super.Size()
-            return sz + data.Allocated()
+            return sz + data!!.Allocated()
         }
 
         // SaveGames
         override fun WriteToSaveGame(savefile: idFile) {
             savefile.WriteBool(eval)
-            val len = data.Length()
+            val len = data!!.Length()
             savefile.WriteInt(len)
             if (len > 0) {
                 savefile.WriteString(data)
@@ -377,14 +383,14 @@ object Winvar {
             val len: Int
             len = savefile.ReadInt()
             if (len > 0) {
-                data.Fill(' ', len)
-                savefile.ReadString(data)
+                data!!.Fill(' ', len)
+                savefile.ReadString(data!!)
             }
         }
 
         // return wether string is emtpy
         override fun x(): Float {
-            return if (data.IsEmpty()) 0.0f else 1.0f
+            return if (data!!.IsEmpty()) 0.0f else 1.0f
         }
     }
 
@@ -398,7 +404,7 @@ object Winvar {
         }
 
         //	~idWinInt() {};
-        override fun Init(_name: String, win: idWindow) {
+        override fun Init(_name: String?, win: idWindow?) {
             super.Init(_name, win)
             if (guiDict != null) {
                 data = guiDict!!.GetInt(GetName())
@@ -423,22 +429,22 @@ object Winvar {
             return data
         }
 
-        override fun set(`val`: String) {
-            data = `val`.toInt()
+        override fun Set(`val`: String?) {
+            data = `val`!!.toInt()
             if (guiDict != null) {
                 guiDict!!.SetInt(GetName(), data)
             }
         }
 
         override fun Update() {
-            val s = GetName()!!
-            if (guiDict != null && s.isNotEmpty()) {
+            val s = GetName()
+            if (guiDict != null && s[0] != '\u0000') {
                 data = guiDict!!.GetInt(s)
             }
         }
 
-        override fun c_str(): String {
-            return Str.va("%d", data)
+        override fun c_str(): String? {
+            return va("%d", data)
         }
 
         // SaveGames
@@ -476,22 +482,24 @@ object Winvar {
         }
 
         //	~idWinFloat() {};
-        override fun Init(_name: String, win: idWindow) {
+        override fun Init(_name: String?, win: idWindow?) {
             super.Init(_name, win)
             if (guiDict != null) {
                 data = guiDict!!.GetFloat(GetName())
             }
         }
 
-        fun set(other: idWinFloat): idWinFloat {
+        fun set(other: idWinFloat?): idWinFloat {
             super.set(other)
-            data = other.data
+            data = other!!.data
             return this
         }
 
         fun set(other: Float): Float {
             data = other
-            guiDict?.SetFloat(GetName(), data)
+            if (guiDict != null) {
+                guiDict!!.SetFloat(GetName(), data)
+            }
             return data
         }
 
@@ -499,24 +507,26 @@ object Winvar {
             return data
         }
 
-        override fun set(`val`: String) {
+        override fun Set(`val`: String?) {
             data = try {
-                `val`.toFloat()
+                `val`!!.toFloat()
             } catch (e: NumberFormatException) {
                 0f //atof doesn't crash with non numbers.
             }
-            guiDict?.SetFloat(GetName(), data)
+            if (guiDict != null) {
+                guiDict!!.SetFloat(GetName(), data)
+            }
         }
 
         override fun Update() {
-            val s = GetName()!!
-            if (guiDict != null && s.isNotEmpty()) {
+            val s = GetName()
+            if (guiDict != null && s[0] != '\u0000') {
                 data = guiDict!!.GetFloat(s)
             }
         }
 
-        override fun c_str(): String {
-            return Str.va("%f", data)
+        override fun c_str(): String? {
+            return va("%f", data)
         }
 
         override fun WriteToSaveGame(savefile: idFile) {
@@ -550,7 +560,7 @@ object Winvar {
         }
 
         //	~idWinRectangle() {};
-        override fun Init(_name: String, win: idWindow) {
+        override fun Init(_name: String?, win: idWindow?) {
             super.Init(_name, win)
             if (guiDict != null) {
                 val v = guiDict!!.GetVec4(GetName())
@@ -564,21 +574,26 @@ object Winvar {
         //	int	operator==(	final idRectangle other ) {
         //		return (other == data);
         //	}//TODO:overrid equals
-        fun set(other: idWinRectangle): idWinRectangle {
+        fun set(other: idWinRectangle?): idWinRectangle {
             super.set(other)
-            data.set(other.data)
+            data.set(other!!.data)
             return this
         }
 
-        fun set(other: idVec4): idRectangle {
+        fun set(other: idVec4?): idRectangle {
             data.set(other)
-            guiDict?.SetVec4(GetName(), other)
+            if (guiDict != null) {
+                guiDict!!.SetVec4(GetName(), other!!)
+            }
             return data
         }
 
-        fun set(other: idRectangle): idRectangle {
+        fun set(other: idRectangle?): idRectangle {
             data.set(other)
-            guiDict?.SetVec4(GetName(), data.ToVec4())
+            if (guiDict != null) {
+                val v = data.ToVec4()
+                guiDict!!.SetVec4(GetName(), v!!)
+            }
             return data
         }
 
@@ -610,15 +625,14 @@ object Winvar {
             return data.Bottom()
         }
 
-        fun ToVec4(): idVec4 {
-            ret.set(data.ToVec4())
+        fun ToVec4(): idVec4? {
+            ret = data.ToVec4()
             return ret
         }
 
-        override fun set(`val`: String) {
+        override fun Set(`val`: String?) {
             Scanner(`val`).use { sscanf ->
-                sscanf.useLocale(Locale.US)
-                if (`val`.contains(",")) {
+                if (`val`!!.contains(",")) {
 //			sscanf( val, "%f,%f,%f,%f", data.x, data.y, data.w, data.h );
                     if (sscanf.hasNext()) {
                         data.x = sscanf.nextFloat()
@@ -648,12 +662,15 @@ object Winvar {
                     }
                 }
             }
-            guiDict?.SetVec4(GetName(), data.ToVec4())
+            if (guiDict != null) {
+                val v = data.ToVec4()
+                guiDict!!.SetVec4(GetName(), v!!)
+            }
         }
 
         override fun Update() {
-            val s = GetName()!!
-            if (guiDict != null && s.isNotEmpty()) {
+            val s = GetName()
+            if (guiDict != null && s[0] != '\u0000') {
                 val v = guiDict!!.GetVec4(s)
                 data.x = v.x
                 data.y = v.y
@@ -662,7 +679,7 @@ object Winvar {
             }
         }
 
-        override fun c_str(): String {
+        override fun c_str(): String? {
             return data.ToVec4().ToString()
         }
 
@@ -694,25 +711,27 @@ object Winvar {
         }
 
         companion object {
-            private val ret: idVec4 = idVec4()
+            private var ret: idVec4? = null
         }
     }
 
     class idWinVec2 : idWinVar {
-        var data: idVec2 = idVec2()
+        var data: idVec2? = null
 
         //
         //
         constructor() : super()
 
         //copy constructor
-        constructor(vec2: idVec2) {
-            data = idVec2(vec2)
-            guiDict?.SetVec2(GetName(), data)
+        constructor(vec2: idVec2?) {
+            data = idVec2(vec2!!)
+            if (guiDict != null) {
+                guiDict!!.SetVec2(GetName(), data!!)
+            }
         }
 
         //	~idWinVec2() {};
-        override fun Init(_name: String, win: idWindow) {
+        override fun Init(_name: String?, win: idWindow?) {
             super.Init(_name, win)
             if (guiDict != null) {
                 data = guiDict!!.GetVec2(GetName())
@@ -745,79 +764,85 @@ object Winvar {
             return this
         }
 
-        fun set(other: idVec2): idVec2 {
+        fun set(other: idVec2?): idVec2? {
             data = other
-            guiDict?.SetVec2(GetName(), data)
+            if (guiDict != null) {
+                guiDict!!.SetVec2(GetName(), data!!)
+            }
             return data
         }
 
         override fun x(): Float {
-            return data.x
+            return data!!.x
         }
 
         fun y(): Float {
-            return data.y
+            return data!!.y
         }
 
-        override fun set(`val`: String) {
+        override fun Set(`val`: String?) {
             Scanner(`val`).use { sscanf ->
-                if (`val`.contains(",")) {
+                if (`val`!!.contains(",")) {
 //			sscanf( val, "%f,%f,%f,%f", data.x, data.y, data.w, data.h );
                     if (sscanf.hasNext()) {
-                        data.x = sscanf.nextFloat()
+                        data!!.x = sscanf.nextFloat()
                     }
                     if (sscanf.hasNext()) {
-                        data.y = sscanf.skip(",").nextFloat()
+                        data!!.y = sscanf.skip(",").nextFloat()
                     }
                 } else {
 //			sscanf( val, "%f %f %f %f", data.x, data.y, data.w, data.h );
                     if (sscanf.hasNextFloat()) {
-                        data.x = sscanf.nextFloat()
+                        data!!.x = sscanf.nextFloat()
                     }
                     if (sscanf.hasNextFloat()) {
-                        data.y = sscanf.nextFloat()
+                        data!!.y = sscanf.nextFloat()
                     }
                 }
             }
-            guiDict?.SetVec2(GetName(), data)
+            if (guiDict != null) {
+                guiDict!!.SetVec2(GetName(), data!!)
+            }
         }
 
-        fun oCastIdVec2(): idVec2 {
+        fun oCastIdVec2(): idVec2? {
             return data
         }
 
         override fun Update() {
-            val s = GetName()!!
-            if (guiDict != null && s.isNotEmpty()) {
+            val s = GetName()
+            if (guiDict != null && s[0] != '\u0000') {
                 data = guiDict!!.GetVec2(s)
             }
         }
 
-        override fun c_str(): String {
-            return data.ToString()
+        override fun c_str(): String? {
+            return data!!.ToString()
         }
 
         fun Zero() {
-            data.Zero()
+            data!!.Zero()
         }
 
         override fun WriteToSaveGame(savefile: idFile) {
             savefile.WriteBool(eval)
-            savefile.Write(data)
+            savefile.Write(data!!)
         }
 
         override fun ReadFromSaveGame(savefile: idFile) {
             eval = savefile.ReadBool()
-            savefile.Read(data)
+            savefile.Read(data!!)
         }
     }
 
     class idWinVec4 : idWinVar {
-        val data: idVec4 = idVec4()
+        val data: idVec4
 
         //
         //
-        constructor() : super()
+        constructor() : super() {
+            data = idVec4()
+        }
 
         constructor(
             x: Float,
@@ -831,11 +856,11 @@ object Winvar {
         //copy constructor
         constructor(winVec4: idWinVec4) {
             super.set(winVec4)
-            data.set(winVec4.data)
+            data = idVec4(winVec4.data)
         }
 
         //	~idWinVec4() {};
-        override fun Init(_name: String, win: idWindow) {
+        override fun Init(_name: String?, win: idWindow?) {
             super.Init(_name, win)
             if (guiDict != null) {
                 data.set(guiDict!!.GetVec4(GetName()))
@@ -862,15 +887,17 @@ object Winvar {
             return data == other
         }
 
-        fun set(other: idWinVec4): idWinVec4 {
+        fun set(other: idWinVec4?): idWinVec4 {
             super.set(other)
-            data.set(other.data)
+            data.set(other!!.data)
             return this
         }
 
-        fun set(other: idVec4): idVec4 {
-            data.set(other)
-            guiDict?.SetVec4(GetName(), data)
+        fun set(other: idVec4?): idVec4 {
+            data.set(other!!)
+            if (guiDict != null) {
+                guiDict!!.SetVec4(GetName(), data)
+            }
             return data
         }
 
@@ -894,21 +921,21 @@ object Winvar {
             return data.w
         }
 
-        override fun set(`val`: String) {
-            Scanner(`val`).useDelimiter("[, ]").use { sscanf ->
-                if (`val`.contains(",")) {
+        override fun Set(`val`: String?) {
+            Scanner(`val`).use { sscanf ->
+                if (`val`!!.contains(",")) {
 //			sscanf( val, "%f,%f,%f,%f", data.x, data.y, data.z, data.w );
                     if (sscanf.hasNext()) {
                         data.x = sscanf.nextFloat()
                     }
                     if (sscanf.hasNext()) {
-                        data.y = sscanf.nextFloat()
+                        data.y = sscanf.skip(",").nextFloat()
                     }
                     if (sscanf.hasNext()) {
-                        data.z = sscanf.nextFloat()
+                        data.z = sscanf.skip(",").nextFloat()
                     }
                     if (sscanf.hasNext()) {
-                        data.w = sscanf.nextFloat()
+                        data.w = sscanf.skip(",").nextFloat()
                     }
                 } else {
 //			sscanf( val, "%f %f %f %f", data.x, data.y, data.z, data.w );
@@ -926,17 +953,19 @@ object Winvar {
                     }
                 }
             }
-            guiDict?.SetVec4(GetName(), data)
+            if (guiDict != null) {
+                guiDict!!.SetVec4(GetName(), data)
+            }
         }
 
         override fun Update() {
-            val s = GetName()!!
-            if (guiDict != null && s.isNotEmpty()) {
+            val s = GetName()
+            if (guiDict != null && s[0] != '\u0000') {
                 data.set(guiDict!!.GetVec4(s))
             }
         }
 
-        override fun c_str(): String {
+        override fun c_str(): String? {
             return data.ToString()
         }
 
@@ -946,7 +975,9 @@ object Winvar {
 
         fun Zero() {
             data.Zero()
-            guiDict?.SetVec4(GetName(), data)
+            if (guiDict != null) {
+                guiDict!!.SetVec4(GetName(), data)
+            }
         }
 
         fun ToVec3(): idVec3 {
@@ -965,7 +996,7 @@ object Winvar {
     }
 
     internal class idWinVec3 : idWinVar {
-        val data: idVec3 = idVec3()
+        val data = idVec3()
 
         //
         //
@@ -978,7 +1009,7 @@ object Winvar {
         }
 
         //	~idWinVec3() {};
-        override fun Init(_name: String, win: idWindow) {
+        override fun Init(_name: String?, win: idWindow?) {
             super.Init(_name, win)
             if (guiDict != null) {
                 data.set(guiDict!!.GetVector(GetName()))
@@ -1011,8 +1042,8 @@ object Winvar {
             return this
         }
 
-        fun set(other: idVec3): idVec3 {
-            data.set(other)
+        fun set(other: idVec3?): idVec3 {
+            data.set(other!!)
             if (guiDict != null) {
                 guiDict!!.SetVector(GetName(), data)
             }
@@ -1035,7 +1066,7 @@ object Winvar {
             return data.z
         }
 
-        override fun set(`val`: String) {
+        override fun Set(`val`: String?) {
             Scanner(`val`).use { sscanf ->
 //		sscanf( val, "%f %f %f", data.x, data.y, data.z);
                 if (sscanf.hasNextFloat()) {
@@ -1054,13 +1085,13 @@ object Winvar {
         }
 
         override fun Update() {
-            val s = GetName()!!
-            if (guiDict != null && s.isNotEmpty()) {
+            val s = GetName()
+            if (guiDict != null && s[0] != '\u0000') {
                 data.set(guiDict!!.GetVector(s))
             }
         }
 
-        override fun c_str(): String {
+        override fun c_str(): String? {
             return data.ToString()
         }
 
@@ -1083,51 +1114,68 @@ object Winvar {
     }
 
     class idWinBackground : idWinStr {
-        protected val mat: Array<idMaterial?>
+        protected val mat: Array<idMaterial?>?
 
         //
         //
         constructor() : super() {
-            mat = arrayOfNulls<idMaterial?>(1)
+            mat = arrayOfNulls(1)
+            data = idStr()
         }
 
         //copy constructor
         constructor(other: idWinBackground) {
-            super.oSet(other)
-            data.set(other.data)
+            super.set(other)
+            data = other.data
             mat = other.mat
-            if (mat.isNotEmpty()) {
-                if (data.IsEmpty()) {
+            if (mat != null) {
+                if (data!!.IsEmpty()) {
                     mat[0] = null
                 } else {
-                    mat[0] = DeclManager.declManager.FindMaterial(data)
+                    mat[0] = DeclManager.declManager.FindMaterial(data!!)
                 }
             }
         }
 
         //	~idWinBackground() {};
-        override fun Init(_name: String, win: idWindow) {
+        override fun Init(_name: String?, win: idWindow?) {
             super.Init(_name, win)
             if (guiDict != null) {
-                data.set(guiDict!!.GetString(GetName()))
+                data!!.set(guiDict!!.GetString(GetName()))
             }
         }
 
-        override fun oSet(other: idStr): idStr {
-            data.set(other)
-            guiDict?.Set(GetName(), data)
-            if (mat[0] != null) {
-                if (data.IsEmpty()) {
+        //	int	operator==(	const idStr other ) {
+        //		return (other == data);
+        //	}
+        //	int	operator==(	const char *other ) {
+        //		return (data == other);
+        //	}
+        override fun hashCode(): Int {
+            return super.hashCode()
+        }
+
+        override fun equals(obj: Any?): Boolean {
+            return super.equals(obj)
+        }
+
+        override fun set(other: idStr?): idStr? {
+            data = other
+            if (guiDict != null) {
+                guiDict!!.Set(GetName(), data!!)
+            }
+            if (mat!![0] != null) {
+                if (data!!.IsEmpty()) {
                     mat[0] = null
                 } else {
-                    mat[0] = DeclManager.declManager.FindMaterial(data)
+                    mat[0] = DeclManager.declManager.FindMaterial(data!!)
                 }
             }
             return data
         }
 
-        //        public idWinBackground oSet(final idWinBackground other) {
-        //            super.oSet(other);
+        //        public idWinBackground set(final idWinBackground other) {
+        //            super.set(other);
         //            data = other.data;
         //            mat[0] = other.mat[0];
         //            if (mat != null) {
@@ -1140,41 +1188,43 @@ object Winvar {
         //            return this;
         //        }
         override fun oCastChar(): CharArray {
-            return data.c_str()
+            return data!!.c_str()
         }
 
         override fun Length(): Int {
             if (guiDict != null) {
-                data.set(guiDict!!.GetString(GetName()))
+                data!!.set(guiDict!!.GetString(GetName()))
             }
-            return data.Length()
+            return data!!.Length()
         }
 
-        override fun c_str(): String {
+        override fun c_str(): String? {
             return data.toString()
         }
 
-        override fun set(`val`: String) {
-            data.set(`val`)
-            guiDict?.Set(GetName(), data)
-            if (mat[0] != null) {
-                if (data.IsEmpty()) {
+        override fun Set(`val`: String?) {
+            data!!.set(`val`)
+            if (guiDict != null) {
+                guiDict!!.Set(GetName(), data!!)
+            }
+            if (mat!![0] != null) {
+                if (data!!.IsEmpty()) {
                     mat[0] = null
                 } else {
-                    mat[0] = DeclManager.declManager.FindMaterial(data)
+                    mat[0] = DeclManager.declManager.FindMaterial(data!!)
                 }
             }
         }
 
         override fun Update() {
-            val s = GetName()!!
-            if (guiDict != null && s.isNotEmpty()) {
-                data.set(guiDict!!.GetString(s))
-                if (mat.isNotEmpty()) {
-                    if (data.IsEmpty()) {
+            val s = GetName()
+            if (guiDict != null && s[0] != '\u0000') {
+                data!!.set(guiDict!!.GetString(s))
+                if (mat != null) {
+                    if (data!!.IsEmpty()) {
                         mat[0] = null
                     } else {
-                        mat[0] = DeclManager.declManager.FindMaterial(data)
+                        mat[0] = DeclManager.declManager.FindMaterial(data!!)
                     }
                 }
             }
@@ -1182,16 +1232,16 @@ object Winvar {
 
         override fun  /*size_t*/Size(): Int {
             val sz = super.Size()
-            return sz + data.Allocated()
+            return sz + data!!.Allocated()
         }
 
         fun SetMaterialPtr(m: idMaterial?) {
-            mat[0] = m
+            mat!![0] = m
         }
 
         override fun WriteToSaveGame(savefile: idFile) {
             savefile.WriteBool(eval)
-            val len = data.Length()
+            val len = data!!.Length()
             savefile.WriteInt(len)
             if (len > 0) {
                 savefile.WriteString(data)
@@ -1203,12 +1253,12 @@ object Winvar {
             val len: Int
             len = savefile.ReadInt()
             if (len > 0) {
-                data.Fill(' ', len)
-                savefile.ReadString(data)
+                data!!.Fill(' ', len)
+                savefile.ReadString(data!!)
             }
-            if (mat[0] != null) {
+            if (mat!![0] != null) {
                 if (len > 0) {
-                    mat[0] = DeclManager.declManager.FindMaterial(data)
+                    mat[0] = DeclManager.declManager.FindMaterial(data!!)
                 } else {
                     mat[0] = null
                 }
@@ -1222,22 +1272,22 @@ object Winvar {
      multiplexes access to a list if idWinVar*
      ================
      */
-    internal class idMultiWinVar : idList<idWinVar>() {
-        fun Set(`val`: String) {
+    internal class idMultiWinVar : idList<idWinVar?>() {
+        fun Set(`val`: String?) {
             for (i in 0 until Num()) {
-                get(i).set(`val`)
+                this[i]!!.Set(`val`)
             }
         }
 
         fun Update() {
             for (i in 0 until Num()) {
-                get(i).Update()
+                this[i]!!.Update()
             }
         }
 
-        fun SetGuiInfo(dict: idDict) {
+        fun SetGuiInfo(dict: idDict?) {
             for (i in 0 until Num()) {
-                get(i).SetGuiInfo(dict, get(i).c_str())
+                this[i]!!.SetGuiInfo(dict, this[i]!!.c_str())
             }
         }
     }

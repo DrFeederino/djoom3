@@ -1301,10 +1301,10 @@ object TypeInfo {
      ================
      */
     class WriteGameState_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             val fileName: idStr
-            fileName = if (args.Argc() > 1) {
-                idStr(args.Argv(1))
+            fileName = if (args!!.Argc() > 1) {
+                idStr(args!!.Argv(1))
             } else {
                 idStr("GameState.txt")
             }
@@ -1326,10 +1326,10 @@ object TypeInfo {
      ================
      */
     class CompareGameState_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             val fileName: idStr
-            fileName = if (args.Argc() > 1) {
-                idStr(args.Argv(1))
+            fileName = if (args!!.Argc() > 1) {
+                idStr(args!!.Argv(1))
             } else {
                 idStr("GameState.txt")
             }
@@ -1351,13 +1351,13 @@ object TypeInfo {
      ================
      */
     class TestSaveGame_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             val name: idStr
-            if (args.Argc() <= 1) {
+            if (args!!.Argc() <= 1) {
                 Game_local.gameLocal.Printf("testSaveGame <mapName>\n")
                 return
             }
-            name = idStr(args.Argv(1))
+            name = idStr(args!!.Argv(1))
             try {
                 CmdSystem.cmdSystem.BufferCommandText(cmdExecution_t.CMD_EXEC_NOW, Str.va("map %s", name))
                 name.Replace("\\", "_")
@@ -1384,7 +1384,7 @@ object TypeInfo {
      ================
      */
     class ListTypeInfo_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             var i: Int
             var j: Int
             val index = idList<Int>()
@@ -1394,7 +1394,7 @@ object TypeInfo {
                 index.Append(i)
                 i++
             }
-            if (args.Argc() > 1 && idStr.Icmp(args.Argv(1), "size") == 0) {
+            if (args!!.Argc() > 1 && idStr.Icmp(args!!.Argv(1), "size") == 0) {
                 index.Sort(SortTypeInfoBySize())
             } else {
                 index.Sort(SortTypeInfoByName())

@@ -7,21 +7,21 @@ import java.nio.ByteOrder
  *
  */
 object tr_font {
-    const val BUILD_FREETYPE = false
-    var fdFile: ByteArray = ByteArray(0)
+    val BUILD_FREETYPE: Boolean = false
+    var fdFile: ByteArray? = null
 
     //    static FT_Library ftLibrary = null;
-    var fdOffset = 0
+    var fdOffset: Int = 0
     fun _FLOOR(x: Int): Int {
-        return x and -64
+        return (x and -64)
     }
 
     fun _CEIL(x: Int): Int {
-        return x + 63 and -64
+        return ((x + 63) and -64)
     }
 
     fun _TRUNC(x: Int): Int {
-        return x shr 6
+        return (x shr 6)
     }
 
     //
@@ -216,8 +216,9 @@ object tr_font {
      ============
      */
     fun readInt(): Int {
-        val i: Int =
-            fdFile[fdOffset] + (fdFile[fdOffset + 1].toInt() shl 8) + (fdFile[fdOffset + 2].toInt() shl 16) + (fdFile[fdOffset + 3].toInt() shl 24)
+        val i: Int = fdFile!!.get(fdOffset) + (fdFile!!.get(fdOffset + 1)
+            .toInt() shl 8) + (fdFile!!.get(fdOffset + 2)
+            .toInt() shl 16) + (fdFile!!.get(fdOffset + 3).toInt() shl 24)
         fdOffset += 4
         return i
     }
@@ -228,10 +229,10 @@ object tr_font {
      ============
      */
     fun readFloat(): Float {
-        val me = poor()
+        val me: poor = poor()
         me.setFfred(fdFile, fdOffset)
         fdOffset += 4
-        return me.getFfred()
+        return me.ffred
     }
 
     /*
@@ -263,19 +264,21 @@ object tr_font {
         //	registeredFontCount = 0;
     }
 
-    private class poor {
+    private class poor() {
         //mistreated me.
-        private val fred = ByteBuffer.allocate(4)
-        fun getFfred(): Float {
-            return fred.getFloat(0)
-        }
-
-        fun setFfred(fred: ByteArray?, offset: Int) {
-            this.fred.put(fred, offset, 4).flip()
-        }
+        private val fred: ByteBuffer = ByteBuffer.allocate(4)
 
         init {
             fred.order(ByteOrder.LITTLE_ENDIAN)
+        }
+
+        val ffred: Float
+            get() {
+                return fred.getFloat(0)
+            }
+
+        fun setFfred(fred: ByteArray?, offset: Int) {
+            this.fred.put(fred, offset, 4).flip()
         }
     }
 }

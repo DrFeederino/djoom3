@@ -5,6 +5,7 @@ import neo.CM.CollisionModel_local.idCollisionModelManagerLocal
 import neo.Game.GameSys.SysCvar
 import neo.Game.Game_local
 import neo.Game.Game_network
+import neo.Renderer.Image
 import neo.Renderer.MegaTexture.idMegaTexture
 import neo.Renderer.Model_local.idRenderModelStatic
 import neo.Renderer.RenderSystem_init
@@ -97,24 +98,62 @@ object CVarSystem {
      ===============================================================================
      */
     const val CVAR_ALL = -1 // all flags
+
+    @JvmField
     val CVAR_ARCHIVE: Int = Lib.BIT(17) // set to cause it to be saved to a config file
+
+    @JvmField
     val CVAR_BOOL: Int = Lib.BIT(0) // variable is a boolean
+
+    @JvmField
     val CVAR_CHEAT: Int = Lib.BIT(13) // variable is considered a cheat
+
+    @JvmField
     val CVAR_FLOAT: Int = Lib.BIT(2) // variable is a float
+
+    @JvmField
     val CVAR_GAME: Int = Lib.BIT(7) // game variable
+
+    @JvmField
     val CVAR_GUI: Int = Lib.BIT(6) // gui variable
+
+    @JvmField
     val CVAR_INIT: Int = Lib.BIT(15) // can only be set from the command-line
+
+    @JvmField
     val CVAR_INTEGER: Int = Lib.BIT(1) // variable is an longeger
+
+    @JvmField
     val CVAR_MODIFIED: Int = Lib.BIT(18) // set when the variable is modified
+
+    @JvmField
     val CVAR_NETWORKSYNC: Int = Lib.BIT(11) // cvar is synced from the server to clients
+
+    @JvmField
     val CVAR_NOCHEAT: Int = Lib.BIT(14) // variable is not considered a cheat
+
+    @JvmField
     val CVAR_RENDERER: Int = Lib.BIT(4) // renderer variable
+
+    @JvmField
     val CVAR_ROM: Int = Lib.BIT(16) // display only; cannot be set by user at all
+
+    @JvmField
     val CVAR_SERVERINFO: Int = Lib.BIT(10) // sent from servers; available to menu
+
+    @JvmField
     val CVAR_SOUND: Int = Lib.BIT(5) // sound variable
+
+    @JvmField
     val CVAR_STATIC: Int = Lib.BIT(12) // statically declared; not user created
+
+    @JvmField
     val CVAR_SYSTEM: Int = Lib.BIT(3) // system variable
+
+    @JvmField
     val CVAR_TOOL: Int = Lib.BIT(8) // tool variable
+
+    @JvmField
     val CVAR_USERINFO: Int = Lib.BIT(9) // sent to servers; available to menu
     private val FORMAT_STRING: String = "%-32s "
 
@@ -135,17 +174,17 @@ object CVarSystem {
     val usr = idUsercmdGenLocal()
     val async = AsyncNetwork.idAsyncNetwork()
     val scan = ServerScan()
-    val image = neo.Renderer.Image()
+    val image = Image
     val texture = idMegaTexture()
     val model = idRenderModelStatic()
-    val render = RenderSystem_init()
+    val render = RenderSystem_init
     val vertex = idVertexCache()
     val snd = snd_system()
     val sys = sys_local()
     val wub: win_local = object : win_local() {}
     val net = win_net()
-    val context = DeviceContext()
-    val bear = GameBearShootWindow()
+    val context = DeviceContext
+    val bear = GameBearShootWindow
     val window = idWindow(null)
     val sysCvar = SysCvar()
     val game = Game_local()
@@ -161,6 +200,8 @@ object CVarSystem {
     private const val NUM_NAME_CHARS = 33
     private const val NUM_DESCRIPTION_CHARS = NUM_COLUMNS - NUM_NAME_CHARS
     private var localCVarSystem: idCVarSystemLocal = idCVarSystemLocal()
+
+    @JvmField
     var cvarSystem: idCVarSystem = localCVarSystem
     fun CreateColumn(textString: String, columnWidth: Int, indent: String, string: idStr): String {
         var i: Int
@@ -523,7 +564,7 @@ object CVarSystem {
         // Called by the command system when argv(0) doesn't match a known command.
         // Returns true if argv(0) is a variable reference and prints or changes the CVar.
         @Throws(idException::class)
-        abstract fun Command(args: CmdArgs.idCmdArgs): Boolean
+        abstract fun Command(args: CmdArgs.idCmdArgs?): Boolean
 
         // Command and argument completion using callback for each valid string.
         @Throws(idException::class)
@@ -984,9 +1025,9 @@ object CVarSystem {
         }
 
         @Throws(idException::class)
-        override fun Command(args: CmdArgs.idCmdArgs): Boolean {
+        override fun Command(args: CmdArgs.idCmdArgs?): Boolean {
             val internal: idInternalCVar?
-            internal = FindInternal(args.Argv(0))
+            internal = FindInternal(args!!.Argv(0))
             if (internal == null) {
                 return false
             }
@@ -1143,13 +1184,13 @@ object CVarSystem {
          */
         internal class Toggle_f : cmdFunction_t() {
             @Throws(idException::class)
-            override fun run(args: CmdArgs.idCmdArgs) {
+            override fun run(args: CmdArgs.idCmdArgs?) {
                 val argc: Int
                 var i: Int
                 var current: Float
                 val set: Float
                 val text: String
-                argc = args.Argc()
+                argc = args!!.Argc()
                 if (argc < 2) {
                     idLib.common.Printf(
                         """usage:
@@ -1210,9 +1251,9 @@ object CVarSystem {
 
         internal class Set_f : cmdFunction_t() {
             @Throws(idException::class)
-            override fun run(args: CmdArgs.idCmdArgs) {
+            override fun run(args: CmdArgs.idCmdArgs?) {
                 val str: String?
-                str = args.Args(2, args.Argc() - 1)
+                str = args!!.Args(2, args.Argc() - 1)
                 localCVarSystem.SetCVarString(args.Argv(1), str)
             }
 
@@ -1226,10 +1267,10 @@ object CVarSystem {
 
         internal class SetS_f : cmdFunction_t() {
             @Throws(idException::class)
-            override fun run(args: CmdArgs.idCmdArgs) {
+            override fun run(args: CmdArgs.idCmdArgs?) {
                 val cvar: idInternalCVar?
                 Set_f.getInstance().run(args)
-                cvar = localCVarSystem.FindInternal(args.Argv(1))
+                cvar = localCVarSystem.FindInternal(args!!.Argv(1))
                 if (null == cvar) {
                     return
                 }
@@ -1246,10 +1287,10 @@ object CVarSystem {
 
         internal class SetU_f : cmdFunction_t() {
             @Throws(idException::class)
-            override fun run(args: CmdArgs.idCmdArgs) {
+            override fun run(args: CmdArgs.idCmdArgs?) {
                 val cvar: idInternalCVar?
                 Set_f.getInstance().run(args)
-                cvar = localCVarSystem.FindInternal(args.Argv(1))
+                cvar = localCVarSystem.FindInternal(args!!.Argv(1))
                 if (null == cvar) {
                     return
                 }
@@ -1266,10 +1307,10 @@ object CVarSystem {
 
         internal class SetT_f : cmdFunction_t() {
             @Throws(idException::class)
-            override fun run(args: CmdArgs.idCmdArgs) {
+            override fun run(args: CmdArgs.idCmdArgs?) {
                 val cvar: idInternalCVar?
                 Set_f.getInstance().run(args)
-                cvar = localCVarSystem.FindInternal(args.Argv(1))
+                cvar = localCVarSystem.FindInternal(args!!.Argv(1))
                 if (null == cvar) {
                     return
                 }
@@ -1286,10 +1327,10 @@ object CVarSystem {
 
         internal class SetA_f : cmdFunction_t() {
             @Throws(idException::class)
-            override fun run(args: CmdArgs.idCmdArgs) {
+            override fun run(args: CmdArgs.idCmdArgs?) {
                 val cvar: idInternalCVar?
                 Set_f.getInstance().run(args)
-                cvar = localCVarSystem.FindInternal(args.Argv(1))
+                cvar = localCVarSystem.FindInternal(args!!.Argv(1))
                 //                if (null == cvar) {
 //                    return;
 //                }
@@ -1310,9 +1351,9 @@ object CVarSystem {
 
         internal class Reset_f : cmdFunction_t() {
             @Throws(idException::class)
-            override fun run(args: CmdArgs.idCmdArgs) {
+            override fun run(args: CmdArgs.idCmdArgs?) {
                 val cvar: idInternalCVar?
-                if (args.Argc() != 2) {
+                if (args!!.Argc() != 2) {
                     idLib.common.Printf("usage: reset <variable>\n")
                     return
                 }
@@ -1333,8 +1374,8 @@ object CVarSystem {
 
         internal class List_f : cmdFunction_t() {
             @Throws(idException::class)
-            override fun run(args: CmdArgs.idCmdArgs) {
-                ListByFlags(args, CVAR_ALL)
+            override fun run(args: CmdArgs.idCmdArgs?) {
+                ListByFlags(args!!, CVAR_ALL)
             }
 
             companion object {
@@ -1346,7 +1387,7 @@ object CVarSystem {
         }
 
         internal class Restart_f : cmdFunction_t() {
-            override fun run(args: CmdArgs.idCmdArgs) {
+            override fun run(args: CmdArgs.idCmdArgs?) {
                 var i: Int
                 var hash: Int
                 var cvar: idInternalCVar?

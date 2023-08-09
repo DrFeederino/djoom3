@@ -16,14 +16,14 @@ class ListGUI {
 
      ===============================================================================
      */
-    abstract class idListGUI : idList<idStr>() {
+    abstract class idListGUI : idList<idStr?>() {
         //TODO:what kind of impact does this inheritance which is farther inherited by ListGUILocal have!?
         // virtual				~idListGUI() { }
-        abstract fun Config(pGUI: idUserInterface, name: String)
-        abstract fun Add(id: Int, s: idStr)
+        abstract fun Config(pGUI: idUserInterface?, name: String)
+        abstract fun Add(id: Int, s: idStr?)
 
         // use the element count as index for the ids
-        abstract fun Push(s: idStr)
+        abstract fun Push(s: idStr?)
         abstract fun Del(id: Int): Boolean
 
         //        public abstract void Clear();

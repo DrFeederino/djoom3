@@ -4,7 +4,9 @@ import neo.Game.Game_local.idGameLocal
 import neo.Renderer.Model.modelSurface_s
 import neo.Renderer.ModelManager
 import neo.Renderer.RenderWorld
-import neo.Renderer.RenderWorld.*
+import neo.Renderer.RenderWorld.deferredEntityCallback_t
+import neo.Renderer.RenderWorld.renderEntity_s
+import neo.Renderer.RenderWorld.renderView_s
 import neo.framework.DeclParticle.idDeclParticle
 import neo.framework.DeclParticle.idParticleStage
 import neo.framework.DeclParticle.particleGen_t
@@ -420,10 +422,10 @@ object SmokeParticles {
         }
 
         private class ModelCallback private constructor() : deferredEntityCallback_t() {
-            override fun run(e: renderEntity_s, v: renderView_s?): Boolean {
+            override fun run(e: renderEntity_s?, v: renderView_s?): Boolean {
                 // update the particles
                 return if (Game_local.gameLocal.smokeParticles != null) {
-                    Game_local.gameLocal.smokeParticles!!.UpdateRenderEntity(e, v)
+                    Game_local.gameLocal.smokeParticles!!.UpdateRenderEntity(e!!, v)
                 } else true
             }
 

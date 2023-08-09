@@ -33,7 +33,9 @@ import neo.Renderer.Model
 import neo.Renderer.Model.dynamicModel_t
 import neo.Renderer.ModelManager
 import neo.Renderer.RenderWorld
-import neo.Renderer.RenderWorld.*
+import neo.Renderer.RenderWorld.deferredEntityCallback_t
+import neo.Renderer.RenderWorld.renderEntity_s
+import neo.Renderer.RenderWorld.renderView_s
 import neo.Sound.snd_shader.idSoundShader
 import neo.Sound.sound.idSoundEmitter
 import neo.TempDump
@@ -375,7 +377,7 @@ object Entity {
             }
 
             private fun Event_SetSkin(e: idEntity, skinname: idEventArg<String>) {
-                e.renderEntity.customSkin = DeclManager.declManager.FindSkin(skinname.value)
+                e.renderEntity!!.customSkin = DeclManager.declManager.FindSkin(skinname.value)
                 e.UpdateVisuals()
             }
 
@@ -384,7 +386,7 @@ object Entity {
                 if (parmnum < 0 || parmnum >= Material.MAX_ENTITY_SHADER_PARMS) {
                     idGameLocal.Error("shader parm index (%d) out of range", parmnum)
                 }
-                idThread.ReturnFloat(e.renderEntity.shaderParms[parmnum])
+                idThread.ReturnFloat(e.renderEntity!!.shaderParms[parmnum])
             }
 
             private fun Event_SetShaderParm(e: idEntity, parmnum: idEventArg<Int>, value: idEventArg<Float>) {
@@ -398,10 +400,10 @@ object Entity {
                 parm2: idEventArg<Float>,
                 parm3: idEventArg<Float>
             ) {
-                e.renderEntity.shaderParms[RenderWorld.SHADERPARM_RED] = parm0.value
-                e.renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN] = parm1.value
-                e.renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE] = parm2.value
-                e.renderEntity.shaderParms[RenderWorld.SHADERPARM_ALPHA] = parm3.value
+                e.renderEntity!!.shaderParms[RenderWorld.SHADERPARM_RED] = parm0.value
+                e.renderEntity!!.shaderParms[RenderWorld.SHADERPARM_GREEN] = parm1.value
+                e.renderEntity!!.shaderParms[RenderWorld.SHADERPARM_BLUE] = parm2.value
+                e.renderEntity!!.shaderParms[RenderWorld.SHADERPARM_ALPHA] = parm3.value
                 e.UpdateVisuals()
             }
 
@@ -499,21 +501,21 @@ object Entity {
                 val key = k.value
                 val `val` = v.value
                 for (i in 0 until RenderWorld.MAX_RENDERENTITY_GUI) {
-                    if (e.renderEntity.gui[i] != null) {
+                    if (e.renderEntity!!.gui[i] != null) {
                         if (idStr.Icmpn(key, "gui_", 4) == 0) {
                             e.spawnArgs.Set(key, `val`)
                         }
-                        e.renderEntity.gui[i]!!.SetStateString(key, `val`)
-                        e.renderEntity.gui[i]!!.StateChanged(Game_local.gameLocal.time)
+                        e.renderEntity!!.gui[i]!!.SetStateString(key, `val`)
+                        e.renderEntity!!.gui[i]!!.StateChanged(Game_local.gameLocal.time)
                     }
                 }
             }
 
             private fun Event_SetGuiFloat(e: idEntity, key: idEventArg<String>, f: idEventArg<Float>) {
                 for (i in 0 until RenderWorld.MAX_RENDERENTITY_GUI) {
-                    if (e.renderEntity.gui[i] != null) {
-                        e.renderEntity.gui[i]!!.SetStateString(key.value, va("%f", f.value))
-                        e.renderEntity.gui[i]!!.StateChanged(Game_local.gameLocal.time)
+                    if (e.renderEntity!!.gui[i] != null) {
+                        e.renderEntity!!.gui[i]!!.SetStateString(key.value, va("%f", f.value))
+                        e.renderEntity!!.gui[i]!!.StateChanged(Game_local.gameLocal.time)
                     }
                 }
             }
@@ -882,7 +884,7 @@ object Entity {
         //
         //
         protected var renderEntity // used to present a model to the renderer
-                : renderEntity_s //TODO: null
+                : renderEntity_s? = null
         private var bindBody // body bound to if unequal -1
                 : Int
         private var   /*jointHandle_t*/bindJoint // joint bound to if unequal INVALID_JOINT
@@ -1011,13 +1013,13 @@ object Entity {
             FixupLocalizedStrings()
 
             // parse static models the same way the editor display does
-            GameEdit.gameEdit.ParseSpawnArgsToRenderEntity(spawnArgs, renderEntity)
-            renderEntity.entityNum = entityNumber
+            GameEdit.gameEdit.ParseSpawnArgsToRenderEntity(spawnArgs, renderEntity!!)
+            renderEntity!!.entityNum = entityNumber
 
             // go dormant within 5 frames so that when the map starts most monsters are dormant
             dormantStart = Game_local.gameLocal.time - DELAY_DORMANT_TIME + idGameLocal.msec * 5
-            origin.set(renderEntity.origin)
-            axis = idMat3(renderEntity.axis)
+            origin.set(renderEntity!!.origin)
+            axis = idMat3(renderEntity!!.axis)
 
             // do the audio parsing the same way dmap and the editor do
             GameEdit.gameEdit.ParseSpawnArgsToRefSound(spawnArgs, refSound)
@@ -1033,7 +1035,7 @@ object Entity {
             }
             i = 0
             while (i < RenderWorld.MAX_RENDERENTITY_GUI) {
-                UpdateGuiParms(renderEntity.gui[i], spawnArgs)
+                UpdateGuiParms(renderEntity!!.gui[i], spawnArgs)
                 i++
             }
             fl.solidForTeam = spawnArgs.GetBool("solidForTeam", "0")
@@ -1132,7 +1134,7 @@ object Entity {
             val flags = fl
             Lib.LittleBitField(flags /*, sizeof(flags)*/)
             savefile.Write(flags /*, sizeof(flags)*/)
-            savefile.WriteRenderEntity(renderEntity)
+            savefile.WriteRenderEntity(renderEntity!!)
             savefile.WriteInt(modelDefHandle)
             savefile.WriteRefSound(refSound)
             savefile.WriteObject(bindMaster!!)
@@ -1196,7 +1198,7 @@ object Entity {
             }
             savefile.Read(fl)
             Lib.LittleBitField(fl)
-            savefile.ReadRenderEntity(renderEntity)
+            savefile.ReadRenderEntity(renderEntity!!)
             modelDefHandle = savefile.ReadInt()
             savefile.ReadRefSound(refSound)
             savefile.ReadObject( /*reinterpret_cast<idClass*&>*/bindMaster)
@@ -1237,7 +1239,7 @@ object Entity {
 
             // restore must retrieve modelDefHandle from the renderer
             if (modelDefHandle != -1) {
-                modelDefHandle = Game_local.gameRenderWorld.AddEntityDef(renderEntity)
+                modelDefHandle = Game_local.gameRenderWorld.AddEntityDef(renderEntity!!)
             }
         }
 
@@ -1296,7 +1298,7 @@ object Entity {
             }
             i = 0
             while (i < RenderWorld.MAX_RENDERENTITY_GUI) {
-                UpdateGuiParms(renderEntity.gui[i], source)
+                UpdateGuiParms(renderEntity!!.gui[i], source)
                 i++
             }
         }
@@ -1478,24 +1480,24 @@ object Entity {
 
             // camera target for remote render views
             if (cameraTarget != null && Game_local.gameLocal.InPlayerPVS(this)) {
-                renderEntity.remoteRenderView = cameraTarget!!.GetRenderView()
+                renderEntity!!.remoteRenderView = cameraTarget!!.GetRenderView()
             }
 
             // if set to invisible, skip
-            if (null == renderEntity.hModel || IsHidden()) {
+            if (null == renderEntity!!.hModel || IsHidden()) {
                 return
             }
 
             // add to refresh list
             if (modelDefHandle == -1) {
-                modelDefHandle = Game_local.gameRenderWorld.AddEntityDef(renderEntity)
+                modelDefHandle = Game_local.gameRenderWorld.AddEntityDef(renderEntity!!)
                 val a = 0
             } else {
-                Game_local.gameRenderWorld.UpdateEntityDef(modelDefHandle, renderEntity)
+                Game_local.gameRenderWorld.UpdateEntityDef(modelDefHandle, renderEntity!!)
             }
         }
 
-        fun GetRenderEntity(): renderEntity_s {
+        fun GetRenderEntity(): renderEntity_s? {
             return renderEntity
         }
 
@@ -1506,28 +1508,28 @@ object Entity {
         open fun SetModel(modelname: String) {
             assert(modelname != null)
             FreeModelDef()
-            renderEntity.hModel = ModelManager.renderModelManager.FindModel(modelname)
-            if (renderEntity.hModel != null) {
-                renderEntity.hModel!!.Reset()
+            renderEntity!!.hModel = ModelManager.renderModelManager.FindModel(modelname)
+            if (renderEntity!!.hModel != null) {
+                renderEntity!!.hModel!!.Reset()
             }
-            renderEntity.callback = null
-            renderEntity.numJoints = 0
-            renderEntity.joints = null
-            if (renderEntity.hModel != null) {
-                renderEntity.bounds.set(renderEntity.hModel!!.Bounds(renderEntity))
+            renderEntity!!.callback = null
+            renderEntity!!.numJoints = 0
+            renderEntity!!.joints = null
+            if (renderEntity!!.hModel != null) {
+                renderEntity!!.bounds.set(renderEntity!!.hModel!!.Bounds(renderEntity))
             } else {
-                renderEntity.bounds.Zero()
+                renderEntity!!.bounds.Zero()
             }
             UpdateVisuals()
         }
 
         fun SetSkin(skin: idDeclSkin?) {
-            renderEntity.customSkin = skin
+            renderEntity!!.customSkin = skin
             UpdateVisuals()
         }
 
         fun GetSkin(): idDeclSkin? {
-            return renderEntity.customSkin
+            return renderEntity!!.customSkin
         }
 
         fun SetShaderParm(parmnum: Int, value: Float) {
@@ -1535,14 +1537,14 @@ object Entity {
                 Game_local.gameLocal.Warning("shader parm index (%d) out of range", parmnum)
                 return
             }
-            renderEntity.shaderParms[parmnum] = value
+            renderEntity!!.shaderParms[parmnum] = value
             UpdateVisuals()
         }
 
         open fun SetColor(red: Float, green: Float, blue: Float) {
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_RED] = red
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN] = green
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE] = blue
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_RED] = red
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_GREEN] = green
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_BLUE] = blue
             UpdateVisuals()
         }
 
@@ -1552,24 +1554,24 @@ object Entity {
         }
 
         open fun GetColor(out: idVec3) {
-            out[0] = renderEntity.shaderParms[RenderWorld.SHADERPARM_RED]
-            out[1] = renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN]
-            out[2] = renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE]
+            out[0] = renderEntity!!.shaderParms[RenderWorld.SHADERPARM_RED]
+            out[1] = renderEntity!!.shaderParms[RenderWorld.SHADERPARM_GREEN]
+            out[2] = renderEntity!!.shaderParms[RenderWorld.SHADERPARM_BLUE]
         }
 
         open fun SetColor(color: idVec4) {
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_RED] = color[0]
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN] = color[1]
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE] = color[2]
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_ALPHA] = color[3]
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_RED] = color[0]
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_GREEN] = color[1]
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_BLUE] = color[2]
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_ALPHA] = color[3]
             UpdateVisuals()
         }
 
         open fun GetColor(out: idVec4) {
-            out[0] = renderEntity.shaderParms[RenderWorld.SHADERPARM_RED]
-            out[1] = renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN]
-            out[2] = renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE]
-            out[3] = renderEntity.shaderParms[RenderWorld.SHADERPARM_ALPHA]
+            out[0] = renderEntity!!.shaderParms[RenderWorld.SHADERPARM_RED]
+            out[1] = renderEntity!!.shaderParms[RenderWorld.SHADERPARM_GREEN]
+            out[2] = renderEntity!!.shaderParms[RenderWorld.SHADERPARM_BLUE]
+            out[3] = renderEntity!!.shaderParms[RenderWorld.SHADERPARM_ALPHA]
         }
 
         open fun FreeModelDef() {
@@ -1611,7 +1613,7 @@ object Entity {
             val animator = GetAnimator()
             if (animator != null && animator.ModelHandle() != null) {
                 // set the callback to update the joints
-                renderEntity.callback = ModelCallback.getInstance()
+                renderEntity!!.callback = ModelCallback.getInstance()
             }
 
             // set to invalid number to force an update the next time the PVS areas are retrieved
@@ -1625,11 +1627,11 @@ object Entity {
             val origin = idVec3()
             val axis = idMat3()
             if (GetPhysicsToVisualTransform(origin, axis)) {
-                renderEntity.axis.set(axis.times(GetPhysics().GetAxis()))
-                renderEntity.origin.set(GetPhysics().GetOrigin().plus(origin.times(renderEntity.axis)))
+                renderEntity!!.axis.set(axis.times(GetPhysics().GetAxis()))
+                renderEntity!!.origin.set(GetPhysics().GetOrigin().plus(origin.times(renderEntity!!.axis)))
             } else {
-                renderEntity.axis.set(GetPhysics().GetAxis())
-                renderEntity.origin.set(GetPhysics().GetOrigin())
+                renderEntity!!.axis.set(GetPhysics().GetAxis())
+                renderEntity!!.origin.set(GetPhysics().GetOrigin())
             }
         }
 
@@ -1649,7 +1651,7 @@ object Entity {
             }
 
             // only do this on dynamic md5 models
-            if (renderEntity.hModel!!.IsDynamicModel() != dynamicModel_t.DM_CACHED) {
+            if (renderEntity!!.hModel!!.IsDynamicModel() != dynamicModel_t.DM_CACHED) {
                 return
             }
             idMath.SinCos16(Game_local.gameLocal.random.RandomFloat() * idMath.TWO_PI, s, c)
@@ -1657,9 +1659,9 @@ object Entity {
             axis[2].NormalVectors(axistemp[0], axistemp[1])
             axis[0] = axistemp[0].times(c._val).plus(axistemp[1].times(-s._val))
             axis[1] = axistemp[0].times(-s._val).plus(axistemp[1].times(-c._val))
-            renderEntity.axis.ProjectVector(origin.minus(renderEntity.origin), localOrigin)
-            renderEntity.axis.ProjectVector(axis[0], localAxis[0])
-            renderEntity.axis.ProjectVector(axis[1], localAxis[1])
+            renderEntity!!.axis.ProjectVector(origin.minus(renderEntity!!.origin), localOrigin)
+            renderEntity!!.axis.ProjectVector(axis[0], localAxis[0])
+            renderEntity!!.axis.ProjectVector(axis[1], localAxis[1])
             size = 1.0f / size
             localAxis[0].timesAssign(size)
             localAxis[1].timesAssign(size)
@@ -1670,7 +1672,7 @@ object Entity {
             val mtr: Material.idMaterial? = DeclManager.declManager.FindMaterial(material)
 
             // project an overlay onto the model
-            Game_local.gameRenderWorld.ProjectOverlay(modelDefHandle, localPlane, mtr)
+            Game_local.gameRenderWorld.ProjectOverlay(modelDefHandle, localPlane as Array<idPlane?>, mtr)
 
             // make sure non-animating models update their overlay
             UpdateVisuals()
@@ -1836,7 +1838,7 @@ object Entity {
             length._val = len
 
             // set reference to the sound for shader synced effects
-            renderEntity.referenceSound = refSound.referenceSound
+            renderEntity!!.referenceSound = refSound.referenceSound
             return true
         }
 
@@ -2211,8 +2213,8 @@ object Entity {
 
         fun ConvertLocalToWorldTransform(offset: idVec3, axis: idMat3) {
             UpdateModelTransform()
-            offset.set(renderEntity.origin.plus(offset.times(renderEntity.axis)))
-            axis.timesAssign(renderEntity.axis)
+            offset.set(renderEntity!!.origin.plus(offset.times(renderEntity!!.axis)))
+            axis.timesAssign(renderEntity!!.axis)
         }
 
         /*
@@ -2316,15 +2318,15 @@ object Entity {
                         return false
                     } else {
                         masterAnimator.GetJointTransform(bindJoint, Game_local.gameLocal.time, masterOrigin, masterAxis)
-                        masterAxis.timesAssign(bindMaster!!.renderEntity.axis)
-                        masterOrigin.set(bindMaster!!.renderEntity.origin.plus(masterOrigin.times(bindMaster!!.renderEntity.axis)))
+                        masterAxis.timesAssign(bindMaster!!.renderEntity!!.axis)
+                        masterOrigin.set(bindMaster!!.renderEntity!!.origin.plus(masterOrigin.times(bindMaster!!.renderEntity!!.axis)))
                     }
                 } else if (bindBody >= 0 && bindMaster!!.GetPhysics() != null) {
                     masterOrigin.set(bindMaster!!.GetPhysics().GetOrigin(bindBody))
                     masterAxis.set(bindMaster!!.GetPhysics().GetAxis(bindBody))
                 } else {
-                    masterOrigin.set(bindMaster!!.renderEntity.origin)
-                    masterAxis.set(bindMaster!!.renderEntity.axis)
+                    masterOrigin.set(bindMaster!!.renderEntity!!.origin)
+                    masterAxis.set(bindMaster!!.renderEntity!!.axis)
                 }
                 true
             } else {
@@ -3085,8 +3087,8 @@ object Entity {
             var i: Int
             i = 0
             while (i < RenderWorld.MAX_RENDERENTITY_GUI) {
-                if (renderEntity.gui[i] != null) {
-                    renderEntity.gui[i]!!.Trigger(Game_local.gameLocal.time)
+                if (renderEntity!!.gui[i] != null) {
+                    renderEntity!!.gui[i]!!.Trigger(Game_local.gameLocal.time)
                 }
                 i++
             }
@@ -3127,7 +3129,7 @@ object Entity {
                                 ent.PostEventMS(EV_Activate, 0f, this)
                             }
                         }
-                        entityGui.renderEntity.shaderParms[RenderWorld.SHADERPARM_MODE] = 1.0f
+                        entityGui.renderEntity!!.shaderParms[RenderWorld.SHADERPARM_MODE] = 1.0f
                         continue
                     }
                     if (token.Icmp("runScript") == 0) {
@@ -3187,10 +3189,10 @@ object Entity {
                         continue
                     }
                     if (0 == token.Icmp("turkeyscore")) {
-                        if (src.ReadToken(token2) && entityGui.renderEntity.gui[0] != null) {
-                            var score = entityGui.renderEntity.gui[0]!!.State().GetInt("score")
+                        if (src.ReadToken(token2) && entityGui.renderEntity!!.gui[0] != null) {
+                            var score = entityGui.renderEntity!!.gui[0]!!.State().GetInt("score")
                             score += token2.toString().toInt()
-                            entityGui.renderEntity.gui[0]!!.SetStateInt("score", score)
+                            entityGui.renderEntity!!.gui[0]!!.SetStateInt("score", score)
                             if (Game_local.gameLocal.GetLocalPlayer() != null && score >= 25000 && !Game_local.gameLocal.GetLocalPlayer()!!.inventory.turkeyScore) {
                                 Game_local.gameLocal.GetLocalPlayer()!!.GiveEmail("highScore")
                                 Game_local.gameLocal.GetLocalPlayer()!!.inventory.turkeyScore = true
@@ -3312,8 +3314,8 @@ object Entity {
                 }
                 j = 0
                 while (j < RenderWorld.MAX_RENDERENTITY_GUI) {
-                    if (ent.renderEntity.gui[j] != null) {
-                        ent.renderEntity.gui[j]!!.Trigger(Game_local.gameLocal.time)
+                    if (ent.renderEntity!!.gui[j] != null) {
+                        ent.renderEntity!!.gui[j]!!.Trigger(Game_local.gameLocal.time)
                     }
                     j++
                 }
@@ -3536,10 +3538,10 @@ object Entity {
 
         fun WriteColorToSnapshot(msg: idBitMsgDelta) {
             val color = idVec4(
-                renderEntity.shaderParms[RenderWorld.SHADERPARM_RED],
-                renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN],
-                renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE],
-                renderEntity.shaderParms[RenderWorld.SHADERPARM_ALPHA]
+                renderEntity!!.shaderParms[RenderWorld.SHADERPARM_RED],
+                renderEntity!!.shaderParms[RenderWorld.SHADERPARM_GREEN],
+                renderEntity!!.shaderParms[RenderWorld.SHADERPARM_BLUE],
+                renderEntity!!.shaderParms[RenderWorld.SHADERPARM_ALPHA]
             )
             msg.WriteLong(Lib.PackColor(color).toInt())
         }
@@ -3547,16 +3549,16 @@ object Entity {
         fun ReadColorFromSnapshot(msg: idBitMsgDelta) {
             val color = idVec4()
             Lib.UnpackColor(msg.ReadLong().toLong(), color)
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_RED] = color[0]
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN] = color[1]
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE] = color[2]
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_ALPHA] = color[3]
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_RED] = color[0]
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_GREEN] = color[1]
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_BLUE] = color[2]
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_ALPHA] = color[3]
         }
 
         fun WriteGUIToSnapshot(msg: idBitMsgDelta) {
             // no need to loop over MAX_RENDERENTITY_GUI at this time
-            if (renderEntity.gui.isNotEmpty()) {
-                msg.WriteByte(renderEntity.gui[0]!!.State().GetInt("networkState"))
+            if (renderEntity!!.gui.isNotEmpty()) {
+                msg.WriteByte(renderEntity!!.gui[0]!!.State().GetInt("networkState"))
             } else {
                 msg.WriteByte(0)
             }
@@ -3566,7 +3568,7 @@ object Entity {
             val state: Int
             val gui: idUserInterface?
             state = msg.ReadByte()
-            gui = renderEntity.gui[0]
+            gui = renderEntity!!.gui[0]
             if (gui != null && state != mpGUIState) {
                 mpGUIState = state
                 gui.SetStateInt("networkState", state)
@@ -3891,7 +3893,7 @@ object Entity {
             val localPVSAreas = IntArray(32)
             val modelAbsBounds = idBounds()
             var i: Int
-            modelAbsBounds.FromTransformedBounds(renderEntity.bounds, renderEntity.origin, renderEntity.axis)
+            modelAbsBounds.FromTransformedBounds(renderEntity!!.bounds, renderEntity!!.origin, renderEntity!!.axis)
             localNumPVSAreas = Game_local.gameLocal.pvs.GetPVSAreas(modelAbsBounds, localPVSAreas, localPVSAreas.size)
 
             // FIXME: some particle systems may have huge bounds and end up in many PVS areas
@@ -4003,11 +4005,11 @@ object Entity {
 
                             //FIXME: need a BindToJoint that accepts a joint position
                             parentAnimator.CreateFrame(Game_local.gameLocal.time, true)
-                            val frame = parent.renderEntity.joints
+                            val frame = parent.renderEntity!!.joints
                             GameEdit.gameEdit.ANIM_CreateAnimFrame(
                                 parentAnimator.ModelHandle(),
                                 anim!!.MD5Anim(0),
-                                parent.renderEntity.numJoints,
+                                parent.renderEntity!!.numJoints,
                                 frame,
                                 0,
                                 parentAnimator.ModelDef()!!.GetVisualOffset(),
@@ -4249,13 +4251,13 @@ object Entity {
          ================
          */
         class ModelCallback private constructor() : deferredEntityCallback_t() {
-            override fun run(e: renderEntity_s, v: renderView_s?): Boolean {
+            override fun run(e: renderEntity_s?, v: renderView_s?): Boolean {
                 val ent: idEntity?
-                ent = Game_local.gameLocal.entities[e.entityNum]
+                ent = Game_local.gameLocal.entities[e!!.entityNum]
                 if (null == ent) {
                     idGameLocal.Error("idEntity::ModelCallback: callback with NULL game entity")
                 }
-                return ent!!.UpdateRenderEntity(e, v)
+                return ent!!.UpdateRenderEntity(e!!, v)
             }
 
             override fun AllocBuffer(): ByteBuffer {
@@ -4527,14 +4529,12 @@ object Entity {
             // check if the entity has an MD5 model
             if (animator.ModelHandle() != null) {
                 // set the callback to update the joints
-                renderEntity.callback = ModelCallback.getInstance()
-                run {
-                    val joints = arrayOf<Array<idJointMat?>?>(null)
-                    renderEntity.numJoints = animator.GetJoints(renderEntity)
-                }
-                animator.GetBounds(Game_local.gameLocal.time, renderEntity.bounds)
+                renderEntity!!.callback = ModelCallback.getInstance()
+                val joints = arrayOf<Array<idJointMat?>?>(null)
+                renderEntity!!.numJoints = animator.GetJoints(renderEntity!!)
+                animator.GetBounds(Game_local.gameLocal.time, renderEntity!!.bounds)
                 if (modelDefHandle != -1) {
-                    Game_local.gameRenderWorld.UpdateEntityDef(modelDefHandle, renderEntity)
+                    Game_local.gameRenderWorld.UpdateEntityDef(modelDefHandle, renderEntity!!)
                 }
             }
         }
@@ -4576,8 +4576,8 @@ object Entity {
             }
 
             // get the latest frame bounds
-            animator.GetBounds(Game_local.gameLocal.time, renderEntity.bounds)
-            if (renderEntity.bounds.IsCleared() && !fl.hidden) {
+            animator.GetBounds(Game_local.gameLocal.time, renderEntity!!.bounds)
+            if (renderEntity!!.bounds.IsCleared() && !fl.hidden) {
                 Game_local.gameLocal.DPrintf("%d: inside out bounds\n", Game_local.gameLocal.time)
             }
 
@@ -4594,19 +4594,19 @@ object Entity {
 
         override fun SetModel(modelname: String) {
             FreeModelDef()
-            renderEntity.hModel = animator.SetModel(modelname)
-            if (TempDump.NOT(renderEntity.hModel)) {
+            renderEntity!!.hModel = animator.SetModel(modelname)
+            if (TempDump.NOT(renderEntity!!.hModel)) {
                 super.SetModel(modelname)
                 return
             }
-            if (null == renderEntity.customSkin) {
-                renderEntity.customSkin = animator.ModelDef()!!.GetDefaultSkin()
+            if (null == renderEntity!!.customSkin) {
+                renderEntity!!.customSkin = animator.ModelDef()!!.GetDefaultSkin()
             }
 
             // set the callback to update the joints
-            renderEntity.callback = ModelCallback.getInstance()
-            renderEntity.numJoints = animator.GetJoints(renderEntity)
-            animator.GetBounds(Game_local.gameLocal.time, renderEntity.bounds)
+            renderEntity!!.callback = ModelCallback.getInstance()
+            renderEntity!!.numJoints = animator.GetJoints(renderEntity!!)
+            animator.GetBounds(Game_local.gameLocal.time, renderEntity!!.bounds)
             UpdateVisuals()
         }
 
@@ -4645,8 +4645,8 @@ object Entity {
             GameEdit.gameEdit.ANIM_CreateAnimFrame(
                 animator.ModelHandle(),
                 anim.MD5Anim(0),
-                renderEntity.numJoints,
-                frame,
+                renderEntity!!.numJoints,
+                frame as Array<idJointMat?>,
                 frameTime,
                 animator.ModelDef()!!.GetVisualOffset(),
                 animator.RemoveOrigin()
@@ -4712,8 +4712,12 @@ object Entity {
             val origin = idVec3()
             val dir = idVec3()
             val axis: idMat3
-            axis = renderEntity.joints!![jointNum]!!.ToMat3().times(renderEntity.axis)
-            origin.set(renderEntity.origin.plus(renderEntity.joints!![jointNum]!!.ToVec3().times(renderEntity.axis)))
+            axis = renderEntity!!.joints!![jointNum]!!.ToMat3().times(renderEntity!!.axis)
+            origin.set(
+                renderEntity!!.origin.plus(
+                    renderEntity!!.joints!![jointNum]!!.ToVec3().times(renderEntity!!.axis)
+                )
+            )
             origin.set(origin.plus(localOrigin.times(axis)))
             dir.set(localDir.times(axis))
             var type: Int = collisionMaterial!!.GetSurfaceType().ordinal
@@ -4805,8 +4809,8 @@ object Entity {
                 val start = idVec3()
                 val axis = idMat3()
                 animator.GetJointTransform(de.jointNum, Game_local.gameLocal.time, origin, axis)
-                axis.timesAssign(renderEntity.axis)
-                origin.set(renderEntity.origin.plus(origin.times(renderEntity.axis)))
+                axis.timesAssign(renderEntity!!.axis)
+                origin.set(renderEntity!!.origin.plus(origin.times(renderEntity!!.axis)))
                 start.set(origin.plus(de.localOrigin.times(axis)))
                 if (!Game_local.gameLocal.smokeParticles!!.EmitSmoke(
                         de.type,

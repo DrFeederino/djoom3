@@ -1985,15 +1985,12 @@ class snd_world {
                         if (offset < size) {
                             j = 0
                             while (j < AMPLITUDE_SAMPLES) {
-                                if (amplitudeData.limit() <= (offset / 512) * 2 || amplitudeData.limit() <= (offset / 512) * 2 + 1) {
-                                    sourceBuffer[j] = amplitudeData[amplitudeData.limit() - 1]
-                                    j++
-                                } else {
+                                if (offset >= amplitudeData.limit()) {
+                                    offset = amplitudeData.limit() - 1;
+                                }
                                     sourceBuffer[j] =
                                         if (j and 1 == 1) amplitudeData[(offset / 512) * 2] else amplitudeData[(offset / 512) * 2 + 1]
                                     j++
-                                }
-
                             }
                         }
                     } else {

@@ -414,11 +414,11 @@ object Anim {
             var i = 0
             while (i < jointInfo.Num()) {
                 jointNum = jointInfo[i].nameIndex
-                if (modelJoints!![i].name.toString() != Game_local.animationLib.JointName(jointNum)) {
+                if (modelJoints!![i]!!.name.toString() != Game_local.animationLib.JointName(jointNum)) {
                     idGameLocal.Error("Model '%s''s joint names don't match anim '%s''s", model.Name(), name)
                 }
-                parent = if (modelJoints[i].parent != null) {
-                    modelJoints.indexOf(modelJoints[i].parent)
+                parent = if (modelJoints[i]!!.parent != null) {
+                    modelJoints.indexOf(modelJoints[i]!!.parent)
                 } else {
                     -1
                 }

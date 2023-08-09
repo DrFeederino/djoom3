@@ -4,26 +4,30 @@ import neo.Renderer.Cinematic.cinData_t
 import neo.Renderer.Image.idImage
 import neo.Renderer.Material.cullType_t
 import neo.Renderer.Material.idMaterial
+import neo.Renderer.Model.idRenderModel
 import neo.Renderer.Model.shadowCache_s
 import neo.Renderer.Model.silEdge_t
 import neo.Renderer.Model.srfTriangles_s
 import neo.Renderer.RenderWorld.modelTrace_s
+import neo.Renderer.VertexCache.vertCache_s
 import neo.Renderer.tr_local.drawSurf_s
 import neo.Renderer.tr_local.idRenderLightLocal
 import neo.Renderer.tr_local.viewEntity_s
 import neo.Renderer.tr_local.viewLight_s
 import neo.Renderer.tr_render.RB_T_RenderTriangleSurface
-import neo.TempDump
+import neo.TempDump.NOT
+import neo.TempDump.allocArray
 import neo.framework.Common
 import neo.framework.DeclManager
 import neo.idlib.BV.Bounds.idBounds
 import neo.idlib.Lib
-import neo.idlib.Text.Str
 import neo.idlib.Text.Str.idStr
+import neo.idlib.Text.Str.va
 import neo.idlib.geometry.DrawVert.idDrawVert
 import neo.idlib.geometry.Winding.idWinding
 import neo.idlib.math.Matrix.idMat3
-import neo.idlib.math.Vector
+import neo.idlib.math.Vector.VectorMA
+import neo.idlib.math.Vector.VectorSubtract
 import neo.idlib.math.Vector.idVec3
 import neo.idlib.math.Vector.idVec4
 import neo.ui.DeviceContext.idDeviceContext
@@ -31,29 +35,30 @@ import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.GL11
 import java.nio.ByteBuffer
 import kotlin.math.abs
+import kotlin.math.max
 
 /**
  *
  */
 object tr_rendertools {
-    const val BAR_HEIGHT = 64
+    val BAR_HEIGHT: Int = 64
 
     //
-    const val G_HEIGHT = 512
+    val G_HEIGHT: Int = 512
 
     /*
      ================
      RB_TestGamma
      ================
      */
-    const val G_WIDTH = 512
-    const val MAX_DEBUG_LINES = 16384
+    val G_WIDTH: Int = 512
+    val MAX_DEBUG_LINES: Int = 16384
 
     //
-    const val MAX_DEBUG_POLYGONS = 8192
+    val MAX_DEBUG_POLYGONS: Int = 8192
 
     //
-    const val MAX_DEBUG_TEXT = 512
+    val MAX_DEBUG_TEXT: Int = 512
 
     //
     //
@@ -81,16 +86,28 @@ object tr_rendertools {
         floatArrayOf(1f, 1f, 0f),
         floatArrayOf(1f, 1f, 1f)
     )
-    var rb_debugLineTime = 0
-    var rb_debugPolygonTime = 0
+    var rb_debugLineTime: Int = 0
+    var rb_debugPolygonTime: Int = 0
 
     //
     //
-    var rb_debugText = TempDump.allocArray(debugText_s::class.java, MAX_DEBUG_TEXT)
-    var rb_debugTextTime = 0
-    var rb_numDebugLines = 0
-    var rb_numDebugPolygons = 0
-    var rb_numDebugText = 0
+    var rb_debugText: Array<debugText_s> = allocArray(debugText_s::class.java, MAX_DEBUG_TEXT)
+    var rb_debugTextTime: Int = 0
+    var rb_numDebugLines: Int = 0
+    var rb_numDebugPolygons: Int = 0
+    var rb_numDebugText: Int = 0
+
+    //    
+    //    
+    /*
+     ================
+     RB_DrawBounds
+     ================
+     */
+    init {
+        rb_debugPolygons = Array<debugPolygon_s>(MAX_DEBUG_POLYGONS) { debugPolygon_s() }
+    }
+
     fun RB_DrawBounds(bounds: idBounds) {
         if (bounds.IsCleared()) {
             return
@@ -126,19 +143,19 @@ object tr_rendertools {
      */
     fun RB_SimpleSurfaceSetup(drawSurf: drawSurf_s) {
         // change the matrix if needed
-        if (drawSurf.space !== tr_local.backEnd.currentSpace) {
+        if (drawSurf.space !== tr_local.backEnd!!.currentSpace) {
             qgl.qglLoadMatrixf(drawSurf.space!!.modelViewMatrix)
-            tr_local.backEnd.currentSpace = drawSurf.space
+            tr_local.backEnd!!.currentSpace = drawSurf.space
         }
 
         // change the scissor if needed
-        if (RenderSystem_init.r_useScissor.GetBool() && !tr_local.backEnd.currentScissor.Equals(drawSurf.scissorRect)) {
-            tr_local.backEnd.currentScissor = drawSurf.scissorRect
+        if (RenderSystem_init.r_useScissor!!.GetBool() && !tr_local.backEnd!!.currentScissor!!.Equals(drawSurf.scissorRect!!)) {
+            tr_local.backEnd!!.currentScissor = drawSurf.scissorRect
             qgl.qglScissor(
-                tr_local.backEnd.viewDef!!.viewport.x1 + tr_local.backEnd.currentScissor.x1,
-                tr_local.backEnd.viewDef!!.viewport.y1 + tr_local.backEnd.currentScissor.y1,
-                tr_local.backEnd.currentScissor.x2 + 1 - tr_local.backEnd.currentScissor.x1,
-                tr_local.backEnd.currentScissor.y2 + 1 - tr_local.backEnd.currentScissor.y1
+                tr_local.backEnd!!.viewDef!!.viewport.x1 + tr_local.backEnd!!.currentScissor!!.x1,
+                tr_local.backEnd!!.viewDef!!.viewport.y1 + tr_local.backEnd!!.currentScissor!!.y1,
+                tr_local.backEnd!!.currentScissor!!.x2 + 1 - tr_local.backEnd!!.currentScissor!!.x1,
+                tr_local.backEnd!!.currentScissor!!.y2 + 1 - tr_local.backEnd!!.currentScissor!!.y1
             )
         }
     }
@@ -149,14 +166,14 @@ object tr_rendertools {
      ================
      */
     fun RB_SimpleWorldSetup() {
-        tr_local.backEnd.currentSpace = tr_local.backEnd.viewDef!!.worldSpace
-        qgl.qglLoadMatrixf(tr_local.backEnd.viewDef!!.worldSpace.modelViewMatrix)
-        tr_local.backEnd.currentScissor = tr_local.backEnd.viewDef!!.scissor
+        tr_local.backEnd!!.currentSpace = tr_local.backEnd!!.viewDef!!.worldSpace
+        qgl.qglLoadMatrixf(tr_local.backEnd!!.viewDef!!.worldSpace.modelViewMatrix)
+        tr_local.backEnd!!.currentScissor = tr_local.backEnd!!.viewDef!!.scissor
         qgl.qglScissor(
-            tr_local.backEnd.viewDef!!.viewport.x1 + tr_local.backEnd.currentScissor.x1,
-            tr_local.backEnd.viewDef!!.viewport.y1 + tr_local.backEnd.currentScissor.y1,
-            tr_local.backEnd.currentScissor.x2 + 1 - tr_local.backEnd.currentScissor.x1,
-            tr_local.backEnd.currentScissor.y2 + 1 - tr_local.backEnd.currentScissor.y1
+            tr_local.backEnd!!.viewDef!!.viewport.x1 + tr_local.backEnd!!.currentScissor!!.x1,
+            tr_local.backEnd!!.viewDef!!.viewport.y1 + tr_local.backEnd!!.currentScissor!!.y1,
+            tr_local.backEnd!!.currentScissor!!.x2 + 1 - tr_local.backEnd!!.currentScissor!!.x1,
+            tr_local.backEnd!!.currentScissor!!.y2 + 1 - tr_local.backEnd!!.currentScissor!!.y1
         )
     }
 
@@ -207,7 +224,7 @@ object tr_rendertools {
      ===================
      */
     fun RB_ScanStencilBuffer() {
-        val counts = IntArray(256)
+        val counts: IntArray = IntArray(256)
         var i: Int
         var stencilReadback: ByteBuffer?
 
@@ -225,7 +242,7 @@ object tr_rendertools {
         )
         i = 0
         while (i < tr_local.glConfig.vidWidth * tr_local.glConfig.vidHeight) {
-            counts[stencilReadback[i].toInt()]++
+            counts[stencilReadback.get(i).toInt()]++
             i++
         }
         stencilReadback = null // R_StaticFree(stencilReadback);
@@ -266,7 +283,7 @@ object tr_rendertools {
         count = 0
         i = 0
         while (i < tr_local.glConfig.vidWidth * tr_local.glConfig.vidHeight) {
-            count += stencilReadback[i].toInt()
+            count += stencilReadback.get(i).toInt()
             i++
         }
         stencilReadback = null // R_StaticFree(stencilReadback);
@@ -311,17 +328,17 @@ object tr_rendertools {
         var surf: drawSurf_s?
         val numDrawSurfs: Int
         var vLight: viewLight_s?
-        if (RenderSystem_init.r_showOverDraw.GetInteger() == 0) {
+        if (RenderSystem_init.r_showOverDraw!!.GetInteger() == 0) {
             return
         }
         material = DeclManager.declManager.FindMaterial("textures/common/overdrawtest", false)
         if (material == null) {
             return
         }
-        drawSurfs = tr_local.backEnd.viewDef!!.drawSurfs
-        numDrawSurfs = tr_local.backEnd.viewDef!!.numDrawSurfs
-        var interactions = 0
-        vLight = tr_local.backEnd.viewDef!!.viewLights
+        drawSurfs = tr_local.backEnd!!.viewDef!!.drawSurfs
+        numDrawSurfs = tr_local.backEnd!!.viewDef!!.numDrawSurfs
+        var interactions: Int = 0
+        vLight = tr_local.backEnd!!.viewDef!!.viewLights
         while (vLight != null) {
             surf = vLight.localInteractions[0]
             while (surf != null) {
@@ -336,8 +353,8 @@ object tr_rendertools {
             }
             vLight = vLight.next
         }
-        val newDrawSurfs: Array<drawSurf_s> =
-            drawSurf_s.generateArray(numDrawSurfs + interactions) // R_FrameAlloc(numDrawSurfs + interactions);
+        val newDrawSurfs: Array<drawSurf_s?> =
+            drawSurf_s.generateArray(numDrawSurfs + interactions) as Array<drawSurf_s?> // R_FrameAlloc(numDrawSurfs + interactions);
         i = 0
         while (i < numDrawSurfs) {
             surf = drawSurfs[i]
@@ -347,7 +364,7 @@ object tr_rendertools {
             newDrawSurfs[i] = surf
             i++
         }
-        vLight = tr_local.backEnd.viewDef!!.viewLights
+        vLight = tr_local.backEnd!!.viewDef!!.viewLights
         while (vLight != null) {
             surf = vLight.localInteractions[0]
             while (surf != null) {
@@ -365,18 +382,20 @@ object tr_rendertools {
             vLight.globalInteractions[0] = null
             vLight = vLight.next
         }
-        when (RenderSystem_init.r_showOverDraw.GetInteger()) {
+        when (RenderSystem_init.r_showOverDraw!!.GetInteger()) {
             1 -> {
-                tr_local.backEnd.viewDef!!.drawSurfs = newDrawSurfs
-                tr_local.backEnd.viewDef!!.numDrawSurfs = numDrawSurfs
+                tr_local.backEnd!!.viewDef!!.drawSurfs = newDrawSurfs as Array<drawSurf_s>
+                tr_local.backEnd!!.viewDef!!.numDrawSurfs = numDrawSurfs
             }
+
             2 -> {
-                tr_local.backEnd.viewDef!!.drawSurfs[0] = newDrawSurfs[numDrawSurfs] //TODO: check pointer refs
-                tr_local.backEnd.viewDef!!.numDrawSurfs = interactions
+                tr_local.backEnd!!.viewDef!!.drawSurfs[0] = newDrawSurfs[numDrawSurfs]!! //TODO: check pointer refs
+                tr_local.backEnd!!.viewDef!!.numDrawSurfs = interactions
             }
+
             3 -> {
-                tr_local.backEnd.viewDef!!.drawSurfs = newDrawSurfs
-                tr_local.backEnd.viewDef!!.numDrawSurfs += interactions
+                tr_local.backEnd!!.viewDef!!.drawSurfs = newDrawSurfs as Array<drawSurf_s>
+                tr_local.backEnd!!.viewDef!!.numDrawSurfs += interactions
             }
         }
     }
@@ -391,11 +410,11 @@ object tr_rendertools {
      ===================
      */
     fun RB_ShowIntensity() {
-        val colorReadback: ByteBuffer?
+        val colorReadback: ByteBuffer
         var i: Int
         var j: Int
         val c: Int
-        if (!RenderSystem_init.r_showIntensity.GetBool()) {
+        if (!RenderSystem_init.r_showIntensity!!.GetBool()) {
             return
         }
         colorReadback =
@@ -412,12 +431,12 @@ object tr_rendertools {
         c = tr_local.glConfig.vidWidth * tr_local.glConfig.vidHeight * 4
         i = 0
         while (i < c) {
-            j = colorReadback[i].toInt()
-            if (colorReadback[i + 1] > j) {
-                j = colorReadback[i + 1].toInt()
+            j = colorReadback.get(i).toInt()
+            if (colorReadback.get(i + 1) > j) {
+                j = colorReadback.get(i + 1).toInt()
             }
-            if (colorReadback[i + 2] > j) {
-                j = colorReadback[i + 2].toInt()
+            if (colorReadback.get(i + 2) > j) {
+                j = colorReadback.get(i + 2).toInt()
             }
             if (j < 128) {
                 colorReadback.put(i + 0, (2 * (128 - j)).toByte())
@@ -462,8 +481,8 @@ object tr_rendertools {
      ===================
      */
     fun RB_ShowDepthBuffer() {
-        val depthReadback: ByteBuffer?
-        if (!RenderSystem_init.r_showDepth.GetBool()) {
+        val depthReadback: ByteBuffer
+        if (!RenderSystem_init.r_showDepth!!.GetBool()) {
             return
         }
         qgl.qglPushMatrix()
@@ -522,7 +541,7 @@ object tr_rendertools {
         var i: Int
         var surf: drawSurf_s?
         var vLight: viewLight_s?
-        if (!RenderSystem_init.r_showLightCount.GetBool()) {
+        if (!RenderSystem_init.r_showLightCount!!.GetBool()) {
             return
         }
         tr_backend.GL_State(tr_local.GLS_DEPTHFUNC_EQUAL)
@@ -532,27 +551,27 @@ object tr_rendertools {
         qgl.qglEnable(GL11.GL_STENCIL_TEST)
 
         // optionally count everything through walls
-        if (RenderSystem_init.r_showLightCount.GetInteger() >= 2) {
+        if (RenderSystem_init.r_showLightCount!!.GetInteger() >= 2) {
             qgl.qglStencilOp(GL11.GL_KEEP, GL11.GL_INCR, GL11.GL_INCR)
         } else {
             qgl.qglStencilOp(GL11.GL_KEEP, GL11.GL_KEEP, GL11.GL_INCR)
         }
         qgl.qglStencilFunc(GL11.GL_ALWAYS, 1, 255)
-        Image.globalImages.defaultImage.Bind()
-        var counter = 0
-        vLight = tr_local.backEnd.viewDef!!.viewLights
+        Image.globalImages.defaultImage!!.Bind()
+        var counter: Int = 0
+        vLight = tr_local.backEnd!!.viewDef!!.viewLights
         while (vLight != null) {
             i = 0
             while (i < 2) {
-                surf = if (i != 0) vLight.localInteractions[0] else vLight.globalInteractions[0]
+                surf = (if (i != 0) vLight.localInteractions[0] else vLight.globalInteractions[0])
                 while (surf != null) {
                     RB_SimpleSurfaceSetup(surf)
                     counter++
-                    if (TempDump.NOT(surf.geo!!.ambientCache)) {
+                    if (NOT(surf.geo!!.ambientCache)) {
                         surf = surf.nextOnLight
                         continue
                     }
-                    val ac =
+                    val ac: idDrawVert =
                         idDrawVert(VertexCache.vertexCache.Position(surf.geo!!.ambientCache)) //TODO:figure out how to work these damn casts.
                     qgl.qglVertexPointer(3, GL11.GL_FLOAT, idDrawVert.BYTES, ac.xyzOffset().toLong())
                     tr_render.RB_DrawElementsWithCounters(surf.geo!!)
@@ -565,7 +584,7 @@ object tr_rendertools {
 
         // display the results
         R_ColorByStencilBuffer()
-        if (RenderSystem_init.r_showLightCount.GetInteger() > 2) {
+        if (RenderSystem_init.r_showLightCount!!.GetInteger() > 2) {
             RB_CountStencilBuffer()
         }
     }
@@ -582,7 +601,7 @@ object tr_rendertools {
         var i: Int
         var surf: drawSurf_s?
         var vLight: viewLight_s?
-        if (!RenderSystem_init.r_showSilhouette.GetBool()) {
+        if (!RenderSystem_init.r_showSilhouette!!.GetBool()) {
             return
         }
 
@@ -598,8 +617,8 @@ object tr_rendertools {
         tr_backend.GL_Cull(cullType_t.CT_TWO_SIDED)
         qgl.qglDisable(GL11.GL_DEPTH_TEST)
         tr_render.RB_RenderDrawSurfListWithFunction(
-            tr_local.backEnd.viewDef!!.drawSurfs,
-            tr_local.backEnd.viewDef!!.numDrawSurfs,
+            tr_local.backEnd!!.viewDef!!.drawSurfs,
+            tr_local.backEnd!!.viewDef!!.numDrawSurfs,
             RB_T_RenderTriangleSurface.INSTANCE
         )
 
@@ -609,28 +628,28 @@ object tr_rendertools {
         RB_SimpleWorldSetup()
         qgl.qglColor3f(0.5f, 0f, 0f)
         tr_backend.GL_State(tr_local.GLS_SRCBLEND_ONE or tr_local.GLS_DSTBLEND_ONE)
-        vLight = tr_local.backEnd.viewDef!!.viewLights
+        vLight = tr_local.backEnd!!.viewDef!!.viewLights
         while (vLight != null) {
             i = 0
             while (i < 2) {
-                surf = if (i != 0) vLight.localShadows[0] else vLight.globalShadows[0]
+                surf = (if (i != 0) vLight.localShadows[0] else vLight.globalShadows[0])
                 while (surf != null) {
                     RB_SimpleSurfaceSetup(surf)
-                    val tri = surf.geo!!
-                    for (shadow in tri.shadowCache!!) {
+                    val tri: srfTriangles_s = surf.geo!!
+                    for (shadow: vertCache_s? in tri.shadowCache!!) {
                         qgl.qglVertexPointer(
                             3,
                             GL11.GL_FLOAT,
-                            shadowCache_s.BYTES,
-                            VertexCache.vertexCache.Position(shadow).int.toLong()
+                            shadowCache_s.Companion.BYTES,
+                            VertexCache.vertexCache.Position(shadow).getInt().toLong()
                         )
                     }
                     qgl.qglBegin(GL11.GL_LINES)
-                    var j = 0
+                    var j: Int = 0
                     while (j < tri.numIndexes) {
-                        val i1 = tri.indexes!![j + 0]
-                        val i2 = tri.indexes!![j + 1]
-                        val i3 = tri.indexes!![j + 2]
+                        val i1: Int = tri.indexes!![j + 0]
+                        val i2: Int = tri.indexes!![j + 1]
+                        val i3: Int = tri.indexes!![j + 2]
                         if ((i1 and 1) + (i2 and 1) + (i3 and 1) == 1) {
                             if ((i1 and 1) + (i2 and 1) == 0) {
                                 qgl.qglArrayElement(i1)
@@ -667,7 +686,7 @@ object tr_rendertools {
         var i: Int
         var surf: drawSurf_s?
         var vLight: viewLight_s?
-        if (!RenderSystem_init.r_showShadowCount.GetBool()) {
+        if (!RenderSystem_init.r_showShadowCount!!.GetBool()) {
             return
         }
         tr_backend.GL_State(tr_local.GLS_DEFAULT)
@@ -676,39 +695,39 @@ object tr_rendertools {
         qgl.qglEnable(GL11.GL_STENCIL_TEST)
         qgl.qglStencilOp(GL11.GL_KEEP, GL11.GL_INCR, GL11.GL_INCR)
         qgl.qglStencilFunc(GL11.GL_ALWAYS, 1, 255)
-        Image.globalImages.defaultImage.Bind()
+        Image.globalImages.defaultImage!!.Bind()
 
         // draw both sides
         tr_backend.GL_Cull(cullType_t.CT_TWO_SIDED)
-        vLight = tr_local.backEnd.viewDef!!.viewLights
+        vLight = tr_local.backEnd!!.viewDef!!.viewLights
         while (vLight != null) {
             i = 0
             while (i < 2) {
-                surf = if (i != 0) vLight.localShadows[0] else vLight.globalShadows[0]
+                surf = (if (i != 0) vLight.localShadows[0] else vLight.globalShadows[0])
                 while (surf != null) {
                     RB_SimpleSurfaceSetup(surf)
-                    val tri = surf.geo!!
-                    if (TempDump.NOT(tri.shadowCache)) {
+                    val tri: srfTriangles_s = surf.geo!!
+                    if (NOT(tri.shadowCache)) {
                         surf = surf.nextOnLight
                         continue
                     }
-                    if (RenderSystem_init.r_showShadowCount.GetInteger() == 3) {
+                    if (RenderSystem_init.r_showShadowCount!!.GetInteger() == 3) {
                         // only show turboshadows
                         if (tri.numShadowIndexesNoCaps != tri.numIndexes) {
                             surf = surf.nextOnLight
                             continue
                         }
                     }
-                    if (RenderSystem_init.r_showShadowCount.GetInteger() == 4) {
+                    if (RenderSystem_init.r_showShadowCount!!.GetInteger() == 4) {
                         // only show static shadows
                         if (tri.numShadowIndexesNoCaps == tri.numIndexes) {
                             surf = surf.nextOnLight
                             continue
                         }
                     }
-                    val cache =
+                    val cache: ByteBuffer =
                         VertexCache.vertexCache.Position(tri.shadowCache) //TODO:figure out how to work these damn casts.
-                    qgl.qglVertexPointer(4, GL11.GL_FLOAT, shadowCache_s.BYTES /*sizeof(cache)*/, cache)
+                    qgl.qglVertexPointer(4, GL11.GL_FLOAT, shadowCache_s.Companion.BYTES /*sizeof(cache)*/, cache)
                     tr_render.RB_DrawElementsWithCounters(tri)
                     surf = surf.nextOnLight
                 }
@@ -719,14 +738,14 @@ object tr_rendertools {
 
         // display the results
         R_ColorByStencilBuffer()
-        if (RenderSystem_init.r_showShadowCount.GetInteger() == 2) {
+        if (RenderSystem_init.r_showShadowCount!!.GetInteger() == 2) {
             Common.common.Printf("all shadows ")
-        } else if (RenderSystem_init.r_showShadowCount.GetInteger() == 3) {
+        } else if (RenderSystem_init.r_showShadowCount!!.GetInteger() == 3) {
             Common.common.Printf("turboShadows ")
-        } else if (RenderSystem_init.r_showShadowCount.GetInteger() == 4) {
+        } else if (RenderSystem_init.r_showShadowCount!!.GetInteger() == 4) {
             Common.common.Printf("static shadows ")
         }
-        if (RenderSystem_init.r_showShadowCount.GetInteger() >= 2) {
+        if (RenderSystem_init.r_showShadowCount!!.GetInteger() >= 2) {
             RB_CountStencilBuffer()
         }
         tr_backend.GL_Cull(cullType_t.CT_FRONT_SIDED)
@@ -739,15 +758,15 @@ object tr_rendertools {
      ===============
      */
     fun RB_T_RenderTriangleSurfaceAsLines(surf: drawSurf_s) {
-        val tri = surf.geo!!
-        if (tri.verts.isNullOrEmpty()) {
+        val tri: srfTriangles_s = surf.geo!!
+        if (null == tri.verts) {
             return
         }
         qgl.qglBegin(GL11.GL_LINES)
-        var i = 0
+        var i: Int = 0
         while (i < tri.numIndexes) {
             for (j in 0..2) {
-                val k = (j + 1) % 3
+                val k: Int = (j + 1) % 3
                 qgl.qglVertex3fv(tri.verts!![tri.silIndexes!![i + j]]!!.xyz.ToFloatPtr())
                 qgl.qglVertex3fv(tri.verts!![tri.silIndexes!![i + k]]!!.xyz.ToFloatPtr())
             }
@@ -763,8 +782,8 @@ object tr_rendertools {
      Debugging tool
      =====================
      */
-    fun RB_ShowTris(drawSurfs: Array<drawSurf_s>, numDrawSurfs: Int) {
-        if (0 == RenderSystem_init.r_showTris.GetInteger()) {
+    fun RB_ShowTris(drawSurfs: Array<drawSurf_s?>?, numDrawSurfs: Int) {
+        if (0 == RenderSystem_init.r_showTris!!.GetInteger()) {
             return
         }
         qgl.qglDisableClientState(GL11.GL_TEXTURE_COORD_ARRAY)
@@ -773,26 +792,29 @@ object tr_rendertools {
         qgl.qglDisable(GL11.GL_STENCIL_TEST)
         qgl.qglColor3f(1f, 1f, 1f)
         tr_backend.GL_State(tr_local.GLS_POLYMODE_LINE)
-        when (RenderSystem_init.r_showTris.GetInteger()) {
+        when (RenderSystem_init.r_showTris!!.GetInteger()) {
             1 -> {
                 qgl.qglPolygonOffset(-1f, -2f)
                 qgl.qglEnable(GL11.GL_POLYGON_OFFSET_LINE)
             }
+
             2 -> {
                 tr_backend.GL_Cull(cullType_t.CT_FRONT_SIDED)
                 qgl.qglDisable(GL11.GL_DEPTH_TEST)
             }
+
             3 -> {
                 tr_backend.GL_Cull(cullType_t.CT_TWO_SIDED)
                 qgl.qglDisable(GL11.GL_DEPTH_TEST)
             }
+
             else -> {
                 tr_backend.GL_Cull(cullType_t.CT_FRONT_SIDED)
                 qgl.qglDisable(GL11.GL_DEPTH_TEST)
             }
         }
         tr_render.RB_RenderDrawSurfListWithFunction(
-            drawSurfs,
+            drawSurfs as Array<drawSurf_s>,
             numDrawSurfs,
             RB_T_RenderTriangleSurface.INSTANCE
         )
@@ -810,22 +832,22 @@ object tr_rendertools {
      Debugging tool
      =====================
      */
-    fun RB_ShowSurfaceInfo(drawSurfs: Array<drawSurf_s>, numDrawSurfs: Int) {
-        val mt = modelTrace_s()
-        val start = idVec3()
-        val end = idVec3()
-        if (!RenderSystem_init.r_showSurfaceInfo.GetBool()) {
+    fun RB_ShowSurfaceInfo(drawSurfs: Array<drawSurf_s?>?, numDrawSurfs: Int) {
+        val mt: modelTrace_s = modelTrace_s()
+        val start: idVec3 = idVec3()
+        val end: idVec3 = idVec3()
+        if (!RenderSystem_init.r_showSurfaceInfo!!.GetBool()) {
             return
         }
 
         // start far enough away that we don't hit the player model
         start.set(
             tr_local.tr.primaryView!!.renderView.vieworg.plus(
-                tr_local.tr.primaryView!!.renderView.viewaxis[0].times(16f)
+                tr_local.tr.primaryView!!.renderView.viewaxis[0].times(16)
             )
         )
         end.set(start.plus(tr_local.tr.primaryView!!.renderView.viewaxis[0].times(1000f)))
-        //	end = start + tr.primaryView!!.renderView.viewaxis[0] * 1000.0f;
+        //	end = start + tr.primaryView.renderView.viewaxis[0] * 1000.0f;
         if (!tr_local.tr.primaryWorld!!.Trace(mt, start, end, 0.0f, false)) {
             return
         }
@@ -838,12 +860,12 @@ object tr_rendertools {
         qgl.qglPolygonOffset(-1f, -2f)
         qgl.qglEnable(GL11.GL_POLYGON_OFFSET_LINE)
         val trans: Array<idVec3> = idVec3.generateArray(3)
-        val matrix = FloatArray(16)
+        val matrix: FloatArray = FloatArray(16)
 
         // transform the object verts into global space
         tr_main.R_AxisToModelMatrix(mt.entity!!.axis, mt.entity!!.origin, matrix)
         tr_local.tr.primaryWorld!!.DrawText(
-            mt.entity!!.hModel!!.Name(), mt.point.plus(tr_local.tr.primaryView!!.renderView.viewaxis[2].times(12f)),
+            mt.entity!!.hModel!!.Name(), mt.point.plus(tr_local.tr.primaryView!!.renderView.viewaxis[2].times(12)),
             0.35f, idDeviceContext.colorRed, tr_local.tr.primaryView!!.renderView.viewaxis
         )
         tr_local.tr.primaryWorld!!.DrawText(
@@ -865,14 +887,14 @@ object tr_rendertools {
      =====================
      */
     fun RB_ShowViewEntitys(vModels: viewEntity_s?) { //TODO:should this back ref?
-        var vModels = vModels
-        if (!RenderSystem_init.r_showViewEntitys.GetBool()) {
+        var vModels: viewEntity_s? = vModels
+        if (!RenderSystem_init.r_showViewEntitys!!.GetBool()) {
             return
         }
-        if (RenderSystem_init.r_showViewEntitys.GetInteger() == 2) {
+        if (RenderSystem_init.r_showViewEntitys!!.GetInteger() == 2) {
             Common.common.Printf("view entities: ")
             while (vModels != null) {
-                Common.common.Printf("%d ", vModels.entityDef.index)
+                Common.common.Printf("%d ", vModels.entityDef!!.index)
                 vModels = vModels.next
             }
             Common.common.Printf("\n")
@@ -888,7 +910,7 @@ object tr_rendertools {
         qgl.qglDisable(GL11.GL_DEPTH_TEST)
         qgl.qglDisable(GL11.GL_SCISSOR_TEST)
         while (vModels != null) {
-            var b: idBounds
+            var b: idBounds?
             qgl.qglLoadMatrixf(vModels.modelViewMatrix)
             //            System.out.println("vModels.modelViewMatrix="+vModels.modelViewMatrix[0]);
             if (null == vModels.entityDef) {
@@ -898,16 +920,16 @@ object tr_rendertools {
 
             // draw the reference bounds in yellow
             qgl.qglColor3f(1f, 1f, 0f)
-            RB_DrawBounds(vModels.entityDef.referenceBounds)
+            RB_DrawBounds(vModels.entityDef!!.referenceBounds)
 
             // draw the model bounds in white
             qgl.qglColor3f(1f, 1f, 1f)
-            val model = tr_light.R_EntityDefDynamicModel(vModels.entityDef)
+            val model: idRenderModel? = tr_light.R_EntityDefDynamicModel(vModels.entityDef!!)
             if (null == model) {
                 vModels = vModels.next
                 continue  // particles won't instantiate without a current view
             }
-            b = model.Bounds(vModels.entityDef.parms)
+            b = model.Bounds(vModels.entityDef!!.parms)
             RB_DrawBounds(b)
             vModels = vModels.next
         }
@@ -929,9 +951,9 @@ object tr_rendertools {
     fun RB_ShowTexturePolarity(drawSurfs: Array<drawSurf_s>, numDrawSurfs: Int) {
         var i: Int
         var j: Int
-        var drawSurf: drawSurf_s?
-        var tri: srfTriangles_s?
-        if (!RenderSystem_init.r_showTexturePolarity.GetBool()) {
+        var drawSurf: drawSurf_s
+        var tri: srfTriangles_s
+        if (!RenderSystem_init.r_showTexturePolarity!!.GetBool()) {
             return
         }
         qgl.qglDisableClientState(GL11.GL_TEXTURE_COORD_ARRAY)
@@ -943,7 +965,7 @@ object tr_rendertools {
         while (i < numDrawSurfs) {
             drawSurf = drawSurfs[i]
             tri = drawSurf.geo!!
-            if (tri.verts.isNullOrEmpty()) {
+            if (NOT(*tri.verts!!)) {
                 i++
                 continue
             }
@@ -951,15 +973,15 @@ object tr_rendertools {
             qgl.qglBegin(GL11.GL_TRIANGLES)
             j = 0
             while (j < tri.numIndexes) {
-                var a: idDrawVert?
-                var b: idDrawVert?
-                var c: idDrawVert?
-                val d0 = FloatArray(5)
-                val d1 = FloatArray(5)
+                var a: idDrawVert
+                var b: idDrawVert
+                var c: idDrawVert
+                val d0: FloatArray = FloatArray(5)
+                val d1: FloatArray = FloatArray(5)
                 var area: Float
-                a = tri.verts!![tri.indexes!![j]]!!
-                b = tri.verts!![tri.indexes!![j + 1]]!!
-                c = tri.verts!![tri.indexes!![j + 2]]!!
+                a = tri.verts!![tri.indexes!!.get(j)]!!
+                b = tri.verts!![tri.indexes!!.get(j + 1)]!!
+                c = tri.verts!![tri.indexes!!.get(j + 2)]!!
 
                 // VectorSubtract( b.xyz, a.xyz, d0 );
                 d0[3] = b.st[0] - a.st[0]
@@ -968,7 +990,7 @@ object tr_rendertools {
                 d1[3] = c.st[0] - a.st[0]
                 d1[4] = c.st[1] - a.st[1]
                 area = d0[3] * d1[4] - d0[4] * d1[3]
-                if (abs(area) < 0.0001) {
+                if (abs(area.toDouble()) < 0.0001) {
                     qgl.qglColor4f(0f, 0f, 1f, 0.5f)
                 } else if (area < 0) {
                     qgl.qglColor4f(1f, 0f, 0f, 0.5f)
@@ -996,9 +1018,9 @@ object tr_rendertools {
     fun RB_ShowUnsmoothedTangents(drawSurfs: Array<drawSurf_s>, numDrawSurfs: Int) {
         var i: Int
         var j: Int
-        var drawSurf: drawSurf_s?
-        var tri: srfTriangles_s?
-        if (!RenderSystem_init.r_showUnsmoothedTangents.GetBool()) {
+        var drawSurf: drawSurf_s
+        var tri: srfTriangles_s
+        if (!RenderSystem_init.r_showUnsmoothedTangents!!.GetBool()) {
             return
         }
         qgl.qglDisableClientState(GL11.GL_TEXTURE_COORD_ARRAY)
@@ -1018,12 +1040,12 @@ object tr_rendertools {
             qgl.qglBegin(GL11.GL_TRIANGLES)
             j = 0
             while (j < tri.numIndexes) {
-                var a: idDrawVert?
-                var b: idDrawVert?
-                var c: idDrawVert?
-                a = tri.verts!![tri.indexes!![j]]!!
-                b = tri.verts!![tri.indexes!![j + 1]]!!
-                c = tri.verts!![tri.indexes!![j + 2]]!!
+                var a: idDrawVert
+                var b: idDrawVert
+                var c: idDrawVert
+                a = tri.verts!![tri.indexes!!.get(j)]!!
+                b = tri.verts!![tri.indexes!!.get(j + 1)]!!
+                c = tri.verts!![tri.indexes!!.get(j + 2)]!!
                 qgl.qglVertex3fv(a.xyz.ToFloatPtr())
                 qgl.qglVertex3fv(b.xyz.ToFloatPtr())
                 qgl.qglVertex3fv(c.xyz.ToFloatPtr())
@@ -1048,9 +1070,9 @@ object tr_rendertools {
     fun RB_ShowTangentSpace(drawSurfs: Array<drawSurf_s>, numDrawSurfs: Int) {
         var i: Int
         var j: Int
-        var drawSurf: drawSurf_s?
-        var tri: srfTriangles_s?
-        if (0 == RenderSystem_init.r_showTangentSpace.GetInteger()) {
+        var drawSurf: drawSurf_s
+        var tri: srfTriangles_s
+        if (0 == RenderSystem_init.r_showTangentSpace!!.GetInteger()) {
             return
         }
         qgl.qglDisableClientState(GL11.GL_TEXTURE_COORD_ARRAY)
@@ -1062,23 +1084,23 @@ object tr_rendertools {
             drawSurf = drawSurfs[i]
             RB_SimpleSurfaceSetup(drawSurf)
             tri = drawSurf.geo!!
-            if (tri.verts.isNullOrEmpty()) {
+            if (null == tri.verts) {
                 i++
                 continue
             }
             qgl.qglBegin(GL11.GL_TRIANGLES)
             j = 0
             while (j < tri.numIndexes) {
-                val v: idDrawVert?
-                v = tri.verts!![tri.indexes!![j]]!!
-                if (RenderSystem_init.r_showTangentSpace.GetInteger() == 1) {
+                val v: idDrawVert
+                v = tri.verts!![tri.indexes!!.get(j)]!!
+                if (RenderSystem_init.r_showTangentSpace!!.GetInteger() == 1) {
                     qgl.qglColor4f(
                         0.5f + 0.5f * v.tangents[0][0],
                         0.5f + 0.5f * v.tangents[0][1],
                         0.5f + 0.5f * v.tangents[0][2],
                         0.5f
                     )
-                } else if (RenderSystem_init.r_showTangentSpace.GetInteger() == 2) {
+                } else if (RenderSystem_init.r_showTangentSpace!!.GetInteger() == 2) {
                     qgl.qglColor4f(
                         0.5f + 0.5f * v.tangents[1][0],
                         0.5f + 0.5f * v.tangents[1][1],
@@ -1112,9 +1134,9 @@ object tr_rendertools {
     fun RB_ShowVertexColor(drawSurfs: Array<drawSurf_s>, numDrawSurfs: Int) {
         var i: Int
         var j: Int
-        var drawSurf: drawSurf_s?
-        var tri: srfTriangles_s?
-        if (!RenderSystem_init.r_showVertexColor.GetBool()) {
+        var drawSurf: drawSurf_s
+        var tri: srfTriangles_s
+        if (!RenderSystem_init.r_showVertexColor!!.GetBool()) {
             return
         }
         qgl.qglDisableClientState(GL11.GL_TEXTURE_COORD_ARRAY)
@@ -1133,8 +1155,8 @@ object tr_rendertools {
             qgl.qglBegin(GL11.GL_TRIANGLES)
             j = 0
             while (j < tri.numIndexes) {
-                val v: idDrawVert?
-                v = tri.verts!![tri.indexes!![j]]!!
+                val v: idDrawVert
+                v = tri.verts!![tri.indexes!!.get(j)]!!
                 qgl.qglColor4ubv(v.color)
                 qgl.qglVertex3fv(v.xyz.ToFloatPtr())
                 j++
@@ -1155,25 +1177,25 @@ object tr_rendertools {
     fun RB_ShowNormals(drawSurfs: Array<drawSurf_s>, numDrawSurfs: Int) {
         var i: Int
         var j: Int
-        var drawSurf: drawSurf_s?
-        val end = idVec3()
-        var tri: srfTriangles_s?
+        var drawSurf: drawSurf_s
+        val end: idVec3 = idVec3()
+        var tri: srfTriangles_s
         var size: Float
         val showNumbers: Boolean
-        val pos = idVec3()
-        if (RenderSystem_init.r_showNormals.GetFloat() == 0.0f) {
+        val pos: idVec3 = idVec3()
+        if (RenderSystem_init.r_showNormals!!.GetFloat() == 0.0f) {
             return
         }
         tr_backend.GL_State(tr_local.GLS_POLYMODE_LINE)
         qgl.qglDisableClientState(GL11.GL_TEXTURE_COORD_ARRAY)
         Image.globalImages.BindNull()
         qgl.qglDisable(GL11.GL_STENCIL_TEST)
-        if (!RenderSystem_init.r_debugLineDepthTest.GetBool()) {
+        if (!RenderSystem_init.r_debugLineDepthTest!!.GetBool()) {
             qgl.qglDisable(GL11.GL_DEPTH_TEST)
         } else {
             qgl.qglEnable(GL11.GL_DEPTH_TEST)
         }
-        size = RenderSystem_init.r_showNormals.GetFloat()
+        size = RenderSystem_init.r_showNormals!!.GetFloat()
         if (size < 0.0f) {
             size = -size
             showNumbers = true
@@ -1194,15 +1216,15 @@ object tr_rendertools {
             while (j < tri.numVerts) {
                 qgl.qglColor3f(0f, 0f, 1f)
                 qgl.qglVertex3fv(tri.verts!![j]!!.xyz.ToFloatPtr())
-                Vector.VectorMA(tri.verts!![j]!!.xyz, size, tri.verts!![j]!!.normal, end)
+                VectorMA(tri.verts!![j]!!.xyz, size, tri.verts!![j]!!.normal, end)
                 qgl.qglVertex3fv(end.ToFloatPtr())
                 qgl.qglColor3f(1f, 0f, 0f)
                 qgl.qglVertex3fv(tri.verts!![j]!!.xyz.ToFloatPtr())
-                Vector.VectorMA(tri.verts!![j]!!.xyz, size, tri.verts!![j]!!.tangents[0], end)
+                VectorMA(tri.verts!![j]!!.xyz, size, tri.verts!![j]!!.tangents[0], end)
                 qgl.qglVertex3fv(end.ToFloatPtr())
                 qgl.qglColor3f(0f, 1f, 0f)
                 qgl.qglVertex3fv(tri.verts!![j]!!.xyz.ToFloatPtr())
-                Vector.VectorMA(tri.verts!![j]!!.xyz, size, tri.verts!![j]!!.tangents[1], end)
+                VectorMA(tri.verts!![j]!!.xyz, size, tri.verts!![j]!!.tangents[1], end)
                 qgl.qglVertex3fv(end.ToFloatPtr())
                 j++
             }
@@ -1225,20 +1247,16 @@ object tr_rendertools {
                         tr_main.R_LocalPointToGlobal(
                             drawSurf.space!!.modelMatrix,
                             tri.verts!![j]!!.xyz.plus(
-                                tri.verts!![j]!!.tangents[0].plus(
-                                    tri.verts!![j]!!.normal.times(
-                                        0.2f
-                                    )
-                                )
+                                tri.verts!![j]!!.tangents[0].plus(tri.verts!![j]!!.normal.times(0.2f))
                             )
                         )
                     )
                     RB_DrawText(
-                        Str.va("%d", j),
+                        va("%d", j),
                         pos,
                         0.01f,
-                        idDeviceContext.colorWhite,
-                        tr_local.backEnd.viewDef!!.renderView.viewaxis,
+                        idDeviceContext.colorWhite!!,
+                        tr_local.backEnd!!.viewDef!!.renderView.viewaxis,
                         1
                     )
                     j++
@@ -1248,20 +1266,19 @@ object tr_rendertools {
                     pos.set(
                         tr_main.R_LocalPointToGlobal(
                             drawSurf.space!!.modelMatrix,
-                            tri.verts!![tri.indexes!![j + 0]]!!.xyz.plus(
-                                tri.verts!![tri.indexes!![j + 1]]!!.xyz.plus(
-                                    tri.verts!![tri.indexes!![j + 2]]!!.xyz
+                            (tri.verts!![tri.indexes!!.get(j + 0)]!!.xyz.plus(
+                                tri.verts!![tri.indexes!!.get(j + 1)]!!.xyz.plus(
+                                    tri.verts!![tri.indexes!!.get(j + 2)]!!.xyz
                                 )
-                            )
-                                .times(1.0f / 3.0f).plus(tri.verts!![tri.indexes!![j + 0]]!!.normal.times(0.2f))
+                            )).times(1.0f / 3.0f).plus(tri.verts!![tri.indexes!!.get(j + 0)]!!.normal.times(0.2f))
                         )
                     )
                     RB_DrawText(
-                        Str.va("%d", j / 3),
+                        va("%d", j / 3),
                         pos,
                         0.01f,
                         Lib.colorCyan,
-                        tr_local.backEnd.viewDef!!.renderView.viewaxis,
+                        tr_local.backEnd!!.viewDef!!.renderView.viewaxis,
                         1
                     )
                     j += 3
@@ -1283,10 +1300,10 @@ object tr_rendertools {
         var i: Int
         var j: Int
         var k: Int
-        var drawSurf: drawSurf_s?
-        val end = idVec3()
-        var tri: srfTriangles_s?
-        if (RenderSystem_init.r_showNormals.GetFloat() == 0.0f) {
+        var drawSurf: drawSurf_s
+        val end: idVec3 = idVec3()
+        var tri: srfTriangles_s
+        if (RenderSystem_init.r_showNormals!!.GetFloat() == 0.0f) {
             return
         }
         tr_backend.GL_State(tr_local.GLS_DEFAULT)
@@ -1302,34 +1319,34 @@ object tr_rendertools {
             qgl.qglBegin(GL11.GL_LINES)
             j = 0
             while (j < tri.numIndexes) {
-                val v = arrayOf(
-                    tri.verts!![tri.indexes!![j + 0]]!!,
-                    tri.verts!![tri.indexes!![j + 1]]!!,
-                    tri.verts!![tri.indexes!![j + 2]]!!
-                )
-                val mid = idVec3()
+                val v: Array<idDrawVert?> = arrayOfNulls(3)
+                val mid: idVec3 = idVec3()
+                v[0] = tri.verts!![tri.indexes!!.get(j + 0)]
+                v[1] = tri.verts!![tri.indexes!!.get(j + 1)]
+                v[2] = tri.verts!![tri.indexes!!.get(j + 2)]
+
                 // make the midpoint slightly above the triangle
-                mid.set(v[0].xyz.plus(v[1].xyz).plus(v[2].xyz).times(1.0f / 3.0f))
-                mid.plusAssign(tri.facePlanes!![j / 3].Normal().times(0.1f))
+                mid.set((v[0]!!.xyz.plus(v[1]!!.xyz).plus(v[2]!!.xyz)).times(1.0f / 3.0f))
+                mid.plusAssign(tri.facePlanes!!.get(j / 3)!!.Normal().times(0.1f))
                 k = 0
                 while (k < 3) {
-                    val pos = idVec3()
-                    pos.set(mid.plus(v[k].xyz.times(3f)).times(0.25f))
+                    val pos: idVec3 = idVec3()
+                    pos.set((mid.plus(v[k]!!.xyz.times(3f))).times(0.25f))
                     qgl.qglColor3f(0f, 0f, 1f)
                     qgl.qglVertex3fv(pos.ToFloatPtr())
-                    Vector.VectorMA(pos, RenderSystem_init.r_showNormals.GetFloat(), v[k].normal, end)
+                    VectorMA(pos, RenderSystem_init.r_showNormals!!.GetFloat(), v[k]!!.normal, end)
                     qgl.qglVertex3fv(end.ToFloatPtr())
                     qgl.qglColor3f(1f, 0f, 0f)
                     qgl.qglVertex3fv(pos.ToFloatPtr())
-                    Vector.VectorMA(pos, RenderSystem_init.r_showNormals.GetFloat(), v[k].tangents[0], end)
+                    VectorMA(pos, RenderSystem_init.r_showNormals!!.GetFloat(), v[k]!!.tangents[0], end)
                     qgl.qglVertex3fv(end.ToFloatPtr())
                     qgl.qglColor3f(0f, 1f, 0f)
                     qgl.qglVertex3fv(pos.ToFloatPtr())
-                    Vector.VectorMA(pos, RenderSystem_init.r_showNormals.GetFloat(), v[k].tangents[1], end)
+                    VectorMA(pos, RenderSystem_init.r_showNormals!!.GetFloat(), v[k]!!.tangents[1], end)
                     qgl.qglVertex3fv(end.ToFloatPtr())
                     qgl.qglColor3f(1f, 1f, 1f)
                     qgl.qglVertex3fv(pos.ToFloatPtr())
-                    qgl.qglVertex3fv(v[k].xyz.ToFloatPtr())
+                    qgl.qglVertex3fv(v[k]!!.xyz.ToFloatPtr())
                     k++
                 }
                 j += 3
@@ -1351,9 +1368,9 @@ object tr_rendertools {
     fun RB_ShowTextureVectors(drawSurfs: Array<drawSurf_s>, numDrawSurfs: Int) {
         var i: Int
         var j: Int
-        var drawSurf: drawSurf_s?
-        var tri: srfTriangles_s?
-        if (RenderSystem_init.r_showTextureVectors.GetFloat() == 0.0f) {
+        var drawSurf: drawSurf_s
+        var tri: srfTriangles_s
+        if (RenderSystem_init.r_showTextureVectors!!.GetFloat() == 0.0f) {
             return
         }
         tr_backend.GL_State(tr_local.GLS_DEPTHFUNC_LESS)
@@ -1379,29 +1396,29 @@ object tr_rendertools {
             qgl.qglBegin(GL11.GL_LINES)
             j = 0
             while (j < tri.numIndexes) {
-                val a: idDrawVert?
-                val b: idDrawVert?
-                val c: idDrawVert?
+                val a: idDrawVert
+                val b: idDrawVert
+                val c: idDrawVert
                 var area: Float
                 var inva: Float
-                val temp = idVec3()
-                val d0 = FloatArray(5)
-                val d1 = FloatArray(5)
-                val mid = idVec3()
+                val temp: idVec3 = idVec3()
+                val d0: FloatArray = FloatArray(5)
+                val d1: FloatArray = FloatArray(5)
+                val mid: idVec3 = idVec3()
                 val tangents: Array<idVec3> = idVec3.generateArray(2)
-                a = tri.verts!![tri.indexes!![j + 0]]!!
-                b = tri.verts!![tri.indexes!![j + 1]]!!
-                c = tri.verts!![tri.indexes!![j + 2]]!!
+                a = tri.verts!![tri.indexes!!.get(j + 0)]!!
+                b = tri.verts!![tri.indexes!!.get(j + 1)]!!
+                c = tri.verts!![tri.indexes!!.get(j + 2)]!!
 
                 // make the midpoint slightly above the triangle
-                mid.set(a.xyz.plus(b.xyz).plus(c.xyz).times(1.0f / 3.0f))
-                mid.plusAssign(tri.facePlanes!![j / 3].Normal().times(0.1f))
+                mid.set((a.xyz.plus(b.xyz).plus(c.xyz)).times(1.0f / 3.0f))
+                mid.plusAssign(tri.facePlanes!!.get(j / 3)!!.Normal().times(0.1f))
 
                 // calculate the texture vectors
-                Vector.VectorSubtract(b.xyz, a.xyz, d0)
+                VectorSubtract(b.xyz, a.xyz, d0)
                 d0[3] = b.st[0] - a.st[0]
                 d0[4] = b.st[1] - a.st[1]
-                Vector.VectorSubtract(c.xyz, a.xyz, d1)
+                VectorSubtract(c.xyz, a.xyz, d1)
                 d1[3] = c.st[0] - a.st[0]
                 d1[4] = c.st[1] - a.st[1]
                 area = d0[3] * d1[4] - d0[4] * d1[3]
@@ -1422,8 +1439,8 @@ object tr_rendertools {
                 tangents[1].set(temp)
 
                 // draw the tangents
-                tangents[0].set(mid.plus(tangents[0].times(RenderSystem_init.r_showTextureVectors.GetFloat())))
-                tangents[1].set(mid.plus(tangents[1].times(RenderSystem_init.r_showTextureVectors.GetFloat())))
+                tangents[0].set(mid.plus(tangents[0].times(RenderSystem_init.r_showTextureVectors!!.GetFloat())))
+                tangents[1].set(mid.plus(tangents[1].times(RenderSystem_init.r_showTextureVectors!!.GetFloat())))
                 qgl.qglColor3f(1f, 0f, 0f)
                 qgl.qglVertex3fv(mid.ToFloatPtr())
                 qgl.qglVertex3fv(tangents[0].ToFloatPtr())
@@ -1447,9 +1464,9 @@ object tr_rendertools {
     fun RB_ShowDominantTris(drawSurfs: Array<drawSurf_s>, numDrawSurfs: Int) {
         var i: Int
         var j: Int
-        var drawSurf: drawSurf_s?
-        var tri: srfTriangles_s?
-        if (!RenderSystem_init.r_showDominantTri.GetBool()) {
+        var drawSurf: drawSurf_s
+        var tri: srfTriangles_s
+        if (!RenderSystem_init.r_showDominantTri!!.GetBool()) {
             return
         }
         tr_backend.GL_State(tr_local.GLS_DEPTHFUNC_LESS)
@@ -1474,16 +1491,16 @@ object tr_rendertools {
             qgl.qglBegin(GL11.GL_LINES)
             j = 0
             while (j < tri.numVerts) {
-                val a: idDrawVert?
-                val b: idDrawVert?
-                val c: idDrawVert?
-                val mid = idVec3()
+                val a: idDrawVert
+                val b: idDrawVert
+                val c: idDrawVert
+                val mid: idVec3 = idVec3()
 
                 // find the midpoint of the dominant tri
                 a = tri.verts!![j]!!
                 b = tri.verts!![tri.dominantTris!![j]!!.v2]!!
                 c = tri.verts!![tri.dominantTris!![j]!!.v3]!!
-                mid.set(a.xyz.plus(b.xyz.plus(c.xyz)).times(1.0f / 3.0f))
+                mid.set((a.xyz.plus(b.xyz.plus(c.xyz))).times(1.0f / 3.0f))
                 qgl.qglVertex3fv(mid.ToFloatPtr())
                 qgl.qglVertex3fv(a.xyz.ToFloatPtr())
                 j++
@@ -1509,10 +1526,10 @@ object tr_rendertools {
         var n: Int
         var o: Int
         var drawSurf: drawSurf_s
-        var tri: srfTriangles_s?
+        var tri: srfTriangles_s
         var edge: silEdge_t?
         var danglePlane: Int
-        if (!RenderSystem_init.r_showEdges.GetBool()) {
+        if (!RenderSystem_init.r_showEdges!!.GetBool()) {
             return
         }
         tr_backend.GL_State(tr_local.GLS_DEFAULT)
@@ -1523,7 +1540,7 @@ object tr_rendertools {
         while (i < numDrawSurfs) {
             drawSurf = drawSurfs[i]
             tri = drawSurf.geo!!
-            val ac = tri.verts //TODO:which element is the pointer pointing to?
+            val ac: Array<idDrawVert>? = tri.verts as Array<idDrawVert> //TODO:which element is the pointer pointing to?
             if (null == ac) {
                 i++
                 continue
@@ -1540,17 +1557,17 @@ object tr_rendertools {
                     var l: Int
                     var i1: Int
                     var i2: Int
-                    l = if (k == 2) 0 else k + 1
-                    i1 = tri.indexes!![j + k]
-                    i2 = tri.indexes!![j + l]
+                    l = if ((k == 2)) 0 else k + 1
+                    i1 = tri.indexes!!.get(j + k)
+                    i2 = tri.indexes!!.get(j + l)
 
                     // if these are used backwards, the edge is shared
                     m = 0
                     while (m < tri.numIndexes) {
                         n = 0
                         while (n < 3) {
-                            o = if (n == 2) 0 else n + 1
-                            if (tri.indexes!![m + n] == i2 && tri.indexes!![m + o] == i1) {
+                            o = if ((n == 2)) 0 else n + 1
+                            if (tri.indexes!!.get(m + n) == i2 && tri.indexes!!.get(m + o) == i1) {
                                 break
                             }
                             n++
@@ -1563,8 +1580,8 @@ object tr_rendertools {
 
                     // if we didn't find a backwards listing, draw it in yellow
                     if (m == tri.numIndexes) {
-                        qgl.qglVertex3fv(ac[i1]!!.xyz.ToFloatPtr())
-                        qgl.qglVertex3fv(ac[i2]!!.xyz.ToFloatPtr())
+                        qgl.qglVertex3fv(ac[i1].xyz.ToFloatPtr())
+                        qgl.qglVertex3fv(ac[i2].xyz.ToFloatPtr())
                     }
                     k++
                 }
@@ -1586,12 +1603,12 @@ object tr_rendertools {
             j = 0
             while (j < tri.numSilEdges) {
                 edge = tri.silEdges!![j]
-                if (edge.p1 != danglePlane && edge.p2 != danglePlane) {
+                if (edge!!.p1 != danglePlane && edge.p2 != danglePlane) {
                     j++
                     continue
                 }
-                qgl.qglVertex3fv(ac[edge.v1]!!.xyz.ToFloatPtr())
-                qgl.qglVertex3fv(ac[edge.v2]!!.xyz.ToFloatPtr())
+                qgl.qglVertex3fv(ac[edge.v1].xyz.ToFloatPtr())
+                qgl.qglVertex3fv(ac[edge.v2].xyz.ToFloatPtr())
                 j++
             }
             qgl.qglEnd()
@@ -1613,9 +1630,9 @@ object tr_rendertools {
     fun RB_ShowLights() {
         var light: idRenderLightLocal
         var count: Int
-        var tri: srfTriangles_s
+        var tri: srfTriangles_s?
         var vLight: viewLight_s?
-        if (0 == RenderSystem_init.r_showLights.GetInteger()) {
+        if (0 == RenderSystem_init.r_showLights!!.GetInteger()) {
             return
         }
 
@@ -1628,29 +1645,29 @@ object tr_rendertools {
         qgl.qglDisable(GL11.GL_DEPTH_TEST)
         Common.common.Printf("volumes: ") // FIXME: not in back end!
         count = 0
-        vLight = tr_local.backEnd.viewDef!!.viewLights
+        vLight = tr_local.backEnd!!.viewDef!!.viewLights
         while (vLight != null) {
-            light = vLight.lightDef
+            light = vLight.lightDef!!
             count++
-            tri = light.frustumTris!!
+            tri = light.frustumTris
 
             // depth buffered planes
-            if (RenderSystem_init.r_showLights.GetInteger() >= 2) {
+            if (RenderSystem_init.r_showLights!!.GetInteger() >= 2) {
                 tr_backend.GL_State(tr_local.GLS_SRCBLEND_SRC_ALPHA or tr_local.GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA or tr_local.GLS_DEPTHMASK)
                 qgl.qglColor4f(0f, 0f, 1f, 0.25f)
                 qgl.qglEnable(GL11.GL_DEPTH_TEST)
-                tr_render.RB_RenderTriangleSurface(tri)
+                tr_render.RB_RenderTriangleSurface(tri!!)
             }
 
             // non-hidden lines
-            if (RenderSystem_init.r_showLights.GetInteger() >= 3) {
+            if (RenderSystem_init.r_showLights!!.GetInteger() >= 3) {
                 tr_backend.GL_State(tr_local.GLS_POLYMODE_LINE or tr_local.GLS_DEPTHMASK)
                 qgl.qglDisable(GL11.GL_DEPTH_TEST)
                 qgl.qglColor3f(1f, 1f, 1f)
-                tr_render.RB_RenderTriangleSurface(tri)
+                tr_render.RB_RenderTriangleSurface(tri!!)
             }
             var index: Int
-            index = tr_local.backEnd.viewDef!!.renderWorld!!.lightDefs.FindIndex(vLight.lightDef)
+            index = tr_local.backEnd!!.viewDef!!.renderWorld!!.lightDefs.FindIndex(vLight.lightDef)
             if (vLight.viewInsideLight) {
                 // view is in this volume
                 Common.common.Printf("[%d] ", index)
@@ -1675,7 +1692,7 @@ object tr_rendertools {
      =====================
      */
     fun RB_ShowPortals() {
-        if (!RenderSystem_init.r_showPortals.GetBool()) {
+        if (!RenderSystem_init.r_showPortals!!.GetBool()) {
             return
         }
 
@@ -1684,7 +1701,7 @@ object tr_rendertools {
         Image.globalImages.BindNull()
         qgl.qglDisable(GL11.GL_DEPTH_TEST)
         tr_backend.GL_State(tr_local.GLS_DEFAULT)
-        tr_local.backEnd.viewDef!!.renderWorld!!.ShowPortals()
+        tr_local.backEnd!!.viewDef!!.renderWorld!!.ShowPortals()
         qgl.qglEnable(GL11.GL_DEPTH_TEST)
     }
 
@@ -1696,17 +1713,17 @@ object tr_rendertools {
     fun RB_ClearDebugText(time: Int) {
         var i: Int
         var num: Int
-        var text: debugText_s?
+        var text: debugText_s
         rb_debugTextTime = time
         if (0 == time) {
             // free up our strings
-            rb_debugText = Array(rb_debugText.size) { debugText_s() }
+            rb_debugText = allocArray(debugText_s::class.java, rb_debugText.size)
             rb_numDebugText = 0
             return
         }
 
         // copy any text that still needs to be drawn
-        i = 0.also { num = it }
+        i = 0.also({ num = it })
         while (i < rb_numDebugText) {
             text = rb_debugText[i]
             if (text.lifeTime > time) {
@@ -1727,7 +1744,7 @@ object tr_rendertools {
      */
     fun RB_AddDebugText(
         text: String?,
-        origin: idVec3,
+        origin: idVec3?,
         scale: Float,
         color: idVec4,
         viewAxis: idMat3,
@@ -1739,7 +1756,7 @@ object tr_rendertools {
         if (rb_numDebugText < MAX_DEBUG_TEXT) {
             debugText = rb_debugText[rb_numDebugText++]
             debugText.text.set(text) //			= text;
-            debugText.origin.set(origin)
+            debugText.origin.set((origin)!!)
             debugText.scale = scale
             debugText.color = color
             debugText.viewAxis = viewAxis
@@ -1757,13 +1774,13 @@ object tr_rendertools {
      ================
      */
     fun RB_DrawTextLength(text: String?, scale: Float, len: Int): Float {
-        var len = len
+        var len: Int = len
         var i: Int
         var num: Int
         var index: Int
         var charIndex: Int
         var spacing: Float
-        var textLen = 0.0f
+        var textLen: Float = 0.0f
         if (text != null && !text.isEmpty()) {
             if (0 == len) {
                 len = text.length
@@ -1812,18 +1829,18 @@ object tr_rendertools {
         var index: Int
         var charIndex: Int
         var line: Int
-        var textLen = 0f
+        var textLen: Float = 0f
         var spacing: Float
-        val org = idVec3()
-        val p1 = idVec3()
-        val p2 = idVec3()
+        val org: idVec3 = idVec3()
+        val p1: idVec3 = idVec3()
+        val p2: idVec3 = idVec3()
         if (text != null && !text.isEmpty()) {
             qgl.qglBegin(GL11.GL_LINES)
             qgl.qglColor3fv(color.ToFloatPtr())
-            line = if (text[0] == '\n') {
-                1
+            if (text[0] == '\n') {
+                line = 1
             } else {
-                0
+                line = 0
             }
             len = text.length
             i = 0
@@ -1863,8 +1880,9 @@ object tr_rendertools {
                         continue
                     }
                     p1.set(
-                        org.plus(viewAxis[1].unaryMinus().times(scale * simplex.simplex[charIndex][index]))
-                            .plus(viewAxis[2].times(scale * simplex.simplex[charIndex][index + 1]))
+                        org.plus(
+                            viewAxis[1].unaryMinus().times(scale * simplex.simplex[charIndex][index])
+                        ).plus(viewAxis[2].times(scale * simplex.simplex[charIndex][index + 1]))
                     )
                     index += 2
                     if (simplex.simplex[charIndex][index] < 0) {
@@ -1873,8 +1891,9 @@ object tr_rendertools {
                     }
                     //				p2 = org + scale * simplex[charIndex][index] * -viewAxis[1] + scale * simplex[charIndex][index+1] * viewAxis[2];
                     p2.set(
-                        org.plus(viewAxis[1].unaryMinus().times(scale * simplex.simplex[charIndex][index]))
-                            .plus(viewAxis[2].times(scale * simplex.simplex[charIndex][index + 1]))
+                        org.plus(
+                            viewAxis[1].unaryMinus().times(scale * simplex.simplex[charIndex][index])
+                        ).plus(viewAxis[2].times(scale * simplex.simplex[charIndex][index + 1]))
                     )
                     qgl.qglVertex3fv(p1.ToFloatPtr())
                     qgl.qglVertex3fv(p2.ToFloatPtr())
@@ -1903,7 +1922,7 @@ object tr_rendertools {
         // all lines are expressed in world coordinates
         RB_SimpleWorldSetup()
         Image.globalImages.BindNull()
-        width = RenderSystem_init.r_debugLineWidth.GetInteger()
+        width = RenderSystem_init.r_debugLineWidth!!.GetInteger()
         if (width < 1) {
             width = 1
         } else if (width > 10) {
@@ -1913,10 +1932,10 @@ object tr_rendertools {
         // draw lines
         tr_backend.GL_State(tr_local.GLS_POLYMODE_LINE)
         qgl.qglLineWidth(width.toFloat())
-        if (!RenderSystem_init.r_debugLineDepthTest.GetBool()) {
+        if (!RenderSystem_init.r_debugLineDepthTest!!.GetBool()) {
             qgl.qglDisable(GL11.GL_DEPTH_TEST)
         }
-        text = rb_debugText[0.also { text_index = it }]
+        text = rb_debugText[0.also({ text_index = it })]
         i = 0
         while (i < rb_numDebugText) {
             if (!text.depthTest) {
@@ -1932,10 +1951,10 @@ object tr_rendertools {
             i++
             text = rb_debugText[++text_index]
         }
-        if (!RenderSystem_init.r_debugLineDepthTest.GetBool()) {
+        if (!RenderSystem_init.r_debugLineDepthTest!!.GetBool()) {
             qgl.qglEnable(GL11.GL_DEPTH_TEST)
         }
-        text = rb_debugText[0.also { text_index = it }]
+        text = rb_debugText[0.also({ text_index = it })]
         i = 0
         while (i < rb_numDebugText) {
             if (text.depthTest) {
@@ -1964,7 +1983,7 @@ object tr_rendertools {
         var i: Int
         var num: Int
         var line: debugLine_s?
-        var line_index: Int = 0
+        var line_index: Int
         rb_debugLineTime = time
         if (0 == time) {
             rb_numDebugLines = 0
@@ -1973,7 +1992,7 @@ object tr_rendertools {
 
         // copy any lines that still need to be drawn
         num = 0
-        line = rb_debugLines[0]
+        line = rb_debugLines[0.also({ line_index = it })]
         i = 0
         while (i < rb_numDebugLines) {
             if (line!!.lifeTime > time) {
@@ -1983,7 +2002,7 @@ object tr_rendertools {
                 num++
             }
             i++
-            line = rb_debugLines[line_index++]!!
+            line = rb_debugLines[line_index++]
         }
         rb_numDebugLines = num
     }
@@ -1993,14 +2012,14 @@ object tr_rendertools {
      RB_AddDebugLine
      ================
      */
-    fun RB_AddDebugLine(color: idVec4, start: idVec3, end: idVec3, lifeTime: Int, depthTest: Boolean) {
+    fun RB_AddDebugLine(color: idVec4?, start: idVec3?, end: idVec3?, lifeTime: Int, depthTest: Boolean) {
         val line: debugLine_s
         if (rb_numDebugLines < MAX_DEBUG_LINES) {
             line = debugLine_s()
             rb_debugLines[rb_numDebugLines++] = line
-            line.rgb = idVec4(color)
-            line.start.set(start)
-            line.end.set(end)
+            line.rgb = idVec4((color)!!)
+            line.start.set((start)!!)
+            line.end.set((end)!!)
             line.depthTest = depthTest
             line.lifeTime = rb_debugLineTime + lifeTime
         }
@@ -2023,7 +2042,7 @@ object tr_rendertools {
         // all lines are expressed in world coordinates
         RB_SimpleWorldSetup()
         Image.globalImages.BindNull()
-        width = RenderSystem_init.r_debugLineWidth.GetInteger()
+        width = RenderSystem_init.r_debugLineWidth!!.GetInteger()
         if (width < 1) {
             width = 1
         } else if (width > 10) {
@@ -2033,16 +2052,15 @@ object tr_rendertools {
         // draw lines
         tr_backend.GL_State(tr_local.GLS_POLYMODE_LINE) //| GLS_DEPTHMASK ); //| GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE );
         qgl.qglLineWidth(width.toFloat())
-        if (!RenderSystem_init.r_debugLineDepthTest.GetBool()) {
+        if (!RenderSystem_init.r_debugLineDepthTest!!.GetBool()) {
             qgl.qglDisable(GL11.GL_DEPTH_TEST)
         }
         qgl.qglBegin(GL11.GL_LINES)
-        line_index = 0
-        line = rb_debugLines[0]!!
+        line = rb_debugLines[0.also({ line_index = it })]!!
         i = 0
         while (i < rb_numDebugLines) {
             if (!line.depthTest) {
-                qgl.qglColor3fv(line.rgb.ToFloatPtr())
+                qgl.qglColor3fv(line.rgb!!.ToFloatPtr())
                 qgl.qglVertex3fv(line.start.ToFloatPtr())
                 qgl.qglVertex3fv(line.end.ToFloatPtr())
             }
@@ -2050,16 +2068,15 @@ object tr_rendertools {
             line = rb_debugLines[line_index++]!!
         }
         qgl.qglEnd()
-        if (!RenderSystem_init.r_debugLineDepthTest.GetBool()) {
+        if (!RenderSystem_init.r_debugLineDepthTest!!.GetBool()) {
             qgl.qglEnable(GL11.GL_DEPTH_TEST)
         }
         qgl.qglBegin(GL11.GL_LINES)
-        line_index = 0
-        line = rb_debugLines[0]!!
+        line = rb_debugLines[0.also({ line_index = it })]!!
         i = 0
         while (i < rb_numDebugLines) {
             if (line.depthTest) {
-                qgl.qglColor4fv(line.rgb.ToFloatPtr())
+                qgl.qglColor4fv(line.rgb!!.ToFloatPtr())
                 qgl.qglVertex3fv(line.start.ToFloatPtr())
                 qgl.qglVertex3fv(line.end.ToFloatPtr())
             }
@@ -2089,7 +2106,7 @@ object tr_rendertools {
 
         // copy any polygons that still need to be drawn
         num = 0
-        poly = rb_debugPolygons[0.also { poly_index = it }]
+        poly = rb_debugPolygons[0.also({ poly_index = it })]
         i = 0
         while (i < rb_numDebugPolygons) {
             if (poly.lifeTime > time) {
@@ -2109,12 +2126,12 @@ object tr_rendertools {
      RB_AddDebugPolygon
      ================
      */
-    fun RB_AddDebugPolygon(color: idVec4, winding: idWinding, lifeTime: Int, depthTest: Boolean) {
+    fun RB_AddDebugPolygon(color: idVec4?, winding: idWinding, lifeTime: Int, depthTest: Boolean) {
         val poly: debugPolygon_s
         if (rb_numDebugPolygons < MAX_DEBUG_POLYGONS) {
             poly = rb_debugPolygons[rb_numDebugPolygons++]
             poly.rgb = color
-            poly.winding.set(winding)
+            poly.winding = winding
             poly.depthTest = depthTest
             poly.lifeTime = rb_debugPolygonTime + lifeTime
         }
@@ -2140,7 +2157,7 @@ object tr_rendertools {
         qgl.qglDisable(GL11.GL_TEXTURE_2D)
         qgl.qglDisable(GL11.GL_STENCIL_TEST)
         qgl.qglEnable(GL11.GL_DEPTH_TEST)
-        if (RenderSystem_init.r_debugPolygonFilled.GetBool()) {
+        if (RenderSystem_init.r_debugPolygonFilled!!.GetBool()) {
             tr_backend.GL_State(tr_local.GLS_SRCBLEND_SRC_ALPHA or tr_local.GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA or tr_local.GLS_DEPTHMASK)
             qgl.qglPolygonOffset(-1f, -2f)
             qgl.qglEnable(GL11.GL_POLYGON_OFFSET_FILL)
@@ -2149,12 +2166,12 @@ object tr_rendertools {
             qgl.qglPolygonOffset(-1f, -2f)
             qgl.qglEnable(GL11.GL_POLYGON_OFFSET_LINE)
         }
-        poly = rb_debugPolygons[0.also { poly_index = it }]
+        poly = rb_debugPolygons[0.also({ poly_index = it })]
         i = 0
         while (i < rb_numDebugPolygons) {
 
 //		if ( !poly.depthTest ) {
-            qgl.qglColor4fv(poly.rgb.ToFloatPtr())
+            qgl.qglColor4fv(poly.rgb!!.ToFloatPtr())
             qgl.qglBegin(GL11.GL_POLYGON)
             j = 0
             while (j < poly.winding.GetNumPoints()) {
@@ -2166,7 +2183,7 @@ object tr_rendertools {
             poly = rb_debugPolygons[++poly_index]
         }
         tr_backend.GL_State(tr_local.GLS_DEFAULT)
-        if (RenderSystem_init.r_debugPolygonFilled.GetBool()) {
+        if (RenderSystem_init.r_debugPolygonFilled!!.GetBool()) {
             qgl.qglDisable(GL11.GL_POLYGON_OFFSET_FILL)
         } else {
             qgl.qglDisable(GL11.GL_POLYGON_OFFSET_LINE)
@@ -2176,8 +2193,8 @@ object tr_rendertools {
     }
 
     fun RB_TestGamma() {
-        val image =
-            Array<Array<ByteArray>>(G_HEIGHT) { Array(G_WIDTH) { ByteArray(4) } }
+        val image: Array<Array<ByteArray>> =
+            Array(G_HEIGHT, { Array(G_WIDTH, { ByteArray(4) }) })
         var i: Int
         var j: Int
         var c: Int
@@ -2186,10 +2203,10 @@ object tr_rendertools {
         var dither: Int
         var mask: Int
         var y: Int
-        if (RenderSystem_init.r_testGamma.GetInteger() <= 0) {
+        if (RenderSystem_init.r_testGamma!!.GetInteger() <= 0) {
             return
         }
-        v = RenderSystem_init.r_testGamma.GetInteger()
+        v = RenderSystem_init.r_testGamma!!.GetInteger()
         if (v <= 1 || v >= 196) {
             v = 128
         }
@@ -2208,7 +2225,7 @@ object tr_rendertools {
                     while (j < G_WIDTH / 4) {
                         comp = 0
                         while (comp < 3) {
-                            if (mask and (1 shl comp) != 0) {
+                            if ((mask and (1 shl comp)) != 0) {
                                 image[y + i][c * G_WIDTH / 4 + j][comp] = v.toByte()
                             }
                             comp++
@@ -2218,15 +2235,15 @@ object tr_rendertools {
                     // dithered color
                     j = 0
                     while (j < G_WIDTH / 4) {
-                        dither = if (i xor j and 1 != 0) {
-                            c * 64
+                        if (((i xor j) and 1) != 0) {
+                            dither = c * 64
                         } else {
-                            c * 64 + 63
+                            dither = c * 64 + 63
                         }
                         comp = 0
                         while (comp < 3) {
-                            if (mask and (1 shl comp) != 0) {
-                                image[y + BAR_HEIGHT / 2 + i][c * G_WIDTH / 4 + j][comp] = dither.toByte()
+                            if ((mask and (1 shl comp)) != 0) {
+                                image[y + (BAR_HEIGHT / 2) + i][c * G_WIDTH / 4 + j][comp] = dither.toByte()
                             }
                             comp++
                         }
@@ -2241,7 +2258,7 @@ object tr_rendertools {
 
         // draw geometrically increasing steps in the bottom row
         y = 0 * BAR_HEIGHT
-        var scale = 1f
+        var scale: Float = 1f
         c = 0
         while (c < 4) {
             v = (64 * scale).toInt()
@@ -2273,7 +2290,7 @@ object tr_rendertools {
         qgl.qglDisable(GL11.GL_TEXTURE_2D)
         qgl.qglOrtho(0.0, 1.0, 0.0, 1.0, -1.0, 1.0)
         qgl.qglRasterPos2f(0.01f, 0.01f)
-        qgl.qglDrawPixels(G_WIDTH, G_HEIGHT, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, image)
+        qgl.qglDrawPixels(G_WIDTH, G_HEIGHT, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, image as Array<Array<ByteArray?>?>)
         qgl.qglPopMatrix()
         qgl.qglEnable(GL11.GL_TEXTURE_2D)
         qgl.qglMatrixMode(GL11.GL_MODELVIEW)
@@ -2285,17 +2302,17 @@ object tr_rendertools {
      ==================
      */
     fun RB_TestGammaBias() {
-        val image =
-            Array<Array<ByteArray>>(G_HEIGHT) { Array(G_WIDTH) { ByteArray(4) } }
-        if (RenderSystem_init.r_testGammaBias.GetInteger() <= 0) {
+        val image: Array<Array<ByteArray>> =
+            Array(G_HEIGHT, { Array(G_WIDTH, { ByteArray(4) }) })
+        if (RenderSystem_init.r_testGammaBias!!.GetInteger() <= 0) {
             return
         }
-        var y = 0
-        var bias = -40
+        var y: Int = 0
+        var bias: Int = -40
         while (bias < 40) {
-            var scale = 1f
+            var scale: Float = 1f
             for (c in 0..3) {
-                var v = (64 * scale + bias).toInt()
+                var v: Int = (64 * scale + bias).toInt()
                 scale = scale * 1.5f
                 if (v < 0) {
                     v = 0
@@ -2303,7 +2320,7 @@ object tr_rendertools {
                     v = 255
                 }
                 for (i in 0 until BAR_HEIGHT) {
-                    for (j in 0 until G_WIDTH / 4) {
+                    for (j in 0 until (G_WIDTH / 4)) {
                         image[y + i][c * G_WIDTH / 4 + j][0] = v.toByte()
                         image[y + i][c * G_WIDTH / 4 + j][1] = v.toByte()
                         image[y + i][c * G_WIDTH / 4 + j][2] = v.toByte()
@@ -2322,7 +2339,7 @@ object tr_rendertools {
         qgl.qglDisable(GL11.GL_TEXTURE_2D)
         qgl.qglOrtho(0.0, 1.0, 0.0, 1.0, -1.0, 1.0)
         qgl.qglRasterPos2f(0.01f, 0.01f)
-        qgl.qglDrawPixels(G_WIDTH, G_HEIGHT, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, image)
+        qgl.qglDrawPixels(G_WIDTH, G_HEIGHT, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, image as Array<Array<ByteArray?>?>)
         qgl.qglPopMatrix()
         qgl.qglEnable(GL11.GL_TEXTURE_2D)
         qgl.qglMatrixMode(GL11.GL_MODELVIEW)
@@ -2345,11 +2362,11 @@ object tr_rendertools {
             return
         }
         if (tr_local.tr.testVideo != null) {
-            val cin: cinData_t?
+            val cin: cinData_t
             cin =
-                tr_local.tr.testVideo!!.ImageForTime((1000 * (tr_local.backEnd.viewDef!!.floatTime - tr_local.tr.testVideoStartTime)).toInt())
+                tr_local.tr.testVideo!!.ImageForTime((1000 * (tr_local.backEnd!!.viewDef!!.floatTime - tr_local.tr.testVideoStartTime)).toInt())
             if (cin.image != null) {
-                image.UploadScratch(cin.image!!, cin.imageWidth, cin.imageHeight)
+                image.UploadScratch(cin.image, cin.imageWidth, cin.imageHeight)
             } else {
                 tr_local.tr.testImage = null
                 return
@@ -2357,7 +2374,7 @@ object tr_rendertools {
             w = 0.25f
             h = 0.25f
         } else {
-            max = Math.max(image.uploadWidth._val, image.uploadHeight._val)
+            max = max(image.uploadWidth._val.toDouble(), image.uploadHeight._val.toDouble()).toInt()
             w = 0.25f * image.uploadWidth._val / max
             h = 0.25f * image.uploadHeight._val / max
             w *= tr_local.glConfig.vidHeight.toFloat() / tr_local.glConfig.vidWidth
@@ -2389,23 +2406,23 @@ object tr_rendertools {
      RB_RenderDebugTools
      =================
      */
-    fun RB_RenderDebugTools(drawSurfs: Array<drawSurf_s>, numDrawSurfs: Int) {
+    fun RB_RenderDebugTools(drawSurfs: Array<drawSurf_s?>?, numDrawSurfs: Int) {
         // don't do anything if this was a 2D rendering
-        if (null == tr_local.backEnd.viewDef!!.viewEntitys) {
+        if (null == tr_local.backEnd!!.viewDef!!.viewEntitys) {
             return
         }
         tr_backend.RB_LogComment("---------- RB_RenderDebugTools ----------\n")
         tr_backend.GL_State(tr_local.GLS_DEFAULT)
-        tr_local.backEnd.currentScissor = tr_local.backEnd.viewDef!!.scissor
+        tr_local.backEnd!!.currentScissor = tr_local.backEnd!!.viewDef!!.scissor
         qgl.qglScissor(
-            tr_local.backEnd.viewDef!!.viewport.x1 + tr_local.backEnd.currentScissor.x1,
-            tr_local.backEnd.viewDef!!.viewport.y1 + tr_local.backEnd.currentScissor.y1,
-            tr_local.backEnd.currentScissor.x2 + 1 - tr_local.backEnd.currentScissor.x1,
-            tr_local.backEnd.currentScissor.y2 + 1 - tr_local.backEnd.currentScissor.y1
+            tr_local.backEnd!!.viewDef!!.viewport.x1 + tr_local.backEnd!!.currentScissor!!.x1,
+            tr_local.backEnd!!.viewDef!!.viewport.y1 + tr_local.backEnd!!.currentScissor!!.y1,
+            tr_local.backEnd!!.currentScissor!!.x2 + 1 - tr_local.backEnd!!.currentScissor!!.x1,
+            tr_local.backEnd!!.currentScissor!!.y2 + 1 - tr_local.backEnd!!.currentScissor!!.y1
         )
         RB_ShowLightCount()
         RB_ShowShadowCount()
-        RB_ShowTexturePolarity(drawSurfs, numDrawSurfs)
+        RB_ShowTexturePolarity(drawSurfs as Array<drawSurf_s>, numDrawSurfs)
         RB_ShowTangentSpace(drawSurfs, numDrawSurfs)
         RB_ShowVertexColor(drawSurfs, numDrawSurfs)
         RB_ShowTris(drawSurfs, numDrawSurfs)
@@ -2413,14 +2430,14 @@ object tr_rendertools {
         RB_ShowSurfaceInfo(drawSurfs, numDrawSurfs)
         RB_ShowEdges(drawSurfs, numDrawSurfs)
         RB_ShowNormals(drawSurfs, numDrawSurfs)
-        RB_ShowViewEntitys(tr_local.backEnd.viewDef!!.viewEntitys)
+        RB_ShowViewEntitys(tr_local.backEnd!!.viewDef!!.viewEntitys)
         RB_ShowLights()
         RB_ShowTextureVectors(drawSurfs, numDrawSurfs)
         RB_ShowDominantTris(drawSurfs, numDrawSurfs)
-        if (RenderSystem_init.r_testGamma.GetInteger() > 0) {    // test here so stack check isn't so damn slow on debug builds
+        if (RenderSystem_init.r_testGamma!!.GetInteger() > 0) {    // test here so stack check isn't so damn slow on debug builds
             RB_TestGamma()
         }
-        if (RenderSystem_init.r_testGammaBias.GetInteger() > 0) {
+        if (RenderSystem_init.r_testGammaBias!!.GetInteger() > 0) {
             RB_TestGammaBias()
         }
         RB_TestImage()
@@ -2445,15 +2462,15 @@ object tr_rendertools {
         }
     }
 
-    class debugLine_s {
-        var depthTest = false
+    class debugLine_s() {
+        var depthTest: Boolean = false
         val end: idVec3 = idVec3()
-        var lifeTime = 0
-        var rgb: idVec4 = idVec4()
+        var lifeTime: Int = 0
+        var rgb: idVec4? = null
         val start: idVec3 = idVec3()
     }
 
-    class debugText_s {
+    class debugText_s() {
         var align: Int
         var color: idVec4
         var depthTest: Boolean
@@ -2475,21 +2492,10 @@ object tr_rendertools {
         }
     }
 
-    class debugPolygon_s {
-        var depthTest = false
-        var lifeTime = 0
-        var rgb: idVec4 = idVec4()
+    class debugPolygon_s() {
+        var depthTest: Boolean = false
+        var lifeTime: Int = 0
+        var rgb: idVec4? = null
         var winding: idWinding = idWinding()
-    }
-
-    //    
-    //    
-    /*
-     ================
-     RB_DrawBounds
-     ================
-     */
-    init {
-        rb_debugPolygons = Array<debugPolygon_s>(MAX_DEBUG_POLYGONS) { debugPolygon_s() }
     }
 }

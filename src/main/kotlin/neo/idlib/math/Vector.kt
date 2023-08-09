@@ -21,7 +21,9 @@ import kotlin.math.*
  */
 object Vector {
     private val vec2_origin: idVec2 = idVec2(0.0f, 0.0f)
-    private val vec3_origin: idVec3 = idVec3(0.0f, 0.0f, 0.0f)
+
+    @JvmField
+    val vec3_origin: idVec3 = idVec3(0.0f, 0.0f, 0.0f)
     private val vec3_zero: idVec3 = vec3_origin
     private val vec4_origin: idVec4 = idVec4(0.0f, 0.0f, 0.0f, 0.0f)
     private val vec4_zero: idVec4 = vec4_origin
@@ -48,6 +50,7 @@ object Vector {
         return idVec3(0.0f, 0.0f, 0.0f)
     }
 
+    @JvmStatic
     fun getVec3_zero(): idVec3 {
         return idVec3(vec3_zero)
     }
@@ -83,18 +86,22 @@ object Vector {
 
      ===============================================================================
      */
+    @JvmStatic
     fun DotProduct(a: DoubleArray, b: DoubleArray): Double {
         return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
     }
 
+    @JvmStatic
     fun DotProduct(a: FloatArray, b: FloatArray): Float {
         return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
     }
 
+    @JvmStatic
     fun DotProduct(a: idVec3, b: idVec3): Float {
         return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
     }
 
+    @JvmStatic
     fun DotProduct(a: idVec3, b: idVec4): Float {
         return DotProduct(a, b.ToVec3())
     }
@@ -107,6 +114,7 @@ object Vector {
         return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
     }
 
+    @JvmStatic
     fun VectorSubtract(a: DoubleArray, b: DoubleArray, c: DoubleArray): DoubleArray {
         c[0] = a[0] - b[0]
         c[1] = a[1] - b[1]
@@ -114,6 +122,7 @@ object Vector {
         return c
     }
 
+    @JvmStatic
     fun VectorSubtract(a: FloatArray, b: FloatArray, c: FloatArray): FloatArray {
         c[0] = a[0] - b[0]
         c[1] = a[1] - b[1]
@@ -121,6 +130,7 @@ object Vector {
         return c
     }
 
+    @JvmStatic
     fun VectorSubtract(a: idVec3, b: idVec3, c: FloatArray): FloatArray {
         c[0] = a[0] - b[0]
         c[1] = a[1] - b[1]
@@ -147,12 +157,14 @@ object Vector {
         o[2] = v[2] * s
     }
 
+    @JvmStatic
     fun VectorMA(v: DoubleArray, s: Double, b: DoubleArray, o: Array<Double>) {
         o[0] = v[0] + b[0] * s
         o[1] = v[1] + b[1] * s
         o[2] = v[2] + b[2] * s
     }
 
+    @JvmStatic
     fun VectorMA(v: idVec3, s: Float, b: idVec3, o: idVec3) {
         o[0] = v[0] + b[0] * s
         o[1] = v[1] + b[1] * s
@@ -201,7 +213,10 @@ object Vector {
     //
     //===============================================================
     class idVec2 : idVec<idVec2>, SERiAL {
+        @JvmField
         var x = 0f
+
+        @JvmField
         var y = 0f
 
 
@@ -450,6 +465,8 @@ object Vector {
 
             @Transient
             val BYTES = SIZE / java.lang.Byte.SIZE
+
+            @JvmStatic
             fun generateArray(length: Int): Array<idVec2> {
                 return Array(length) { idVec2() }
             }
@@ -462,8 +479,13 @@ object Vector {
     //
     //===============================================================
     open class idVec3 : idVec<idVec3>, SERiAL {
+        @JvmField
         var x = 0f
+
+        @JvmField
         var y = 0f
+
+        @JvmField
         var z = 0f
 
         constructor()
@@ -1200,9 +1222,11 @@ object Vector {
 
         companion object {
             @Transient
+            @JvmField
             val SIZE = 3 * java.lang.Float.SIZE
 
             @Transient
+            @JvmField
             val BYTES = SIZE / java.lang.Byte.SIZE
 
             /*
@@ -1220,10 +1244,12 @@ object Vector {
                 return idVec3(b.x * a, b.y * a, b.z * a)
             }
 
+            @JvmStatic
             fun generateArray(length: Int): Array<idVec3> {
                 return Array(length) { idVec3() }
             }
 
+            @JvmStatic
             fun generateArray(firstDimensionSize: Int, secondDimensionSize: Int): Array<Array<idVec3>> {
                 return Array(firstDimensionSize) { Array(secondDimensionSize) { idVec3() } }
             }
@@ -1253,9 +1279,17 @@ object Vector {
     //===============================================================
     class idVec4 : idVec<idVec4>, SERiAL {
         private val DBG_count = DBG_counter++
+
+        @JvmField
         var w = 0f
+
+        @JvmField
         var x = 0f
+
+        @JvmField
         var y = 0f
+
+        @JvmField
         var z = 0f
 
         constructor()
@@ -1532,11 +1566,15 @@ object Vector {
 
         companion object {
             @Transient
+            @JvmField
             val SIZE = 4 * java.lang.Float.SIZE
 
             @Transient
+            @JvmField
             val BYTES = SIZE / java.lang.Byte.SIZE
             private var DBG_counter = 0
+
+            @JvmStatic
             fun generateArray(length: Int): Array<idVec4> {
                 return Array(length) { idVec4() }
             }
@@ -1557,10 +1595,19 @@ object Vector {
     //
     //===============================================================
     class idVec5 : idVec<idVec5>, SERiAL {
+        @JvmField
         var s = 0f
+
+        @JvmField
         var t = 0f
+
+        @JvmField
         var x = 0f
+
+        @JvmField
         var y = 0f
+
+        @JvmField
         var z = 0f
 
         constructor()

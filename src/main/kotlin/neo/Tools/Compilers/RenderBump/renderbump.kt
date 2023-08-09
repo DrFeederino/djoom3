@@ -427,7 +427,7 @@ object renderbump {
         v[0].set(highMesh.verts!![highMesh.indexes!![faceNum * 3 + 0]]!!.xyz)
         v[1].set(highMesh.verts!![highMesh.indexes!![faceNum * 3 + 1]]!!.xyz)
         v[2].set(highMesh.verts!![highMesh.indexes!![faceNum * 3 + 2]]!!.xyz)
-        plane.set(highMesh.facePlanes!![faceNum])
+        plane.set(highMesh.facePlanes!![faceNum]!!)
 
         // only test against planes facing the same direction as our normal
         d = plane.Normal().times(normal)
@@ -903,7 +903,7 @@ object renderbump {
         i = 0
         while (i < model.NumSurfaces()) {
             val surf = model.Surface(i)
-            totalVerts += surf.geometry!!.numVerts
+            totalVerts += surf!!.geometry!!.numVerts
             totalIndexes += surf.geometry!!.numIndexes
             i++
         }
@@ -920,7 +920,7 @@ object renderbump {
         i = 0
         while (i < model.NumSurfaces()) {
             val surf = model.Surface(i)
-            val tri = surf.geometry!!
+            val tri = surf!!.geometry!!
 
 //            memcpy(verts + numVerts, tri.verts, tri.numVerts * sizeof(tri.verts[0]));
             System.arraycopy(tri.verts, 0, verts, 0, tri.numVerts)
@@ -1121,7 +1121,7 @@ object renderbump {
             rb.highModel = CombineModelSurfaces(rb.highModel!!)
         }
         val surf = rb.highModel!!.Surface(0)
-        mesh = surf.geometry!!
+        mesh = surf!!.geometry!!
         rb.mesh = mesh
         tr_trisurf.R_DeriveFacePlanes(mesh)
 
@@ -1229,7 +1229,7 @@ object renderbump {
      */
     class RenderBump_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             val lowPoly: idRenderModel?
             val source: String
             var i: Int
@@ -1246,7 +1246,7 @@ object renderbump {
             Common.common.SetRefreshOnPrint(true)
 
             // there should be a single parameter, the filename for a game loadable low-poly model
-            if (args.Argc() != 2) {
+            if (args!!.Argc() != 2) {
                 Common.common.Error("Usage: renderbump <lowPolyModel>")
             }
             Common.common.Printf("----- Renderbump %s -----\n", args.Argv(1))
@@ -1277,7 +1277,7 @@ object renderbump {
                 opt.traceFrac = 0.05f
 
                 // parse the renderbump parameters for this surface
-                cmdLine = ms.shader!!.GetRenderBump()
+                cmdLine = ms!!.shader!!.GetRenderBump()
                 Common.common.Printf(
                     "surface %d, shader %s\nrenderBump = %s ", i,
                     ms.shader!!.GetName(), cmdLine
@@ -1424,7 +1424,7 @@ object renderbump {
      ==============
      */
     class RenderBumpFlat_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             var width: Int
             var height: Int
             val source: String
@@ -1441,7 +1441,7 @@ object renderbump {
 
             // check options
             i = 1
-            while (i < args.Argc() - 1) {
+            while (i < args!!.Argc() - 1) {
                 var s: String
                 s = args.Argv(i)
                 if (s[0] == '-') {
@@ -1483,7 +1483,7 @@ object renderbump {
 
             // create normals if not present in file
             val surf = highPolyModel.Surface(0)
-            mesh = surf.geometry!!
+            mesh = surf!!.geometry!!
 
             // bound the entire file
             tr_trisurf.R_BoundTriSurf(mesh)
@@ -1544,7 +1544,7 @@ object renderbump {
                     i = 0
                     while (i < highPolyModel.NumSurfaces()) {
                         val surf2 = highPolyModel.Surface(i)
-                        mesh = surf2.geometry!!
+                        mesh = surf2!!.geometry!!
                         if (colorPass != 0) {
                             // just render the surface color for artist visualization
                             j = 0

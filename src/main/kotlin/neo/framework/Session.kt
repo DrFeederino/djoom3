@@ -49,9 +49,16 @@ class Session {
     //
     // needed by the gui system for the load game menu
     class logStats_t : SERiAL {
+        @JvmField
         var combat = 0
+
+        @JvmField
         var health = 0
+
+        @JvmField
         var heartRate = 0f
+
+        @JvmField
         var stamina = 0
         override fun AllocBuffer(): ByteBuffer {
             throw TODO_Exception()
@@ -83,12 +90,17 @@ class Session {
     abstract class idSession {
         // The renderer and sound system will write changes to writeDemo.
         // Demos can be recorded and played at the same time when splicing.
+        @JvmField
         var readDemo: idDemoFile? = null
+
+        @JvmField
         var renderdemoVersion = 0
 
         // The render world and sound world used for this session.
         lateinit var rw: idRenderWorld
         lateinit var sw: idSoundWorld
+
+        @JvmField
         var writeDemo: idDemoFile? = null
 
         //	public abstract			~idSession() {}
@@ -254,7 +266,7 @@ class Session {
      */
     internal class Session_RescanSI_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             sessLocal.mapSpawnData.serverInfo.set(CVarSystem.cvarSystem.MoveCVarsToDict(CVarSystem.CVAR_SERVERINFO))
             if (Game_local.game != null && idAsyncNetwork.server.IsActive()) {
                 Game_local.game.SetServerInfo(sessLocal.mapSpawnData.serverInfo)
@@ -278,12 +290,12 @@ class Session {
      */
     internal class Session_Map_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             val map: idStr
             val string: String
             val ff: findFile_t
             val rl_args = CmdArgs.idCmdArgs()
-            map = idStr(args.Argv(1))
+            map = idStr(args!!.Argv(1))
             if (0 == map.Length()) {
                 return
             }
@@ -329,12 +341,12 @@ class Session {
      */
     internal class Session_DevMap_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             val map: idStr
             val string: String
             val ff: findFile_t
             val rl_args = CmdArgs.idCmdArgs()
-            map = idStr(args.Argv(1))
+            map = idStr(args!!.Argv(1))
             if (0 == map.Length()) {
                 return
             }
@@ -378,10 +390,10 @@ class Session {
      */
     internal class Session_TestMap_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             val map: idStr
             var string: String
-            map = idStr(args.Argv(1))
+            map = idStr(args!!.Argv(1))
             if (0 == map.Length()) {
                 return
             }
@@ -408,8 +420,8 @@ class Session {
      */
     internal class Sess_WritePrecache_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs) {
-            if (args.Argc() != 2) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
+            if (args!!.Argc() != 2) {
                 Common.common.Printf("USAGE: writePrecache <execFile>\n")
                 return
             }
@@ -432,7 +444,7 @@ class Session {
 
     internal class Session_PromptKey_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             var retkey: String
             val valid = BooleanArray(2)
             if (recursed) {
@@ -455,7 +467,7 @@ class Session {
 //                    prompt_msg = common.GetLanguageDict().GetString("#str_04308");
 //                }
 ////                for (int d = 0; d < common.GetLanguageDict().args.Size(); d++) {
-////                    LangDict.idLangKeyValue bla = common.GetLanguageDict().args.oGet(d);
+////                    LangDict.idLangKeyValue bla = common.GetLanguageDict().args.get(d);
 ////                    System.out.println(bla.key + " >>> " + bla.value);
 ////                }
 //                retkey = sessLocal.MessageBox(MSG_CDKEY, prompt_msg, common.GetLanguageDict().GetString("#str_04305"), true, null, null, true);
@@ -509,8 +521,8 @@ class Session {
      ================
      */
     internal class Session_DemoShot_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
-            if (args.Argc() != 2) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
+            if (args!!.Argc() != 2) {
                 val filename: String = FindUnusedFileName("demos/shot%03i.demo")
                 sessLocal.DemoShot(filename)
             } else {
@@ -532,8 +544,8 @@ class Session {
      ================
      */
     internal class Session_RecordDemo_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
-            if (args.Argc() != 2) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
+            if (args!!.Argc() != 2) {
                 val filename: String = FindUnusedFileName("demos/demo%03i.demo")
                 sessLocal.StartRecordingRenderDemo(filename)
             } else {
@@ -556,8 +568,8 @@ class Session {
      */
     internal class Session_CompressDemo_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs) {
-            if (args.Argc() == 2) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
+            if (args!!.Argc() == 2) {
                 sessLocal.CompressDemoFile("2", args.Argv(1))
             } else if (args.Argc() == 3) {
                 sessLocal.CompressDemoFile(args.Argv(2), args.Argv(1))
@@ -580,7 +592,7 @@ class Session {
      ================
      */
     internal class Session_StopRecordingDemo_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             sessLocal.StopRecordingRenderDemo()
         }
 
@@ -598,8 +610,8 @@ class Session {
      ================
      */
     internal class Session_PlayDemo_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
-            if (args.Argc() >= 2) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
+            if (args!!.Argc() >= 2) {
                 sessLocal.StartPlayingRenderDemo(Str.va("demos/%s", args.Argv(1)))
             }
         }
@@ -618,8 +630,8 @@ class Session {
      ================
      */
     internal class Session_TimeDemo_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
-            if (args.Argc() >= 2) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
+            if (args!!.Argc() >= 2) {
                 sessLocal.TimeRenderDemo(Str.va("demos/%s", args.Argv(1)), args.Argc() > 2)
             }
         }
@@ -638,8 +650,8 @@ class Session {
      ================
      */
     internal class Session_TimeDemoQuit_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
-            sessLocal.TimeRenderDemo(Str.va("demos/%s", args.Argv(1)))
+        override fun run(args: CmdArgs.idCmdArgs?) {
+            sessLocal.TimeRenderDemo(Str.va("demos/%s", args!!.Argv(1)))
             if (sessLocal.timeDemo == timeDemo_t.TD_YES) {
                 // this allows hardware vendors to automate some testing
                 sessLocal.timeDemo = timeDemo_t.TD_YES_THEN_QUIT
@@ -660,8 +672,8 @@ class Session {
      ================
      */
     internal class Session_AVIDemo_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
-            sessLocal.AVIRenderDemo(Str.va("demos/%s", args.Argv(1)))
+        override fun run(args: CmdArgs.idCmdArgs?) {
+            sessLocal.AVIRenderDemo(Str.va("demos/%s", args!!.Argv(1)))
         }
 
         companion object {
@@ -678,8 +690,8 @@ class Session {
      ================
      */
     internal class Session_AVIGame_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
-            val Argv = arrayOf(args.Argv(1))
+        override fun run(args: CmdArgs.idCmdArgs?) {
+            val Argv = arrayOf(args!!.Argv(1))
             val empty = Argv[0].isEmpty()
             sessLocal.AVIGame(Argv) //TODO:back reference
             if (empty) {
@@ -701,8 +713,8 @@ class Session {
      ================
      */
     internal class Session_AVICmdDemo_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
-            sessLocal.AVICmdDemo(args.Argv(1))
+        override fun run(args: CmdArgs.idCmdArgs?) {
+            sessLocal.AVICmdDemo(args!!.Argv(1))
         }
 
         companion object {
@@ -720,8 +732,8 @@ class Session {
      */
     internal class Session_WriteCmdDemo_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs) {
-            if (args.Argc() == 1) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
+            if (args!!.Argc() == 1) {
                 val filename: String = FindUnusedFileName("demos/cmdDemo%03i.cdemo")
                 sessLocal.WriteCmdDemo(filename)
             } else if (args.Argc() == 2) {
@@ -745,8 +757,8 @@ class Session {
      ================
      */
     internal class Session_PlayCmdDemo_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
-            sessLocal.StartPlayingCmdDemo(args.Argv(1))
+        override fun run(args: CmdArgs.idCmdArgs?) {
+            sessLocal.StartPlayingCmdDemo(args!!.Argv(1))
         }
 
         companion object {
@@ -763,8 +775,8 @@ class Session {
      ================
      */
     internal class Session_TimeCmdDemo_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
-            sessLocal.TimeCmdDemo(args.Argv(1))
+        override fun run(args: CmdArgs.idCmdArgs?) {
+            sessLocal.TimeCmdDemo(args!!.Argv(1))
         }
 
         companion object {
@@ -781,7 +793,7 @@ class Session {
      ================
      */
     internal class Session_Disconnect_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             sessLocal.Stop()
             sessLocal.StartMenu()
             if (snd_system.soundSystem != null) {
@@ -803,7 +815,7 @@ class Session {
      ================
      */
     internal class Session_EndOfDemo_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             sessLocal.Stop()
             sessLocal.StartMenu()
             if (snd_system.soundSystem != null) {
@@ -827,7 +839,7 @@ class Session {
      */
     internal class Session_ExitCmdDemo_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             if (null == sessLocal.cmdDemoFile) {
                 Common.common.Printf("not reading from a cmdDemo\n")
                 return
@@ -851,8 +863,8 @@ class Session {
      ================
      */
     internal class Session_TestGUI_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
-            sessLocal.TestGUI(args.Argv(1))
+        override fun run(args: CmdArgs.idCmdArgs?) {
+            sessLocal.TestGUI(args!!.Argv(1))
         }
 
         companion object {
@@ -870,9 +882,9 @@ class Session {
      */
     internal class LoadGame_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             Console.console.Close()
-            if (args.Argc() < 2 || idStr.Icmp(args.Argv(1), "quick") == 0) {
+            if (args!!.Argc() < 2 || idStr.Icmp(args.Argv(1), "quick") == 0) {
                 val saveName = Common.common.GetLanguageDict().GetString("#str_07178")
                 sessLocal.LoadGame(saveName)
             } else {
@@ -895,8 +907,8 @@ class Session {
      */
     internal class SaveGame_f : cmdFunction_t() {
         @Throws(idException::class)
-        override fun run(args: CmdArgs.idCmdArgs) {
-            if (args.Argc() < 2 || idStr.Icmp(args.Argv(1), "quick") == 0) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
+            if (args!!.Argc() < 2 || idStr.Icmp(args.Argv(1), "quick") == 0) {
                 val saveName = Common.common.GetLanguageDict().GetString("#str_07178")
                 if (sessLocal.SaveGame(saveName)) {
                     Common.common.Printf("%s\n", saveName)
@@ -922,8 +934,8 @@ class Session {
      ===============
      */
     internal class TakeViewNotes_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
-            val p = if (args.Argc() > 1) args.Argv(1) else ""
+        override fun run(args: CmdArgs.idCmdArgs?) {
+            val p = if (args!!.Argc() > 1) args.Argv(1) else ""
             sessLocal.TakeNotes(p)
         }
 
@@ -941,8 +953,8 @@ class Session {
      ===============
      */
     internal class TakeViewNotes2_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
-            val p = if (args.Argc() > 1) args.Argv(1) else ""
+        override fun run(args: CmdArgs.idCmdArgs?) {
+            val p = if (args!!.Argc() > 1) args.Argv(1) else ""
             sessLocal.TakeNotes(p, true)
         }
 
@@ -963,14 +975,14 @@ class Session {
      ===============
      */
     internal class Session_Hitch_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             val sw = snd_system.soundSystem.GetPlayingSoundWorld()
             if (sw != null) {
                 snd_system.soundSystem.SetMute(true)
                 sw.Pause()
                 Sys_EnterCriticalSection()
             }
-            if (args.Argc() == 2) {
+            if (args!!.Argc() == 2) {
                 win_main.Sys_Sleep(args.Argv(1).toInt())
             } else {
                 win_main.Sys_Sleep(100)
@@ -1001,6 +1013,7 @@ class Session {
 
      ===============================================================================
      */
+        @JvmField
         val session: idSession = sessLocal
         var PREVIEW_HEIGHT = 298
         var PREVIEW_WIDTH = 398

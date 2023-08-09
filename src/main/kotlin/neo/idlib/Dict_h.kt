@@ -797,7 +797,7 @@ class Dict_h {
 
         class ShowMemoryUsage_f : cmdFunction_t() {
             @Throws(idException::class)
-            override fun run(args: CmdArgs.idCmdArgs) {
+            override fun run(args: CmdArgs.idCmdArgs?) {
                 idLib.common.Printf("%5d KB in %d keys\n", globalKeys.Size() shr 10, globalKeys.Num())
                 idLib.common.Printf("%5d KB in %d values\n", globalValues.Size() shr 10, globalValues.Num())
             }
@@ -812,7 +812,7 @@ class Dict_h {
 
         class ListKeys_f : cmdFunction_t() {
             @Throws(idException::class)
-            override fun run(args: CmdArgs.idCmdArgs) {
+            override fun run(args: CmdArgs.idCmdArgs?) {
                 var i: Int
                 val keyStrings = idList<idPoolStr>()
                 i = 0
@@ -839,7 +839,7 @@ class Dict_h {
 
         class ListValues_f : cmdFunction_t() {
             @Throws(idException::class)
-            override fun run(args: CmdArgs.idCmdArgs) {
+            override fun run(args: CmdArgs.idCmdArgs?) {
                 var i: Int
                 val valueStrings = idList<idPoolStr>()
                 i = 0

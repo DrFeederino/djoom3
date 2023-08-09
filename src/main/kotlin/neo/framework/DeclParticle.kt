@@ -124,22 +124,41 @@ object DeclParticle {
     class particleGen_t {
         //
         //
+        @JvmField
         var age // in seconds, calculated as fraction * stage->particleLife
                 = 0f
+
+        @JvmField
         var animationFrameFrac // set by ParticleTexCoords, used to make the cross faded version
                 = 0f
+
+        @JvmField
         val axis: idMat3 = idMat3()
+
+        @JvmField
         var frac // 0.0 to 1.0
                 = 0f
+
+        @JvmField
         var index // particle number in the system
                 = 0
+
+        @JvmField
         val origin // dynamic smoke particles can have individual origins and axis
                 : idVec3 = idVec3()
+
+        @JvmField
         var originalRandom // needed so aimed particles can reset the random for another origin calculation
                 : idRandom = idRandom()
+
+        @JvmField
         var random: idRandom = idRandom()
+
+        @JvmField
         var renderEnt // for shaderParms, etc
                 : renderEntity_s = renderEntity_s()
+
+        @JvmField
         var renderView: renderView_s = renderView_s()
 
     }
@@ -157,6 +176,7 @@ object DeclParticle {
                 : idParticleParm = idParticleParm()
 
         //
+        @JvmField
         val bounds // derived
                 : idBounds = idBounds()
 
@@ -177,16 +197,26 @@ object DeclParticle {
 
         // on a per stage basis
         //
+        @JvmField
         var cycleMsec // ( particleLife + deadTime ) in msec
                 = 0
+
+        @JvmField
         var cycles // allows things to oneShot ( 1 cycle ) or run for a set number of cycles
                 = 0.0f
+
+        @JvmField
         var deadTime // time after particleLife before respawning
                 = 0.0f
+
+        @JvmField
         var directionParms: FloatArray = FloatArray(4)
 
         //
+        @JvmField
         var directionType: prtDirection_t = prtDirection_t.PDIR_CONE
+
+        @JvmField
         var distributionParms: FloatArray = FloatArray(4)
 
         //
@@ -199,20 +229,29 @@ object DeclParticle {
                 : idVec4 = idVec4()
         var fadeInFraction // in 0.0 to 1.0 range
                 : Float
+
+        @JvmField
         var fadeIndexFraction // in 0.0 to 1.0 range, causes later index smokes to be more faded
                 : Float
+
+        @JvmField
         var fadeOutFraction // in 0.0 to 1.0 range
                 : Float
+
+        @JvmField
         var gravity // can be negative to float up
                 : Float
 
         //
+        @JvmField
         var hidden // for editor use
                 : Boolean
 
         //
         var initialAngle // in degrees, random angle is used if zero ( default )
                 : Float
+
+        @JvmField
         var material: Material.idMaterial? = null
 
         //
@@ -225,6 +264,8 @@ object DeclParticle {
         var orientation // view, aimed, or axis fixed
                 : prtOrientation_t = prtOrientation_t.POR_VIEW
         var orientationParms: FloatArray = FloatArray(4)
+
+        @JvmField
         var particleLife // total seconds of life for each particle
                 = 0.0f
         var randomDistribution // randomly orient the quad on emission ( defaults to true )
@@ -233,20 +274,28 @@ object DeclParticle {
                 : idParticleParm = idParticleParm()
 
         //
+        @JvmField
         var size: idParticleParm = idParticleParm()
 
         //
+        @JvmField
         var spawnBunching // 0.0 = all come out at first instant, 1.0 = evenly spaced over cycle time
                 = 0.0f
 
         //
+        @JvmField
         var speed: idParticleParm = idParticleParm()
+
+        @JvmField
         var timeOffset // time offset from system start for the first particle to spawn
                 = 0.0f
 
         //
+        @JvmField
         var totalParticles // total number of particles, although some may be invisible at a given time
                 = 0
+
+        @JvmField
         var worldGravity // apply gravity in world space
                 : Boolean
 
@@ -922,8 +971,13 @@ object DeclParticle {
     // group of particle stages
     //
     class idDeclParticle : idDecl() {
+        @JvmField
         val bounds: idBounds = idBounds()
+
+        @JvmField
         var depthHack = 0f
+
+        @JvmField
         val stages: idList<idParticleStage> = idList()
         override fun DefaultDefinition(): String {
             return """{

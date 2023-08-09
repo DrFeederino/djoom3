@@ -976,6 +976,7 @@ object shadowopt3 {
 
      ====================
      */
+    @JvmStatic
     fun SuperOptimizeOccluders(
         verts: Array<idVec4>,
         indexes: IntArray,
@@ -1112,6 +1113,7 @@ object shadowopt3 {
      removes degenerate tris
      ====================
      */
+    @JvmStatic
     fun CleanupOptimizedShadowTris(tri: srfTriangles_s) {
         var i: Int
 

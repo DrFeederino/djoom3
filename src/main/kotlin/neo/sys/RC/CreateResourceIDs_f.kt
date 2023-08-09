@@ -14,7 +14,7 @@ import neo.idlib.Lib.idException
  */
 class CreateResourceIDs_f private constructor() : cmdFunction_t() {
     @Throws(idException::class)
-    override fun run(args: CmdArgs.idCmdArgs) {
+    override fun run(args: CmdArgs.idCmdArgs?) {
         throw TODO_Exception() //TODO: is this needed in java?
         //    	int i, j;
 //	idStr path, fileName;

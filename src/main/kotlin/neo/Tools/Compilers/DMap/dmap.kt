@@ -206,7 +206,7 @@ object dmap {
      Dmap
      ============
      */
-    fun Dmap(args: CmdArgs.idCmdArgs) {
+    fun Dmap(args: CmdArgs.idCmdArgs?) {
         var i: Int
         var start: Int
         var end: Int
@@ -216,7 +216,7 @@ object dmap {
         var noCM = false
         var noAAS = false
         ResetDmapGlobals()
-        if (args.Argc() < 2) {
+        if (args!!.Argc() < 2) {
             DmapHelp()
             return
         }
@@ -683,7 +683,7 @@ object dmap {
      ============
      */
     class Dmap_f : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             idLib.common.ClearWarnings("running dmap")
 
             // refresh the screen each time we print so it doesn't look

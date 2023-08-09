@@ -2,46 +2,13 @@ package neo.Renderer
 
 import neo.Renderer.Material.idMaterial
 import neo.Renderer.Material.stageVertexColor_t
-import neo.Renderer.VertexCache.vertexCache
-import neo.Renderer.draw_common.RB_StencilShadowPass
-import neo.Renderer.qgl.qglActiveTextureARB
-import neo.Renderer.qgl.qglBindProgramARB
-import neo.Renderer.qgl.qglClear
-import neo.Renderer.qgl.qglColorPointer
-import neo.Renderer.qgl.qglDisable
-import neo.Renderer.qgl.qglDisableClientState
-import neo.Renderer.qgl.qglDisableVertexAttribArrayARB
-import neo.Renderer.qgl.qglEnable
-import neo.Renderer.qgl.qglEnableClientState
-import neo.Renderer.qgl.qglEnableVertexAttribArrayARB
-import neo.Renderer.qgl.qglGetError
-import neo.Renderer.qgl.qglGetIntegerv
-import neo.Renderer.qgl.qglGetString
-import neo.Renderer.qgl.qglProgramEnvParameter4fvARB
-import neo.Renderer.qgl.qglProgramStringARB
-import neo.Renderer.qgl.qglScissor
-import neo.Renderer.qgl.qglStencilFunc
-import neo.Renderer.qgl.qglVertexAttribPointerARB
-import neo.Renderer.qgl.qglVertexPointer
-import neo.Renderer.tr_backend.GL_SelectTexture
-import neo.Renderer.tr_backend.GL_State
-import neo.Renderer.tr_backend.RB_LogComment
-import neo.Renderer.tr_local.GLS_DEPTHFUNC_EQUAL
-import neo.Renderer.tr_local.GLS_DEPTHFUNC_LESS
-import neo.Renderer.tr_local.GLS_DEPTHMASK
-import neo.Renderer.tr_local.GLS_DSTBLEND_ONE
-import neo.Renderer.tr_local.GLS_SRCBLEND_ONE
-import neo.Renderer.tr_local.backEnd
 import neo.Renderer.tr_local.drawInteraction_t
 import neo.Renderer.tr_local.drawSurf_s
-import neo.Renderer.tr_local.glConfig
 import neo.Renderer.tr_local.idScreenRect
 import neo.Renderer.tr_local.programParameter_t
 import neo.Renderer.tr_local.program_t
 import neo.Renderer.tr_local.viewLight_s
 import neo.Renderer.tr_render.DrawInteraction
-import neo.Renderer.tr_render.RB_CreateSingleDrawInteractions
-import neo.Renderer.tr_render.RB_DrawElementsWithCounters
 import neo.TempDump.NOT
 import neo.TempDump.TODO_Exception
 import neo.framework.CmdSystem.cmdFunction_t
@@ -49,6 +16,7 @@ import neo.framework.Common
 import neo.framework.FileSystem_h.fileSystem
 import neo.idlib.CmdArgs
 import neo.idlib.Text.Str.idStr
+import neo.idlib.Text.Str.idStr.Companion.Icmp
 import neo.idlib.geometry.DrawVert.idDrawVert
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.ARBFragmentProgram
@@ -79,7 +47,7 @@ object draw_arb2 {
     // a single file can have both a vertex program and a fragment program
     var progs = arrayOfNulls<progDef_t>(MAX_GLPROGS)
 
-    //
+    //        
     init {
         var a = 0
         progs[a++] = progDef_t(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB, program_t.VPROG_TEST, "test.vfp")
@@ -141,9 +109,9 @@ object draw_arb2 {
      ====================
      */
     fun GL_SelectTextureNoClient(unit: Int) {
-        backEnd.glState.currenttmu = unit
-        qglActiveTextureARB(ARBMultitexture.GL_TEXTURE0_ARB + unit)
-        RB_LogComment("glActiveTextureARB( %d )\n", unit)
+        tr_local.backEnd!!.glState.currenttmu = unit
+        qgl.qglActiveTextureARB(ARBMultitexture.GL_TEXTURE0_ARB + unit)
+        tr_backend.RB_LogComment("glActiveTextureARB( %d )\n", unit)
     }
 
     /*
@@ -159,40 +127,40 @@ object draw_arb2 {
         }
 
         // perform setup here that will be constant for all interactions
-        GL_State(GLS_SRCBLEND_ONE or GLS_DSTBLEND_ONE or GLS_DEPTHMASK or backEnd.depthFunc)
+        tr_backend.GL_State(tr_local.GLS_SRCBLEND_ONE or tr_local.GLS_DSTBLEND_ONE or tr_local.GLS_DEPTHMASK or tr_local.backEnd!!.depthFunc)
 
         // bind the vertex program
-        if (RenderSystem_init.r_testARBProgram.GetBool()) {
-            qglBindProgramARB(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB, program_t.VPROG_TEST)
-            qglBindProgramARB(ARBFragmentProgram.GL_FRAGMENT_PROGRAM_ARB, program_t.FPROG_TEST)
+        if (RenderSystem_init.r_testARBProgram!!.GetBool()) {
+            qgl.qglBindProgramARB(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB, program_t.VPROG_TEST)
+            qgl.qglBindProgramARB(ARBFragmentProgram.GL_FRAGMENT_PROGRAM_ARB, program_t.FPROG_TEST)
         } else {
-            qglBindProgramARB(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB, program_t.VPROG_INTERACTION)
-            qglBindProgramARB(ARBFragmentProgram.GL_FRAGMENT_PROGRAM_ARB, program_t.FPROG_INTERACTION)
+            qgl.qglBindProgramARB(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB, program_t.VPROG_INTERACTION)
+            qgl.qglBindProgramARB(ARBFragmentProgram.GL_FRAGMENT_PROGRAM_ARB, program_t.FPROG_INTERACTION)
         }
-        qglEnable(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB)
-        qglEnable(ARBFragmentProgram.GL_FRAGMENT_PROGRAM_ARB)
+        qgl.qglEnable(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB)
+        qgl.qglEnable(ARBFragmentProgram.GL_FRAGMENT_PROGRAM_ARB)
 
         // enable the vertex arrays
-        qglEnableVertexAttribArrayARB(8)
-        qglEnableVertexAttribArrayARB(9)
-        qglEnableVertexAttribArrayARB(10)
-        qglEnableVertexAttribArrayARB(11)
-        qglEnableClientState(GL11.GL_COLOR_ARRAY)
+        qgl.qglEnableVertexAttribArrayARB(8)
+        qgl.qglEnableVertexAttribArrayARB(9)
+        qgl.qglEnableVertexAttribArrayARB(10)
+        qgl.qglEnableVertexAttribArrayARB(11)
+        qgl.qglEnableClientState(GL11.GL_COLOR_ARRAY)
 
         // texture 0 is the normalization cube map for the vector towards the light
         GL_SelectTextureNoClient(0)
-        if (backEnd.vLight.lightShader!!.IsAmbientLight()) {
-            Image.globalImages.ambientNormalMap.Bind()
+        if (tr_local.backEnd!!.vLight!!.lightShader!!.IsAmbientLight()) {
+            Image.globalImages.ambientNormalMap!!.Bind()
         } else {
-            Image.globalImages.normalCubeMapImage.Bind()
+            Image.globalImages.normalCubeMapImage!!.Bind()
         }
 
         // texture 6 is the specular lookup table
         GL_SelectTextureNoClient(6)
-        if (RenderSystem_init.r_testARBProgram.GetBool()) {
-            Image.globalImages.specular2DTableImage.Bind() // variable specularity in alpha channel
+        if (RenderSystem_init.r_testARBProgram!!.GetBool()) {
+            Image.globalImages.specular2DTableImage!!.Bind() // variable specularity in alpha channel
         } else {
-            Image.globalImages.specularTableImage.Bind()
+            Image.globalImages.specularTableImage!!.Bind()
         }
         while (surf != null) {
 
@@ -200,30 +168,30 @@ object draw_arb2 {
 
             // set the vertex pointers
             val ac =
-                idDrawVert(vertexCache.Position(surf.geo!!.ambientCache)) //TODO:figure out how to work these damn casts.
+                idDrawVert(VertexCache.vertexCache.Position(surf.geo!!.ambientCache)) //TODO:figure out how to work these damn casts.
             //            qglColorPointer(4, GL_UNSIGNED_BYTE, 0/*sizeof(idDrawVert)*/, ac.colorOffset());
 //            qglVertexAttribPointerARB(11, 3, GL_FLOAT, false, 0/*sizeof(idDrawVert)*/, ac.normalOffset());
 //            qglVertexAttribPointerARB(10, 3, GL_FLOAT, false, 0/*sizeof(idDrawVert)*/, ac.tangentsOffset_1());
 //            qglVertexAttribPointerARB(9, 3, GL_FLOAT, false, 0/*sizeof(idDrawVert)*/, ac.tangentsOffset_0());
 //            qglVertexAttribPointerARB(8, 2, GL_FLOAT, false, 0/*sizeof(idDrawVert)*/, ac.stOffset());
 //            qglVertexPointer(3, GL_FLOAT, 0/*sizeof(idDrawVert)*/, ac.xyzOffset());
-            qglColorPointer(4, GL11.GL_UNSIGNED_BYTE, idDrawVert.BYTES, ac.colorOffset().toLong())
-            qglVertexAttribPointerARB(11, 3, GL11.GL_FLOAT, false, idDrawVert.BYTES, ac.normalOffset().toLong())
-            qglVertexAttribPointerARB(10, 3, GL11.GL_FLOAT, false, idDrawVert.BYTES, ac.tangentsOffset_1().toLong())
-            qglVertexAttribPointerARB(9, 3, GL11.GL_FLOAT, false, idDrawVert.BYTES, ac.tangentsOffset_0().toLong())
-            qglVertexAttribPointerARB(8, 2, GL11.GL_FLOAT, false, idDrawVert.BYTES, ac.stOffset().toLong())
-            qglVertexPointer(3, GL11.GL_FLOAT, idDrawVert.BYTES, ac.xyzOffset().toLong())
+            qgl.qglColorPointer(4, GL11.GL_UNSIGNED_BYTE, idDrawVert.BYTES, ac.colorOffset().toLong())
+            qgl.qglVertexAttribPointerARB(11, 3, GL11.GL_FLOAT, false, idDrawVert.BYTES, ac.normalOffset().toLong())
+            qgl.qglVertexAttribPointerARB(10, 3, GL11.GL_FLOAT, false, idDrawVert.BYTES, ac.tangentsOffset_1().toLong())
+            qgl.qglVertexAttribPointerARB(9, 3, GL11.GL_FLOAT, false, idDrawVert.BYTES, ac.tangentsOffset_0().toLong())
+            qgl.qglVertexAttribPointerARB(8, 2, GL11.GL_FLOAT, false, idDrawVert.BYTES, ac.stOffset().toLong())
+            qgl.qglVertexPointer(3, GL11.GL_FLOAT, idDrawVert.BYTES, ac.xyzOffset().toLong())
 
             // this may cause RB_ARB2_DrawInteraction to be exacuted multiple
             // times with different colors and images if the surface or light have multiple layers
-            RB_CreateSingleDrawInteractions(surf, RB_ARB2_DrawInteraction.INSTANCE)
+            tr_render.RB_CreateSingleDrawInteractions(surf, RB_ARB2_DrawInteraction.INSTANCE)
             surf = surf.nextOnLight
         }
-        qglDisableVertexAttribArrayARB(8)
-        qglDisableVertexAttribArrayARB(9)
-        qglDisableVertexAttribArrayARB(10)
-        qglDisableVertexAttribArrayARB(11)
-        qglDisableClientState(GL11.GL_COLOR_ARRAY)
+        qgl.qglDisableVertexAttribArrayARB(8)
+        qgl.qglDisableVertexAttribArrayARB(9)
+        qgl.qglDisableVertexAttribArrayARB(10)
+        qgl.qglDisableVertexAttribArrayARB(11)
+        qgl.qglDisableClientState(GL11.GL_COLOR_ARRAY)
 
         // disable features
         GL_SelectTextureNoClient(6)
@@ -238,10 +206,10 @@ object draw_arb2 {
         Image.globalImages.BindNull()
         GL_SelectTextureNoClient(1)
         Image.globalImages.BindNull()
-        backEnd.glState.currenttmu = -1
-        GL_SelectTexture(0)
-        qglDisable(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB)
-        qglDisable(ARBFragmentProgram.GL_FRAGMENT_PROGRAM_ARB)
+        tr_local.backEnd!!.glState.currenttmu = -1
+        tr_backend.GL_SelectTexture(0)
+        qgl.qglDisable(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB)
+        qgl.qglDisable(ARBFragmentProgram.GL_FRAGMENT_PROGRAM_ARB)
     }
 
     /*
@@ -252,15 +220,15 @@ object draw_arb2 {
     fun RB_ARB2_DrawInteractions() {
         var vLight: viewLight_s?
         var lightShader: idMaterial?
-        GL_SelectTexture(0)
-        qglDisableClientState(GL11.GL_TEXTURE_COORD_ARRAY)
+        tr_backend.GL_SelectTexture(0)
+        qgl.qglDisableClientState(GL11.GL_TEXTURE_COORD_ARRAY)
 
         //
         // for each light, perform adding and shadowing
         //
-        vLight = backEnd.viewDef!!.viewLights
+        vLight = tr_local.backEnd!!.viewDef!!.viewLights
         while (vLight != null) {
-            backEnd.vLight = vLight
+            tr_local.backEnd!!.vLight = vLight
 
             // do fogging later
             if (vLight.lightShader!!.IsFogLight()) {
@@ -281,55 +249,55 @@ object draw_arb2 {
 
             // clear the stencil buffer if needed
             if (vLight.globalShadows[0] != null || vLight.localShadows[0] != null) {
-                backEnd.currentScissor = idScreenRect(vLight.scissorRect)
-                if (RenderSystem_init.r_useScissor.GetBool()) {
-                    qglScissor(
-                        backEnd.viewDef!!.viewport.x1 + backEnd.currentScissor.x1,
-                        backEnd.viewDef!!.viewport.y1 + backEnd.currentScissor.y1,
-                        backEnd.currentScissor.x2 + 1 - backEnd.currentScissor.x1,
-                        backEnd.currentScissor.y2 + 1 - backEnd.currentScissor.y1
+                tr_local.backEnd!!.currentScissor = idScreenRect(vLight.scissorRect!!)
+                if (RenderSystem_init.r_useScissor!!.GetBool()) {
+                    qgl.qglScissor(
+                        tr_local.backEnd!!.viewDef!!.viewport.x1 + tr_local.backEnd!!.currentScissor!!.x1,
+                        tr_local.backEnd!!.viewDef!!.viewport.y1 + tr_local.backEnd!!.currentScissor!!.y1,
+                        tr_local.backEnd!!.currentScissor!!.x2 + 1 - tr_local.backEnd!!.currentScissor!!.x1,
+                        tr_local.backEnd!!.currentScissor!!.y2 + 1 - tr_local.backEnd!!.currentScissor!!.y1
                     )
                 }
-                qglClear(GL11.GL_STENCIL_BUFFER_BIT)
+                qgl.qglClear(GL11.GL_STENCIL_BUFFER_BIT)
             } else {
                 // no shadows, so no need to read or write the stencil buffer
                 // we might in theory want to use GL_ALWAYS instead of disabling
                 // completely, to satisfy the invarience rules
-                qglStencilFunc(GL11.GL_ALWAYS, 128, 255)
+                qgl.qglStencilFunc(GL11.GL_ALWAYS, 128, 255)
             }
-            if (RenderSystem_init.r_useShadowVertexProgram.GetBool()) {
-                qglEnable(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB)
-                qglBindProgramARB(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB, program_t.VPROG_STENCIL_SHADOW)
-                RB_StencilShadowPass(vLight.globalShadows[0])
+            if (RenderSystem_init.r_useShadowVertexProgram!!.GetBool()) {
+                qgl.qglEnable(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB)
+                qgl.qglBindProgramARB(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB, program_t.VPROG_STENCIL_SHADOW)
+                draw_common.RB_StencilShadowPass(vLight.globalShadows[0])
                 RB_ARB2_CreateDrawInteractions(vLight.localInteractions[0])
-                qglEnable(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB)
-                qglBindProgramARB(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB, program_t.VPROG_STENCIL_SHADOW)
-                RB_StencilShadowPass(vLight.localShadows[0])
+                qgl.qglEnable(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB)
+                qgl.qglBindProgramARB(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB, program_t.VPROG_STENCIL_SHADOW)
+                draw_common.RB_StencilShadowPass(vLight.localShadows[0])
                 RB_ARB2_CreateDrawInteractions(vLight.globalInteractions[0])
-                qglDisable(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB) // if there weren't any globalInteractions, it would have stayed on
+                qgl.qglDisable(ARBVertexProgram.GL_VERTEX_PROGRAM_ARB) // if there weren't any globalInteractions, it would have stayed on
             } else {
-                RB_StencilShadowPass(vLight.globalShadows[0])
+                draw_common.RB_StencilShadowPass(vLight.globalShadows[0])
                 RB_ARB2_CreateDrawInteractions(vLight.localInteractions[0])
-                RB_StencilShadowPass(vLight.localShadows[0])
+                draw_common.RB_StencilShadowPass(vLight.localShadows[0])
                 RB_ARB2_CreateDrawInteractions(vLight.globalInteractions[0])
             }
 
             // translucent surfaces never get stencil shadowed
-            if (RenderSystem_init.r_skipTranslucent.GetBool()) {
+            if (RenderSystem_init.r_skipTranslucent!!.GetBool()) {
                 vLight = vLight.next
                 continue
             }
-            qglStencilFunc(GL11.GL_ALWAYS, 128, 255)
-            backEnd.depthFunc = GLS_DEPTHFUNC_LESS
+            qgl.qglStencilFunc(GL11.GL_ALWAYS, 128, 255)
+            tr_local.backEnd!!.depthFunc = tr_local.GLS_DEPTHFUNC_LESS
             RB_ARB2_CreateDrawInteractions(vLight.translucentInteractions[0])
-            backEnd.depthFunc = GLS_DEPTHFUNC_EQUAL
+            tr_local.backEnd!!.depthFunc = tr_local.GLS_DEPTHFUNC_EQUAL
             vLight = vLight.next
         }
 
         // disable stencil shadow test
-        qglStencilFunc(GL11.GL_ALWAYS, 128, 255)
-        GL_SelectTexture(0)
-        qglEnableClientState(GL11.GL_TEXTURE_COORD_ARRAY)
+        qgl.qglStencilFunc(GL11.GL_ALWAYS, 128, 255)
+        tr_backend.GL_SelectTexture(0)
+        qgl.qglEnableClientState(GL11.GL_TEXTURE_COORD_ARRAY)
     }
 
     /*
@@ -359,7 +327,7 @@ object draw_arb2 {
 //        buffer = /*(char *)*/ _alloca(strlen(fileBuffer) + 1);
         buffer = String(fileBuffer[0]!!.array())
         //        fileSystem.FreeFile(fileBuffer);
-        if (!glConfig.isInitialized) {
+        if (!tr_local.glConfig.isInitialized) {
             return
         }
 
@@ -374,14 +342,14 @@ object draw_arb2 {
         // vertex and fragment programs can both be present in a single file, so
         // scan for the proper header to be the start point, and stamp a 0 in after the end
         if (progs[progIndex]!!.target == ARBVertexProgram.GL_VERTEX_PROGRAM_ARB) {
-            if (!glConfig.ARBVertexProgramAvailable) {
+            if (!tr_local.glConfig.ARBVertexProgramAvailable) {
                 Common.common.Printf(": GL_VERTEX_PROGRAM_ARB not available\n")
                 return
             }
             start = buffer.indexOf("!!ARBvp")
         }
         if (progs[progIndex]!!.target == ARBFragmentProgram.GL_FRAGMENT_PROGRAM_ARB) {
-            if (!glConfig.ARBFragmentProgramAvailable) {
+            if (!tr_local.glConfig.ARBFragmentProgramAvailable) {
                 Common.common.Printf(": GL_FRAGMENT_PROGRAM_ARB not available\n")
                 return
             }
@@ -399,19 +367,19 @@ object draw_arb2 {
         buffer = buffer.substring(start, end + 3) //end[3] = 0;
         val substring = BufferUtils.createByteBuffer(buffer.length)
         substring.put(buffer.toByteArray()).flip()
-        qglBindProgramARB(progs[progIndex]!!.target, progs[progIndex]!!.ident)
-        qglGetError()
-        qglProgramStringARB(
+        qgl.qglBindProgramARB(progs[progIndex]!!.target, progs[progIndex]!!.ident)
+        qgl.qglGetError()
+        qgl.qglProgramStringARB(
             progs[progIndex]!!.target,
             ARBVertexProgram.GL_PROGRAM_FORMAT_ASCII_ARB,
             0,  /*(unsigned char *)*/
             substring
         )
-        err = qglGetError()
-        qglGetIntegerv(ARBVertexProgram.GL_PROGRAM_ERROR_POSITION_ARB, ofs)
+        err = qgl.qglGetError()
+        qgl.qglGetIntegerv(ARBVertexProgram.GL_PROGRAM_ERROR_POSITION_ARB, ofs)
         if (err == GL11.GL_INVALID_OPERATION) {
-            val   /*GLubyte*/str: String = qglGetString(ARBVertexProgram.GL_PROGRAM_ERROR_STRING_ARB)
-            Common.common.Printf("\nGL_PROGRAM_ERROR_STRING_ARB: %s\n", str)
+            val  /*GLubyte*/str = qgl.qglGetString(ARBVertexProgram.GL_PROGRAM_ERROR_STRING_ARB)
+            Common.common.Printf("\nGL_PROGRAM_ERROR_STRING_ARB: %s\n", str!!)
             if (ofs[0] < 0) {
                 Common.common.Printf("GL_PROGRAM_ERROR_POSITION_ARB < 0 with error\n")
             } else if (ofs[0] >= buffer.length - start) {
@@ -452,7 +420,7 @@ object draw_arb2 {
             }
             val compare = idStr(progs[i]!!.name)
             compare.StripFileExtension()
-            if (NOT(idStr.Icmp(stripped, compare))) {
+            if (NOT(Icmp(stripped, compare))) {
                 return progs[i]!!.ident
             }
             i++
@@ -474,15 +442,15 @@ object draw_arb2 {
      ==================
      */
     fun R_ARB2_Init() {
-        glConfig.allowARB2Path = false
+        tr_local.glConfig.allowARB2Path = false
         Common.common.Printf("---------- R_ARB2_Init ----------\n")
-        if (!glConfig.ARBVertexProgramAvailable || !glConfig.ARBFragmentProgramAvailable) {
+        if (!tr_local.glConfig.ARBVertexProgramAvailable || !tr_local.glConfig.ARBFragmentProgramAvailable) {
             Common.common.Printf("Not available.\n")
             return
         }
         Common.common.Printf("Available.\n")
         Common.common.Printf("---------------------------------\n")
-        glConfig.allowARB2Path = true
+        tr_local.glConfig.allowARB2Path = true
     }
 
     /*
@@ -491,78 +459,78 @@ object draw_arb2 {
      ==================
      */
     internal class RB_ARB2_DrawInteraction private constructor() : DrawInteraction() {
-        override fun run(din: drawInteraction_t) {
+        public override fun run(din: drawInteraction_t) {
             DBG_RB_ARB2_DrawInteraction++
             // load all the vertex program parameters
-            qglProgramEnvParameter4fvARB(
+            qgl.qglProgramEnvParameter4fvARB(
                 ARBVertexProgram.GL_VERTEX_PROGRAM_ARB,
                 programParameter_t.PP_LIGHT_ORIGIN,
                 din.localLightOrigin.ToFloatPtr()
             )
-            qglProgramEnvParameter4fvARB(
+            qgl.qglProgramEnvParameter4fvARB(
                 ARBVertexProgram.GL_VERTEX_PROGRAM_ARB,
                 programParameter_t.PP_VIEW_ORIGIN,
                 din.localViewOrigin.ToFloatPtr()
             )
-            qglProgramEnvParameter4fvARB(
+            qgl.qglProgramEnvParameter4fvARB(
                 ARBVertexProgram.GL_VERTEX_PROGRAM_ARB,
                 programParameter_t.PP_LIGHT_PROJECT_S,
-                din.lightProjection[0].ToFloatPtr()
+                din.lightProjection[0]!!.ToFloatPtr()
             )
-            qglProgramEnvParameter4fvARB(
+            qgl.qglProgramEnvParameter4fvARB(
                 ARBVertexProgram.GL_VERTEX_PROGRAM_ARB,
                 programParameter_t.PP_LIGHT_PROJECT_T,
-                din.lightProjection[1].ToFloatPtr()
+                din.lightProjection[1]!!.ToFloatPtr()
             )
-            qglProgramEnvParameter4fvARB(
+            qgl.qglProgramEnvParameter4fvARB(
                 ARBVertexProgram.GL_VERTEX_PROGRAM_ARB,
                 programParameter_t.PP_LIGHT_PROJECT_Q,
-                din.lightProjection[2].ToFloatPtr()
+                din.lightProjection[2]!!.ToFloatPtr()
             )
-            qglProgramEnvParameter4fvARB(
+            qgl.qglProgramEnvParameter4fvARB(
                 ARBVertexProgram.GL_VERTEX_PROGRAM_ARB,
                 programParameter_t.PP_LIGHT_FALLOFF_S,
-                din.lightProjection[3].ToFloatPtr()
+                din.lightProjection[3]!!.ToFloatPtr()
             )
-            qglProgramEnvParameter4fvARB(
+            qgl.qglProgramEnvParameter4fvARB(
                 ARBVertexProgram.GL_VERTEX_PROGRAM_ARB,
                 programParameter_t.PP_BUMP_MATRIX_S,
                 din.bumpMatrix[0].ToFloatPtr()
             )
-            qglProgramEnvParameter4fvARB(
+            qgl.qglProgramEnvParameter4fvARB(
                 ARBVertexProgram.GL_VERTEX_PROGRAM_ARB,
                 programParameter_t.PP_BUMP_MATRIX_T,
                 din.bumpMatrix[1].ToFloatPtr()
             )
-            qglProgramEnvParameter4fvARB(
+            qgl.qglProgramEnvParameter4fvARB(
                 ARBVertexProgram.GL_VERTEX_PROGRAM_ARB,
                 programParameter_t.PP_DIFFUSE_MATRIX_S,
                 din.diffuseMatrix[0].ToFloatPtr()
             )
-            qglProgramEnvParameter4fvARB(
+            qgl.qglProgramEnvParameter4fvARB(
                 ARBVertexProgram.GL_VERTEX_PROGRAM_ARB,
                 programParameter_t.PP_DIFFUSE_MATRIX_T,
                 din.diffuseMatrix[1].ToFloatPtr()
             )
-            qglProgramEnvParameter4fvARB(
+            qgl.qglProgramEnvParameter4fvARB(
                 ARBVertexProgram.GL_VERTEX_PROGRAM_ARB,
                 programParameter_t.PP_SPECULAR_MATRIX_S,
                 din.specularMatrix[0].ToFloatPtr()
             )
-            qglProgramEnvParameter4fvARB(
+            qgl.qglProgramEnvParameter4fvARB(
                 ARBVertexProgram.GL_VERTEX_PROGRAM_ARB,
                 programParameter_t.PP_SPECULAR_MATRIX_T,
                 din.specularMatrix[1].ToFloatPtr()
             )
 
             // testing fragment based normal mapping
-            if (RenderSystem_init.r_testARBProgram.GetBool()) {
-                qglProgramEnvParameter4fvARB(
+            if (RenderSystem_init.r_testARBProgram!!.GetBool()) {
+                qgl.qglProgramEnvParameter4fvARB(
                     ARBFragmentProgram.GL_FRAGMENT_PROGRAM_ARB,
                     2,
                     din.localLightOrigin.ToFloatPtr()
                 )
-                qglProgramEnvParameter4fvARB(
+                qgl.qglProgramEnvParameter4fvARB(
                     ARBFragmentProgram.GL_FRAGMENT_PROGRAM_ARB,
                     3,
                     din.localViewOrigin.ToFloatPtr()
@@ -570,12 +538,12 @@ object draw_arb2 {
             }
             when (din.vertexColor) {
                 stageVertexColor_t.SVC_IGNORE -> {
-                    qglProgramEnvParameter4fvARB(
+                    qgl.qglProgramEnvParameter4fvARB(
                         ARBVertexProgram.GL_VERTEX_PROGRAM_ARB,
                         programParameter_t.PP_COLOR_MODULATE,
                         ZERO
                     )
-                    qglProgramEnvParameter4fvARB(
+                    qgl.qglProgramEnvParameter4fvARB(
                         ARBVertexProgram.GL_VERTEX_PROGRAM_ARB,
                         programParameter_t.PP_COLOR_ADD,
                         ONE
@@ -583,12 +551,12 @@ object draw_arb2 {
                 }
 
                 stageVertexColor_t.SVC_MODULATE -> {
-                    qglProgramEnvParameter4fvARB(
+                    qgl.qglProgramEnvParameter4fvARB(
                         ARBVertexProgram.GL_VERTEX_PROGRAM_ARB,
                         programParameter_t.PP_COLOR_MODULATE,
                         ONE
                     )
-                    qglProgramEnvParameter4fvARB(
+                    qgl.qglProgramEnvParameter4fvARB(
                         ARBVertexProgram.GL_VERTEX_PROGRAM_ARB,
                         programParameter_t.PP_COLOR_ADD,
                         ZERO
@@ -596,22 +564,32 @@ object draw_arb2 {
                 }
 
                 stageVertexColor_t.SVC_INVERSE_MODULATE -> {
-                    qglProgramEnvParameter4fvARB(
+                    qgl.qglProgramEnvParameter4fvARB(
                         ARBVertexProgram.GL_VERTEX_PROGRAM_ARB,
                         programParameter_t.PP_COLOR_MODULATE,
                         NEG_ONE
                     )
-                    qglProgramEnvParameter4fvARB(
+                    qgl.qglProgramEnvParameter4fvARB(
                         ARBVertexProgram.GL_VERTEX_PROGRAM_ARB,
                         programParameter_t.PP_COLOR_ADD,
                         ONE
                     )
                 }
+
+                null -> TODO()
             }
 
             // set the constant colors
-            qglProgramEnvParameter4fvARB(ARBFragmentProgram.GL_FRAGMENT_PROGRAM_ARB, 0, din.diffuseColor.ToFloatPtr())
-            qglProgramEnvParameter4fvARB(ARBFragmentProgram.GL_FRAGMENT_PROGRAM_ARB, 1, din.specularColor.ToFloatPtr())
+            qgl.qglProgramEnvParameter4fvARB(
+                ARBFragmentProgram.GL_FRAGMENT_PROGRAM_ARB,
+                0,
+                din.diffuseColor.ToFloatPtr()
+            )
+            qgl.qglProgramEnvParameter4fvARB(
+                ARBFragmentProgram.GL_FRAGMENT_PROGRAM_ARB,
+                1,
+                din.specularColor.ToFloatPtr()
+            )
 
             // set the textures
             // texture 1 will be the per-surface bump map
@@ -635,7 +613,7 @@ object draw_arb2 {
             din.specularImage!!.Bind()
 
             // draw it
-            RB_DrawElementsWithCounters(din.surf!!.geo!!)
+            tr_render.RB_DrawElementsWithCounters(din.surf!!.geo!!)
         }
 
         companion object {
@@ -658,7 +636,7 @@ object draw_arb2 {
      ==================
      */
     class R_ReloadARBPrograms_f private constructor() : cmdFunction_t() {
-        override fun run(args: CmdArgs.idCmdArgs) {
+        override fun run(args: CmdArgs.idCmdArgs?) {
             var i: Int
             Common.common.Printf("----- R_ReloadARBPrograms -----\n")
             i = 0

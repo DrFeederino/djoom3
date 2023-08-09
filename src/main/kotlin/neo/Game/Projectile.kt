@@ -115,7 +115,7 @@ object Projectile {
                 }
 
                 // get material type name
-                typeName = Game_local.gameLocal.sufaceTypeNames[materialType.ordinal]
+                typeName = Game_local.gameLocal.sufaceTypeNames[materialType!!.ordinal]
 
                 // play impact sound
                 sound = projectileDef.GetString(Str.va("snd_%s", typeName))
@@ -506,7 +506,7 @@ object Projectile {
             if (projectileFlags.randomShaderSpin) {
                 var f = Game_local.gameLocal.random.RandomFloat()
                 f *= 0.5f
-                renderEntity.shaderParms[RenderWorld.SHADERPARM_DIVERSITY] = f
+                renderEntity!!.shaderParms[RenderWorld.SHADERPARM_DIVERSITY] = f
             }
             UpdateVisuals()
             state = projectileState_t.LAUNCHED
@@ -796,16 +796,17 @@ object Projectile {
             }
             if (fxname != null && !fxname.isEmpty()) {
                 SetModel(fxname)
-                renderEntity.shaderParms[RenderWorld.SHADERPARM_ALPHA] = 1.0f
-                renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE] =
-                    renderEntity.shaderParms[RenderWorld.SHADERPARM_ALPHA]
-                renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN] =
-                    renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE]
-                renderEntity.shaderParms[RenderWorld.SHADERPARM_RED] =
-                    renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN]
-                renderEntity.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] =
+                renderEntity!!.shaderParms[RenderWorld.SHADERPARM_ALPHA] = 1.0f
+                renderEntity!!.shaderParms[RenderWorld.SHADERPARM_BLUE] =
+                    renderEntity!!.shaderParms[RenderWorld.SHADERPARM_ALPHA]
+                renderEntity!!.shaderParms[RenderWorld.SHADERPARM_GREEN] =
+                    renderEntity!!.shaderParms[RenderWorld.SHADERPARM_BLUE]
+                renderEntity!!.shaderParms[RenderWorld.SHADERPARM_RED] =
+                    renderEntity!!.shaderParms[RenderWorld.SHADERPARM_GREEN]
+                renderEntity!!.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] =
                     -Math_h.MS2SEC(Game_local.gameLocal.time.toFloat())
-                renderEntity.shaderParms[RenderWorld.SHADERPARM_DIVERSITY] = Game_local.gameLocal.random.CRandomFloat()
+                renderEntity!!.shaderParms[RenderWorld.SHADERPARM_DIVERSITY] =
+                    Game_local.gameLocal.random.CRandomFloat()
                 Show()
                 removeTime = if (removeTime > 3000) removeTime else 3000
             }
@@ -940,7 +941,7 @@ object Projectile {
         }
 
         override fun ClientPredictionThink() {
-            if (null == renderEntity.hModel) {
+            if (null == renderEntity!!.hModel) {
                 return
             }
             Think()
@@ -1016,7 +1017,7 @@ object Projectile {
                     }
                     projectileState_t.FIZZLED, projectileState_t.EXPLODED -> {
                         StopSound(TempDump.etoi(gameSoundChannel_t.SND_CHANNEL_BODY2), false)
-                        GameEdit.gameEdit.ParseSpawnArgsToRenderEntity(spawnArgs, renderEntity)
+                        GameEdit.gameEdit.ParseSpawnArgsToRenderEntity(spawnArgs, renderEntity!!)
                         state = projectileState_t.SPAWNED
                     }
                 }
@@ -1752,17 +1753,17 @@ object Projectile {
                     val player =
                         if (beamTargets[i].target.GetEntity() is idPlayer) beamTargets[i].target.GetEntity() as idPlayer? else null
                     val org = idVec3(beamTargets[i].target.GetEntity()!!.GetPhysics().GetAbsBounds().GetCenter())
-                    beamTargets[i].renderEntity.origin.set(GetPhysics().GetOrigin())
-                    beamTargets[i].renderEntity.shaderParms[RenderWorld.SHADERPARM_BEAM_END_X] = org.x
-                    beamTargets[i].renderEntity.shaderParms[RenderWorld.SHADERPARM_BEAM_END_Y] = org.y
-                    beamTargets[i].renderEntity.shaderParms[RenderWorld.SHADERPARM_BEAM_END_Z] = org.z
-                    beamTargets[i].renderEntity.shaderParms[RenderWorld.SHADERPARM_ALPHA] = 1.0f
-                    beamTargets[i].renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE] =
-                        beamTargets[i].renderEntity.shaderParms[RenderWorld.SHADERPARM_ALPHA]
-                    beamTargets[i].renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN] =
-                        beamTargets[i].renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE]
-                    beamTargets[i].renderEntity.shaderParms[RenderWorld.SHADERPARM_RED] =
-                        beamTargets[i].renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN]
+                    beamTargets[i].renderEntity!!.origin.set(GetPhysics().GetOrigin())
+                    beamTargets[i].renderEntity!!.shaderParms[RenderWorld.SHADERPARM_BEAM_END_X] = org.x
+                    beamTargets[i].renderEntity!!.shaderParms[RenderWorld.SHADERPARM_BEAM_END_Y] = org.y
+                    beamTargets[i].renderEntity!!.shaderParms[RenderWorld.SHADERPARM_BEAM_END_Z] = org.z
+                    beamTargets[i].renderEntity!!.shaderParms[RenderWorld.SHADERPARM_ALPHA] = 1.0f
+                    beamTargets[i].renderEntity!!.shaderParms[RenderWorld.SHADERPARM_BLUE] =
+                        beamTargets[i].renderEntity!!.shaderParms[RenderWorld.SHADERPARM_ALPHA]
+                    beamTargets[i].renderEntity!!.shaderParms[RenderWorld.SHADERPARM_GREEN] =
+                        beamTargets[i].renderEntity!!.shaderParms[RenderWorld.SHADERPARM_BLUE]
+                    beamTargets[i].renderEntity!!.shaderParms[RenderWorld.SHADERPARM_RED] =
+                        beamTargets[i].renderEntity!!.shaderParms[RenderWorld.SHADERPARM_GREEN]
                     if (Game_local.gameLocal.time > nextDamageTime) {
                         var bfgVision = true
                         if (damageFreq != null &&  /*(const char *)*/!damageFreq.IsEmpty() && beamTargets[i].target.GetEntity() != null && beamTargets[i].target.GetEntity()!!
@@ -1782,13 +1783,13 @@ object Projectile {
                                 Model.INVALID_JOINT
                             )
                         } else {
-                            beamTargets[i].renderEntity.shaderParms[RenderWorld.SHADERPARM_ALPHA] = 0.0f
-                            beamTargets[i].renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE] =
-                                beamTargets[i].renderEntity.shaderParms[RenderWorld.SHADERPARM_ALPHA]
-                            beamTargets[i].renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN] =
-                                beamTargets[i].renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE]
-                            beamTargets[i].renderEntity.shaderParms[RenderWorld.SHADERPARM_RED] =
-                                beamTargets[i].renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN]
+                            beamTargets[i].renderEntity!!.shaderParms[RenderWorld.SHADERPARM_ALPHA] = 0.0f
+                            beamTargets[i].renderEntity!!.shaderParms[RenderWorld.SHADERPARM_BLUE] =
+                                beamTargets[i].renderEntity!!.shaderParms[RenderWorld.SHADERPARM_ALPHA]
+                            beamTargets[i].renderEntity!!.shaderParms[RenderWorld.SHADERPARM_GREEN] =
+                                beamTargets[i].renderEntity!!.shaderParms[RenderWorld.SHADERPARM_BLUE]
+                            beamTargets[i].renderEntity!!.shaderParms[RenderWorld.SHADERPARM_RED] =
+                                beamTargets[i].renderEntity!!.shaderParms[RenderWorld.SHADERPARM_GREEN]
                             bfgVision = false
                         }
                         player?.playerView?.EnableBFGVision(bfgVision)
@@ -1888,21 +1889,21 @@ object Projectile {
                 }
                 val bt = beamTarget_t() //memset( &bt.renderEntity, 0, sizeof( renderEntity_t ) );
                 renderEntity = renderEntity_s()
-                bt.renderEntity.origin.set(GetPhysics().GetOrigin())
-                bt.renderEntity.axis.set(GetPhysics().GetAxis())
-                bt.renderEntity.shaderParms[RenderWorld.SHADERPARM_BEAM_WIDTH] = beamWidth
-                bt.renderEntity.shaderParms[RenderWorld.SHADERPARM_RED] = 1.0f
-                bt.renderEntity.shaderParms[RenderWorld.SHADERPARM_GREEN] = 1.0f
-                bt.renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE] = 1.0f
-                bt.renderEntity.shaderParms[RenderWorld.SHADERPARM_ALPHA] = 1.0f
-                bt.renderEntity.shaderParms[RenderWorld.SHADERPARM_DIVERSITY] =
+                bt.renderEntity!!.origin.set(GetPhysics().GetOrigin())
+                bt.renderEntity!!.axis.set(GetPhysics().GetAxis())
+                bt.renderEntity!!.shaderParms[RenderWorld.SHADERPARM_BEAM_WIDTH] = beamWidth
+                bt.renderEntity!!.shaderParms[RenderWorld.SHADERPARM_RED] = 1.0f
+                bt.renderEntity!!.shaderParms[RenderWorld.SHADERPARM_GREEN] = 1.0f
+                bt.renderEntity!!.shaderParms[RenderWorld.SHADERPARM_BLUE] = 1.0f
+                bt.renderEntity!!.shaderParms[RenderWorld.SHADERPARM_ALPHA] = 1.0f
+                bt.renderEntity!!.shaderParms[RenderWorld.SHADERPARM_DIVERSITY] =
                     Game_local.gameLocal.random.CRandomFloat() * 0.75f
-                bt.renderEntity.hModel = ModelManager.renderModelManager.FindModel("_beam")
-                bt.renderEntity.callback = null
-                bt.renderEntity.numJoints = 0
-                bt.renderEntity.joints = null
-                bt.renderEntity.bounds.Clear()
-                bt.renderEntity.customSkin = DeclManager.declManager.FindSkin(skin)
+                bt.renderEntity!!.hModel = ModelManager.renderModelManager.FindModel("_beam")
+                bt.renderEntity!!.callback = null
+                bt.renderEntity!!.numJoints = 0
+                bt.renderEntity!!.joints = null
+                bt.renderEntity!!.bounds.Clear()
+                bt.renderEntity!!.customSkin = DeclManager.declManager.FindSkin(skin)
                 bt.target.oSet(ent)
                 bt.modelDefHandle = Game_local.gameRenderWorld.AddEntityDef(bt.renderEntity)
                 beamTargets.Append(bt)
@@ -1942,7 +1943,7 @@ object Projectile {
                     i++
                     continue
                 }
-                beamTargets[i].renderEntity.shaderParms[RenderWorld.SHADERPARM_BEAM_WIDTH] = beamWidth
+                beamTargets[i].renderEntity!!.shaderParms[RenderWorld.SHADERPARM_BEAM_WIDTH] = beamWidth
 
                 // if the hit entity takes damage
                 damageScale = if (damagePower != 0f) {
@@ -2105,7 +2106,7 @@ object Projectile {
             val gravVec = idVec3()
             val randomVelocity: Boolean
             val axis: idMat3
-            renderEntity.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] =
+            renderEntity!!.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] =
                 -Math_h.MS2SEC(Game_local.gameLocal.time.toFloat())
             spawnArgs.GetVector("velocity", "0 0 0", velocity)
             spawnArgs.GetAngles("angular_velocity", "0 0 0", angular_velocity)
@@ -2145,7 +2146,7 @@ object Projectile {
             // load the trace model
             if (!CollisionModel_local.collisionModelManager.TrmFromModel(clipModelName, trm)) {
                 // default to a box
-                physicsObj.SetClipBox(renderEntity.bounds, 1.0f)
+                physicsObj.SetClipBox(renderEntity!!.bounds, 1.0f)
             } else {
                 physicsObj.SetClipModel(idClipModel(trm), 1.0f)
             }

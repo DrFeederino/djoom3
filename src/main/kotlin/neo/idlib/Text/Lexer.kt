@@ -21,15 +21,22 @@ import java.util.*
  *
  */
 object Lexer {
+    @JvmField
     val LEXFL_ALLOWBACKSLASHSTRINGCONCAT: Int =
         Lib.BIT(12) // allow multiple strings seperated by '\' to be concatenated
     val LEXFL_ALLOWFLOATEXCEPTIONS: Int =
         Lib.BIT(10) // allow float exceptions like 1.#INF or 1.#IND to be parsed
     val LEXFL_ALLOWIPADDRESSES: Int = Lib.BIT(9) // allow ip addresses to be parsed as numbers
+
+    @JvmField
     val LEXFL_ALLOWMULTICHARLITERALS: Int = Lib.BIT(11) // allow multi character literals
     val LEXFL_ALLOWNUMBERNAMES: Int = Lib.BIT(8) // allow names to start with a number
+
+    @JvmField
     val LEXFL_ALLOWPATHNAMES: Int = Lib.BIT(7) // allow path seperators in names
     val LEXFL_NOBASEINCLUDES: Int = Lib.BIT(6) // don't include files embraced with < >
+
+    @JvmField
     val LEXFL_NODOLLARPRECOMPILE: Int = Lib.BIT(5) // don't use the $ sign for precompilation
 
     /**
@@ -53,9 +60,15 @@ object Lexer {
      */
     // lexer flags
     val LEXFL_NOERRORS: Int = Lib.BIT(0) // don't print any errors
+
+    @JvmField
     val LEXFL_NOFATALERRORS: Int = Lib.BIT(2) // errors aren't fatal
+
+    @JvmField
     val LEXFL_NOSTRINGCONCAT: Int =
         Lib.BIT(3) // multiple strings seperated by whitespaces are not concatenated
+
+    @JvmField
     val LEXFL_NOSTRINGESCAPECHARS: Int = Lib.BIT(4) // no escape characters inside strings
     val LEXFL_NOWARNINGS: Int = Lib.BIT(1) // don't print any warnings
     val LEXFL_ONLYSTRINGS: Int =
@@ -1639,7 +1652,7 @@ object Lexer {
                     token.AppendDirty(buffer.get(script_p++))
                 }
             }
-            //            token.oSet(token.len, '\0');
+            //            token.set(token.len, '\0');
             if (token.type == Token.TT_LITERAL) {
                 if (0 == flags and LEXFL_ALLOWMULTICHARLITERALS) {
                     if (token.Length() != 1) {
@@ -1668,7 +1681,7 @@ object Lexer {
                         ||  // if special path name characters are allowed
                         flags and LEXFL_ALLOWPATHNAMES != 0 && (c == '/' || c == '\\' || c == ':' || c == '.'))
             )
-            //            token.oSet(token.len, '\0');
+            //            token.set(token.len, '\0');
             //the sub type is the length of the name
             token.subtype = token.Length()
             return true
@@ -1852,7 +1865,7 @@ object Lexer {
                     token.subtype = token.subtype or Token.TT_IPPORT
                 }
             }
-            //            token.oSet(token.len, '\0');
+            //            token.set(token.len, '\0');
             return true
         }
 

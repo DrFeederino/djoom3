@@ -584,6 +584,7 @@ object Plane {
             //
             //public	float			operator[]( int index ) const
             //public	float &			operator[]( int index )
+            @JvmStatic
             fun generateArray(length: Int): Array<idPlane> {
                 return Array(length) { idPlane() }
             }

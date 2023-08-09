@@ -20,7 +20,9 @@ import neo.Renderer.ModelManager
 import neo.Renderer.ModelManager.idRenderModelManager
 import neo.Renderer.RenderSystem.idRenderSystem
 import neo.Renderer.RenderWorld
-import neo.Renderer.RenderWorld.*
+import neo.Renderer.RenderWorld.idRenderWorld
+import neo.Renderer.RenderWorld.renderEntity_s
+import neo.Renderer.RenderWorld.renderLight_s
 import neo.Sound.snd_shader
 import neo.Sound.snd_shader.idSoundShader
 import neo.Sound.sound.idSoundEmitter
@@ -668,7 +670,7 @@ object Game {
             model: idRenderModel?,
             anim: idMD5Anim?,
             numJoints: Int,
-            joints: Array<idJointMat>?,
+            joints: Array<idJointMat?>?,
             time: Int,
             offset: idVec3,
             remove_origin_offset: Boolean
@@ -704,8 +706,8 @@ object Game {
                 )
                 i = 0
                 while (i < numJoints) {
-                    joints!![i].SetRotation(idMat3.getMat3_identity())
-                    joints[i].SetTranslation(offset)
+                    joints!![i]!!.SetRotation(idMat3.getMat3_identity())
+                    joints[i]!!.SetTranslation(offset)
                     i++
                 }
                 return
@@ -725,7 +727,11 @@ object Game {
             anim.GetInterpolatedFrame(frame, jointFrame as Array<idJointQuat>, index, numJoints)
 
             // convert joint quaternions to joint matrices
-            Simd.SIMDProcessor.ConvertJointQuatsToJointMats(joints!!, jointFrame as Array<idJointQuat>, numJoints)
+            Simd.SIMDProcessor.ConvertJointQuatsToJointMats(
+                joints as Array<idJointMat>,
+                jointFrame as Array<idJointQuat>,
+                numJoints
+            )
 
             // first joint is always root of entire hierarchy
             if (remove_origin_offset) {
@@ -735,7 +741,7 @@ object Game {
             }
 
             // transform the children
-            md5joints = model.GetJoints()!!
+            md5joints = model.GetJoints() as Array<idMD5Joint>
             i = 1
             while (i < numJoints) {
                 joints[i].timesAssign(joints[md5joints.indexOf(md5joints[i].parent)])
@@ -998,7 +1004,7 @@ object Game {
                 return null
             }
             MD5anim = anim.MD5Anim(0)
-            MD5joints = md5.GetJoints()
+            MD5joints = md5.GetJoints() as Array<idMD5Joint>
             numMD5joints = md5.NumJoints()
 
             // setup a render entity
@@ -1114,7 +1120,7 @@ object Game {
                 }
                 jointNum = 0
                 while (jointNum < numMD5joints) {
-                    if (MD5joints!![jointNum].name.Icmp(fb.jointName) == 0) {
+                    if (MD5joints!![jointNum].name!!.Icmp(fb.jointName) == 0) {
                         break
                     }
                     jointNum++
@@ -1143,24 +1149,24 @@ object Game {
                 )
                 when (jointMod[i]) {
                     declAFJointMod_t.DECLAF_JOINTMOD_ORIGIN -> {
-                        ent.joints!![i].SetRotation(localm.times(ent.joints!![parentNum].ToMat3()))
-                        ent.joints!![i].SetTranslation(modifiedOrigin[i])
+                        ent.joints!![i]!!.SetRotation(localm.times(ent.joints!![parentNum]!!.ToMat3()))
+                        ent.joints!![i]!!.SetTranslation(modifiedOrigin[i])
                     }
 
                     declAFJointMod_t.DECLAF_JOINTMOD_AXIS -> {
-                        ent.joints!![i].SetRotation(modifiedAxis[i]!!)
-                        ent.joints!![i].SetTranslation(
-                            ent.joints!![parentNum].ToVec3().plus(localt.times(ent.joints!![parentNum].ToMat3()))
+                        ent.joints!![i]!!.SetRotation(modifiedAxis[i]!!)
+                        ent.joints!![i]!!.SetTranslation(
+                            ent.joints!![parentNum]!!.ToVec3().plus(localt.times(ent.joints!![parentNum]!!.ToMat3()))
                         )
                     }
                     declAFJointMod_t.DECLAF_JOINTMOD_BOTH -> {
-                        ent.joints!![i].SetRotation(modifiedAxis[i]!!)
-                        ent.joints!![i].SetTranslation(modifiedOrigin[i])
+                        ent.joints!![i]!!.SetRotation(modifiedAxis[i]!!)
+                        ent.joints!![i]!!.SetTranslation(modifiedOrigin[i])
                     }
                     else -> {
-                        ent.joints!![i].SetRotation(localm.times(ent.joints!![parentNum].ToMat3()))
-                        ent.joints!![i].SetTranslation(
-                            ent.joints!![parentNum].ToVec3().plus(localt.times(ent.joints!![parentNum].ToMat3()))
+                        ent.joints!![i]!!.SetRotation(localm.times(ent.joints!![parentNum]!!.ToMat3()))
+                        ent.joints!![i]!!.SetTranslation(
+                            ent.joints!![parentNum]!!.ToVec3().plus(localt.times(ent.joints!![parentNum]!!.ToMat3()))
                         )
                     }
                 }

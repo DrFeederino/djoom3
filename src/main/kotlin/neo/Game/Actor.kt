@@ -1590,8 +1590,8 @@ object Actor {
                     Game_local.gameLocal.clip,
                     this,
                     0,
-                    renderEntity.origin,
-                    renderEntity.axis,
+                    renderEntity!!.origin,
+                    renderEntity!!.axis,
                     modelDefHandle
                 )
             }
@@ -1801,7 +1801,7 @@ object Actor {
             attach.channel = animator.GetChannelForJoint(joint)
             GetJointWorldTransform(joint, Game_local.gameLocal.time, origin, axis)
             attach.ent.oSet(ent)
-            ent.SetOrigin(origin.plus(originOffset.times(renderEntity.axis)))
+            ent.SetOrigin(origin.plus(originOffset.times(renderEntity!!.axis)))
             val rotate = angleOffset.ToMat3()
             val newAxis = rotate.times(axis)
             ent.SetAxis(newAxis)
@@ -2139,11 +2139,11 @@ object Actor {
                 val attach = attachments.Alloc()!!
                 attach.channel = animator.GetChannelForJoint(joint)
                 animator.GetJointTransform(joint, Game_local.gameLocal.time, origin, axis)
-                origin.set(renderEntity.origin.plus(origin.plus(modelOffset).times(renderEntity.axis)))
+                origin.set(renderEntity!!.origin.plus(origin.plus(modelOffset).times(renderEntity!!.axis)))
                 //attach.ent.oSet(new idEntityPtr<>());
                 attach.ent.oSet(headEnt)
                 headEnt.SetOrigin(origin)
-                headEnt.SetAxis(renderEntity.axis)
+                headEnt.SetAxis(renderEntity!!.axis)
                 headEnt.BindToJoint(this, joint, true)
             }
         }
