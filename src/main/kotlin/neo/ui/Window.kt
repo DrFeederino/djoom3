@@ -50,7 +50,7 @@ import neo.idlib.math.Interpolate.idInterpolateAccelDecelLinear
 import neo.idlib.math.Matrix.idMat3
 import neo.idlib.math.Matrix.idMat3.Companion.getMat3_identity
 import neo.idlib.math.Rotation.idRotation
-import neo.idlib.math.Vector.getVec3_origin
+import neo.idlib.math.Vector.getVec3Origin
 import neo.idlib.math.Vector.idVec2
 import neo.idlib.math.Vector.idVec3
 import neo.idlib.math.Vector.idVec4
@@ -364,7 +364,7 @@ object Window {
             return dc
         }
 
-        @JvmOverloads
+
         fun SetFocus(w: idWindow?, scripts: Boolean = false /*= true*/): idWindow? {
             // only one child can have the focus
             var lastFocus: idWindow? = null
@@ -699,7 +699,7 @@ object Window {
             return null
         }
 
-        @JvmOverloads
+
         fun GetWinVarByName(_name: String?, winLookup: Boolean = false /*= false*/): idWinVar? {
             return GetWinVarByName(_name, winLookup, null)
         }
@@ -987,7 +987,7 @@ object Window {
             return name.toString() //TODO:return idStr???
         }
 
-        @JvmOverloads
+
         fun Parse(src: idParser, rebuild: Boolean = true /*= true*/): Boolean {
             val token = idToken()
             var token2: idToken
@@ -1743,7 +1743,7 @@ object Window {
                 || (flags and WIN_DESKTOP != 0 && 0 == flags and WIN_NOCURSOR && !hideCursor.data
                         && (gui!!.Active() || flags and WIN_MENUGUI != 0))
             ) {
-                dc!!.SetTransformInfo(getVec3_origin(), getMat3_identity())
+                dc!!.SetTransformInfo(getVec3Origin(), getMat3_identity())
                 gui!!.DrawCursor()
             }
             if (gui_debug.GetInteger() != 0 && flags and WIN_DESKTOP != 0) {
@@ -1772,7 +1772,7 @@ object Window {
             textRect.Offset(-x, -y)
         }
 
-        @JvmOverloads
+
         fun ArchiveToDictionary(dict: idDict?, useNames: Boolean = true /*= true*/) {
             //FIXME: rewrite without state
             val c = children.Num()
@@ -1781,7 +1781,7 @@ object Window {
             }
         }
 
-        @JvmOverloads
+
         fun InitFromDictionary(dict: idDict?, byName: Boolean = true /*= true*/) {
             //FIXME: rewrite without state
             val c = children.Num()
@@ -1998,7 +1998,7 @@ object Window {
             }
         }
 
-        @JvmOverloads
+
         fun ReadFromDemoFile(f: idDemoFile?, rebuild: Boolean = true /*= true*/) {
 
             // should never hit unless we re-enable WRITE_GUIS
@@ -2453,7 +2453,7 @@ object Window {
             return ops.Num() > 0
         }
 
-        @JvmOverloads
+
         fun EvalRegs(test: Int = -1 /*= -1*/, force: Boolean = false /*= false*/): Float {
             if (!force && test >= 0 && test < MAX_EXPRESSION_REGISTERS && lastEval === this) {
                 return regs[test]
@@ -2519,7 +2519,7 @@ object Window {
             return c
         }
 
-        @JvmOverloads
+
         fun ParseScript(
             src: idParser,
             list: idGuiScriptList?,
@@ -2622,7 +2622,7 @@ object Window {
          Returns a register index
          ================
          */
-        @JvmOverloads
+
         fun ParseExpression(src: idParser, `var`: idWinVar? = null /*= NULL*/, component: Int = 0 /*= 0*/): Int {
             return ParseExpressionPriority(src, TOP_PRIORITY, `var`)
         }

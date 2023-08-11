@@ -741,7 +741,7 @@ class AsyncNetwork {
             )
 
             // if set run a dedicated server
-            @JvmField
+
             var serverDedicated: idCVar = idCVar(
                 "net_serverDedicated",
                 "0",

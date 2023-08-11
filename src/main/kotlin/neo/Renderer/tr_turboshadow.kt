@@ -11,6 +11,7 @@ import neo.idlib.math.Simd.SIMDProcessor
 import neo.idlib.math.Vector.idVec3
 import neo.idlib.math.Vector.idVec4
 
+
 object tr_turboshadow {
     var c_turboUnusedVerts: Int = 0
 

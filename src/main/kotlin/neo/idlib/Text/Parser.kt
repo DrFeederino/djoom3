@@ -237,7 +237,7 @@ object Parser {
         }
 
         // load a source file
-        @JvmOverloads
+
         @Throws(idException::class)
         fun LoadFile(filename: String, OSPath: Boolean = false): Boolean {
             val script: idLexer
@@ -306,7 +306,7 @@ object Parser {
         }
 
         // free the current source
-        @JvmOverloads
+
         fun FreeSource(keepDefines: Boolean = false /*= false*/) {
             var script: idLexer?
             var token: idToken?
@@ -611,7 +611,7 @@ object Parser {
          =================
          */
         // skip the braced section
-        @JvmOverloads
+
         @Throws(idException::class)
         fun SkipBracedSection(parseFirstBrace: Boolean = true /*= true*/): Boolean {
             val token = idToken()

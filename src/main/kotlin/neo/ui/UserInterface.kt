@@ -17,9 +17,9 @@ import neo.ui.UserInterfaceLocal.idUserInterfaceManagerLocal
 object UserInterface {
     var uiManagerLocal = idUserInterfaceManagerLocal()
 
-    @JvmField
+
     var uiManager: idUserInterfaceManager = uiManagerLocal
-    fun setUiManager(uiManager: idUserInterfaceManager) {
+    fun setUiManagers(uiManager: idUserInterfaceManager) {
         uiManagerLocal = uiManager as idUserInterfaceManagerLocal
         UserInterface.uiManager = uiManagerLocal
     }
@@ -47,7 +47,7 @@ object UserInterface {
 
         // returns false if it failed to load
         abstract fun InitFromFile(qpath: String?, rebuild: Boolean /*= true*/, cache: Boolean /*= true*/): Boolean
-        @JvmOverloads
+
         fun InitFromFile(qpath: String?, rebuild: Boolean = true /*= true*/): Boolean {
             return InitFromFile(qpath, rebuild, true)
         }
@@ -160,7 +160,7 @@ object UserInterface {
                 forceUnique: Boolean /*= false*/
             ): idUserInterface?
 
-            @JvmOverloads
+
             fun FindGui(
                 qpath: String?,
                 autoLoad: Boolean = false /*= false*/,

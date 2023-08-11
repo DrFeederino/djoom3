@@ -335,12 +335,12 @@ class idMat4 {
         this.set(getMat4_identity())
     }
 
-    @JvmOverloads
+
     fun IsIdentity(epsilon: Float = idMat0.MATRIX_EPSILON.toFloat()): Boolean {
         return Compare(getMat4_identity(), epsilon)
     }
 
-    @JvmOverloads
+
     fun IsSymmetric(epsilon: Float = idMat0.MATRIX_EPSILON.toFloat()): Boolean {
         for (i in 1..3) {
             for (j in 0 until i) {
@@ -352,7 +352,7 @@ class idMat4 {
         return true
     }
 
-    @JvmOverloads
+
     fun IsDiagonal(epsilon: Float = idMat0.MATRIX_EPSILON.toFloat()): Boolean {
         for (i in 0..3) {
             for (j in 0..3) {

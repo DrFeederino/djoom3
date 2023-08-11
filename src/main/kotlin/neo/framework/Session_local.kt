@@ -1670,7 +1670,7 @@ object Session_local {
             SetGUI(null, null)
         }
 
-        @JvmOverloads
+
         fun StartNewGame(mapName: String, devmap: Boolean = false /*= false*/) {
             if (BuildDefines.ID_DEDICATED) {
                 Common.common.Printf("Dedicated servers cannot start singleplayer games.\n")
@@ -1749,7 +1749,7 @@ object Session_local {
          Draws and captures the current state, then starts a wipe with that image
          ================
          */
-        @JvmOverloads
+
         fun StartWipe(_wipeMaterial: String, hold: Boolean = false /*= false*/) {
             Console.console.Close()
 
@@ -1958,7 +1958,7 @@ object Session_local {
             }
         }
 
-        @JvmOverloads
+
         @Throws(idException::class)
         fun SaveGame(saveName: String, autosave: Boolean = false /*= false*/): Boolean {
             return false //HACKME::8
@@ -2321,7 +2321,7 @@ object Session_local {
          This should still work after disconnecting from a level
          ==============
          */
-        @JvmOverloads
+
         @Throws(idException::class)
         fun WriteCmdDemo(demoName: String, save: Boolean = false /*= false*/) {
             if (demoName.isEmpty()) {
@@ -2589,7 +2589,7 @@ object Session_local {
             Common.common.SetRefreshOnPrint(false)
         }
 
-        @JvmOverloads
+
         @Throws(idException::class)
         fun TimeRenderDemo(demoName: String, twice: Boolean = false /*= false*/) {
             val demo = idStr(demoName)
@@ -2951,7 +2951,7 @@ object Session_local {
          Exits with mapSpawned = true
          ===============
          */
-        @JvmOverloads
+
         @Throws(idException::class)
         fun ExecuteMapChange(noFadeWipe: Boolean = false /*= false*/) {
             var i: Int
@@ -3227,7 +3227,7 @@ object Session_local {
             return guiActive
         }
 
-        @JvmOverloads
+
         @Throws(idException::class)
         fun DispatchCommand(gui: idUserInterface?, menuCommand: String, doIngame: Boolean = false /*= true*/) {
             var gui = gui
@@ -4229,7 +4229,7 @@ object Session_local {
             fileTimes.Sort(idListSaveGameCompare())
         }
 
-        @JvmOverloads
+
         fun TakeNotes(p: String, extended: Boolean = false /*= false*/) {
             if (!mapSpawned) {
                 Common.common.Printf("No map loaded!\n")

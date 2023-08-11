@@ -171,7 +171,7 @@ object Physics_Monster {
         // set delta for next move
         fun SetDelta(d: idVec3) {
             delta.set(d)
-            if (delta != Vector.getVec3_origin()) {
+            if (delta != Vector.getVec3Origin()) {
                 Activate()
             }
         }
@@ -266,7 +266,7 @@ object Physics_Monster {
                     moveResult = monsterMoveResult_t.MM_OK
                 }
                 delta.set(current.velocity.times(timeStep))
-                if (delta != Vector.getVec3_origin()) {
+                if (delta != Vector.getVec3Origin()) {
                     moveResult = SlideMove(current.origin, current.velocity, delta)
                     delta.Zero()
                 }
@@ -280,7 +280,7 @@ object Physics_Monster {
                     current.velocity.set(delta.div(timeStep))
                 }
                 current.velocity.minusAssign(gravityNormal.times(current.velocity.times(gravityNormal)))
-                if (delta == Vector.getVec3_origin()) {
+                if (delta == Vector.getVec3Origin()) {
                     Rest()
                 } else {
                     // try moving into the desired direction
@@ -647,7 +647,7 @@ object Physics_Monster {
             val result2: monsterMoveResult_t
             val stepdist: Float
             val nostepdist: Float
-            if (delta == Vector.getVec3_origin()) {
+            if (delta == Vector.getVec3Origin()) {
                 return monsterMoveResult_t.MM_OK
             }
 

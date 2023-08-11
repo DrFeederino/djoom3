@@ -57,7 +57,7 @@ import neo.idlib.math.Math_h
 import neo.idlib.math.Math_h.idMath
 import neo.idlib.math.Matrix.idMat3
 import neo.idlib.math.Simd
-import neo.idlib.math.Vector.getVec3_origin
+import neo.idlib.math.Vector.getVec3Origin
 import neo.idlib.math.Vector.idVec3
 import neo.sys.sys_public.idSys
 import neo.ui.UserInterface.idUserInterface
@@ -567,11 +567,11 @@ object Game {
             val modelDef: idDeclModelDef?
             args = Game_local.gameLocal.FindEntityDefDict(classname, false)
             if (null == args) {
-                return getVec3_origin()
+                return getVec3Origin()
             }
             modelDef = Anim_Blend.ANIM_GetModelDefFromEntityDef(args)
             return if (null == modelDef) {
-                getVec3_origin()
+                getVec3Origin()
             } else modelDef.GetVisualOffset()
         }
 

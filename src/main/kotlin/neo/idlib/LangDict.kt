@@ -39,7 +39,7 @@ class LangDict {
             hash.Clear()
         }
 
-        @JvmOverloads
+
         @Throws(idException::class)
         fun Load(fileName: String, clear: Boolean = true): Boolean {
             if (clear) {

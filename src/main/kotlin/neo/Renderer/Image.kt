@@ -3452,7 +3452,7 @@ object Image {
             ddsHash!!.Free()
         }
 
-        @JvmOverloads
+
         fun FinishBuild(removeDups: Boolean = false /*= false */) {
             val batchFile: idFile?
             if (removeDups) {

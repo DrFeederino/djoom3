@@ -93,7 +93,7 @@ object win_glimp {
      parameters and try again.
      ===================
      */
-    @JvmStatic
+
     fun GLimp_Init(parms: glimpParms_t): Boolean {
         common.Printf("Initializing OpenGL subsystem\n")
 
@@ -205,7 +205,7 @@ object win_glimp {
      subsystem.
      ===================
      */
-    @JvmStatic
+
     fun GLimp_Shutdown() {
         glfwDestroyWindow(window)
         glfwTerminate()
@@ -229,7 +229,7 @@ object win_glimp {
         }
     }
 
-    @JvmStatic
+
     fun GLimp_SwapBuffers() {
         var error = glGetError()
         if (error > 0) {
@@ -246,7 +246,7 @@ object win_glimp {
     // most OpenGL implementations, this will result in all OpenGL calls
     // being immediate returns, which lets us guage how much time is
     // being spent inside OpenGL.
-    @JvmStatic
+
     fun GLimp_EnableLogging(enable: Boolean) { //TODO:activate this function. EDIT:make sure it works.
         var enable = enable
         try {
@@ -310,17 +310,17 @@ object win_glimp {
         }
     }
 
-    @JvmStatic
+
     fun GLimp_DeactivateContext() {
         common.DPrintf("TODO: GLimp_ActivateContext\n")
     }
 
-    @JvmStatic
+
     fun GLimp_ActivateContext() {
         common.DPrintf("TODO: GLimp_DeactivateContext\n");
     }
 
-    @JvmStatic
+
     fun GLimp_SetScreenParms(parms: glimpParms_t) {
         common.DPrintf("TODO: GLimp_SetScreenParms\n");
     }
@@ -333,22 +333,22 @@ object win_glimp {
      ====================================================================
      */
     class glimpParms_t {
-        @JvmField
+
         var displayHz = 0
 
-        @JvmField
+
         var fullScreen = false
 
-        @JvmField
+
         var height = 0
 
-        @JvmField
+
         var multiSamples = 0
 
-        @JvmField
+
         var stereo = false
 
-        @JvmField
+
         var width = 0
     }
 }

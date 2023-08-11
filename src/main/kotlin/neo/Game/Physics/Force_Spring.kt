@@ -75,8 +75,8 @@ class Force_Spring {
             var info: impactInfo_s = impactInfo_s()
             pos1.set(p1)
             pos2.set(p2)
-            velocity2.set(Vector.getVec3_origin())
-            velocity1.set(Vector.getVec3_origin())
+            velocity2.set(Vector.getVec3Origin())
+            velocity1.set(Vector.getVec3Origin())
             if (physics1 != null) {
                 axis = physics1!!.GetAxis(id1)
                 pos1.set(physics1!!.GetOrigin(id1))

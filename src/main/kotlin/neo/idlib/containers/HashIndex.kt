@@ -337,7 +337,7 @@ object HashIndex {
         }
 
         // returns a key for a string
-        @JvmOverloads
+
         fun GenerateKey(string: CharArray, caseSensitive: Boolean = true): Int {
             return if (caseSensitive) {
                 idStr.Hash(string) and hashMask
@@ -346,7 +346,7 @@ object HashIndex {
             }
         }
 
-        @JvmOverloads
+
         fun GenerateKey(string: String, caseSensitive: Boolean = true): Int {
             return GenerateKey(string.toCharArray(), caseSensitive)
         }

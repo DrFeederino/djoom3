@@ -920,7 +920,7 @@ object MapFile {
         // normally this will use a .reg file instead of a .map file if it exists,
         // which is what the game and dmap want, but the editor will want to always
         // load a .map file
-        @JvmOverloads
+
         @Throws(idException::class)
         fun Parse(
             filename: String,
@@ -1043,7 +1043,7 @@ object MapFile {
             return Parse(filename.toString())
         }
 
-        @JvmOverloads
+
         @Throws(idException::class)
         fun Write(fileName: String, ext: String, fromBasePath: Boolean = true): Boolean {
             var i: Int

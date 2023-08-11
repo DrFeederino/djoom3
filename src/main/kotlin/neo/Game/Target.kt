@@ -186,7 +186,7 @@ object Target {
             i = 0
             while (i < targets.Num()) {
                 ent = targets[i].GetEntity()
-                ent?.Damage(this, this, Vector.getVec3_origin(), damage, 1.0f, Model.INVALID_JOINT)
+                ent?.Damage(this, this, Vector.getVec3Origin(), damage, 1.0f, Model.INVALID_JOINT)
                 i++
             }
         }

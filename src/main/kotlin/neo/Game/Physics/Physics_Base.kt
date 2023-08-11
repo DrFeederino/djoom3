@@ -195,7 +195,7 @@ class Physics_Base {
         }
 
         override fun GetOrigin(id: Int /*= 0*/): idVec3 {
-            return Vector.getVec3_origin()
+            return Vector.getVec3Origin()
         }
 
         override fun GetAxis(id: Int /*= 0*/): idMat3 {
@@ -205,11 +205,11 @@ class Physics_Base {
         override fun SetLinearVelocity(newLinearVelocity: idVec3, id: Int /*= 0*/) {}
         override fun SetAngularVelocity(newAngularVelocity: idVec3, id: Int /*= 0*/) {}
         override fun GetLinearVelocity(id: Int /*= 0*/): idVec3 {
-            return Vector.getVec3_origin()
+            return Vector.getVec3Origin()
         }
 
         override fun GetAngularVelocity(id: Int /*= 0*/): idVec3 {
-            return Vector.getVec3_origin()
+            return Vector.getVec3Origin()
         }
 
         override fun SetGravity(newGravity: idVec3) {
@@ -353,11 +353,11 @@ class Physics_Base {
 
         override fun SetPushed(deltaTime: Int) {}
         override fun GetPushedLinearVelocity(id: Int /*= 0*/): idVec3 {
-            return Vector.getVec3_origin()
+            return Vector.getVec3Origin()
         }
 
         override fun GetPushedAngularVelocity(id: Int /*= 0*/): idVec3 {
-            return Vector.getVec3_origin()
+            return Vector.getVec3Origin()
         }
 
         override fun SetMaster(master: idEntity?, orientated: Boolean /*= true*/) {}
@@ -389,7 +389,7 @@ class Physics_Base {
             contacts.SetNum(index + 10, false)
             val contactz = Array(10) { contactInfo_t() }
             dir.SubVec3_oSet(0, gravityNormal)
-            dir.SubVec3_oSet(1, Vector.getVec3_origin())
+            dir.SubVec3_oSet(1, Vector.getVec3Origin())
             num = Game_local.gameLocal.clip.Contacts(
                 contactz,
                 10,
@@ -475,12 +475,12 @@ class Physics_Base {
                 start.set(org + vec)
                 a = 20.0f
                 while (a < length) {
-                    end.set(org + idRotation(Vector.getVec3_origin(), dir, -a).ToMat3() * vec)
+                    end.set(org + idRotation(Vector.getVec3Origin(), dir, -a).ToMat3() * vec)
                     Game_local.gameRenderWorld.DebugLine(Lib.colorBlue, start, end, 1)
                     start.set(end)
                     a += 20.0f
                 }
-                end.set(org + (idRotation(Vector.getVec3_origin(), dir, -length).ToMat3() * vec))
+                end.set(org + (idRotation(Vector.getVec3Origin(), dir, -length).ToMat3() * vec))
                 Game_local.gameRenderWorld.DebugArrow(Lib.colorBlue, start, end, 1)
             }
         }

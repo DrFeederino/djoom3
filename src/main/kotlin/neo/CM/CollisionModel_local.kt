@@ -54,7 +54,7 @@ import neo.idlib.math.Plane.idPlane
 import neo.idlib.math.Pluecker.idPluecker
 import neo.idlib.math.Random.idRandom
 import neo.idlib.math.Rotation.idRotation
-import neo.idlib.math.Vector.getVec3_origin
+import neo.idlib.math.Vector.getVec3Origin
 import neo.idlib.math.Vector.idVec3
 import neo.idlib.math.Vector.idVec6
 import java.util.*
@@ -578,7 +578,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 results.fraction = 0.0f
                 results.endpos.set(start)
                 results.endAxis.set(trmAxis)
-                results.c.normal.set(getVec3_origin())
+                results.c.normal.set(getVec3Origin())
                 results.c.material = null
                 results.c.point.set(start)
                 //if (Session.session.rw != null) {
@@ -787,7 +787,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                         i++
                     }
                 }
-                if (modelOrigin != getVec3_origin()) {
+                if (modelOrigin != getVec3Origin()) {
                     i = 0
                     while (i < tw.numContacts) {
                         tw.contacts!![i].point.plusAssign(modelOrigin)
@@ -1114,7 +1114,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                     boxAxis,
                     Material.CONTENTS_SOLID or Material.CONTENTS_PLAYERCLIP,
                     CollisionModel_debug.cm_testModel.GetInteger(),
-                    getVec3_origin(),
+                    getVec3Origin(),
                     modelAxis
                 )
                 i++
@@ -1172,7 +1172,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 // rotational collision detection
                 val vec = idVec3(random.CRandomFloat(), random.CRandomFloat(), random.RandomFloat())
                 vec.Normalize()
-                val rotation = idRotation(getVec3_origin(), vec, CollisionModel_debug.cm_testAngle.GetFloat())
+                val rotation = idRotation(getVec3Origin(), vec, CollisionModel_debug.cm_testAngle.GetFloat())
                 timer.Clear()
                 timer.Start()
                 i = 0
@@ -1186,7 +1186,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                         boxAxis,
                         Material.CONTENTS_SOLID or Material.CONTENTS_PLAYERCLIP,
                         CollisionModel_debug.cm_testModel.GetInteger(),
-                        getVec3_origin(),
+                        getVec3Origin(),
                         modelAxis
                     )
                     i++
@@ -7546,7 +7546,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 model.edges!![i].sideSet = 0
                 model.edges!![i].internal = src.ParseInt() == 1
                 model.edges!![i].numUsers = src.ParseInt().toShort()
-                model.edges!![i].normal.set(getVec3_origin())
+                model.edges!![i].normal.set(getVec3Origin())
                 model.edges!![i].checkcount = 0
                 model.numInternalEdges += if (model.edges!![i].internal) 1 else 0
                 i++
@@ -7862,7 +7862,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 }
             }
             if (CollisionModel_debug.cm_drawNormals.GetBool()) {
-                center.set(getVec3_origin())
+                center.set(getVec3Origin())
                 i = 0
                 while (i < p.numEdges) {
                     edgeNum = p.edges[i]

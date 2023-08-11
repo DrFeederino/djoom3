@@ -36,32 +36,32 @@ object CmdSystem {
     //typedef enum {
     const val CMD_FL_ALL: Long = -1
 
-    @JvmField
+
     val CMD_FL_CHEAT: Long = Lib.BIT(0) // command is considered a cheat
         .toLong()
 
-    @JvmField
+
     val CMD_FL_GAME: Long = Lib.BIT(4) // game command
         .toLong()
 
-    @JvmField
+
     val CMD_FL_RENDERER: Long = Lib.BIT(2) // renderer command
         .toLong()
 
-    @JvmField
+
     val CMD_FL_SOUND: Long = Lib.BIT(3) // sound command
         .toLong()
 
-    @JvmField
+
     val CMD_FL_SYSTEM: Long = Lib.BIT(1) // system command
         .toLong()
 
-    @JvmField
+
     val CMD_FL_TOOL: Long = Lib.BIT(5) // tool command
         .toLong()
     private var cmdSystemLocal: idCmdSystemLocal = idCmdSystemLocal()
 
-    @JvmField
+
     var cmdSystem: idCmdSystem = cmdSystemLocal
 
     //} cmdFlags_t;
@@ -257,7 +257,7 @@ object CmdSystem {
             companion object {
                 private val instance: argCompletion_t = ArgCompletion_ModelName()
 
-                @JvmStatic
+
                 fun getInstance(): argCompletion_t {
                     return instance
                 }
@@ -297,7 +297,7 @@ object CmdSystem {
             companion object {
                 private val instance: argCompletion_t = ArgCompletion_ImageName()
 
-                @JvmStatic
+
                 fun getInstance(): argCompletion_t {
                     return instance
                 }
@@ -313,7 +313,7 @@ object CmdSystem {
             companion object {
                 private val instance: argCompletion_t = ArgCompletion_VideoName()
 
-                @JvmStatic
+
                 fun getInstance(): argCompletion_t {
                     return instance
                 }

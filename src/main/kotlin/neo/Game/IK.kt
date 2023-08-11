@@ -832,7 +832,7 @@ object IK /*ea*/ {
                 return
             }
             animator!!.SetJointAxis(waistJoint, jointModTransform_t.JOINTMOD_NONE, idMat3.getMat3_identity())
-            animator!!.SetJointPos(waistJoint, jointModTransform_t.JOINTMOD_NONE, Vector.getVec3_origin())
+            animator!!.SetJointPos(waistJoint, jointModTransform_t.JOINTMOD_NONE, Vector.getVec3Origin())
             i = 0
             while (i < numLegs) {
                 animator!!.SetJointAxis(

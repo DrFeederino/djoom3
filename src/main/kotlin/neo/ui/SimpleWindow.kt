@@ -11,7 +11,7 @@ import neo.idlib.Text.Str.idStr.Companion.Icmp
 import neo.idlib.math.Matrix.idMat3
 import neo.idlib.math.Matrix.idMat3.Companion.getMat3_identity
 import neo.idlib.math.Rotation.idRotation
-import neo.idlib.math.Vector.getVec3_origin
+import neo.idlib.math.Vector.getVec3Origin
 import neo.idlib.math.Vector.idVec2
 import neo.idlib.math.Vector.idVec3
 import neo.ui.DeviceContext.idDeviceContext
@@ -211,7 +211,7 @@ class SimpleWindow {
                 !itob(flags and Window.WIN_NOWRAP),
                 -1
             )
-            dc!!.SetTransformInfo(getVec3_origin(), getMat3_identity())
+            dc!!.SetTransformInfo(getVec3Origin(), getMat3_identity())
             if (flags and Window.WIN_NOCLIP != 0) {
                 dc!!.EnableClipping(true)
             }

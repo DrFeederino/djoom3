@@ -181,7 +181,7 @@ object renderbump {
                     j++
                     continue
                 }
-                normal.set(Vector.getVec3_origin())
+                normal.set(Vector.getVec3Origin())
                 k = -1
                 while (k < 2) {
                     l = -1
@@ -245,7 +245,7 @@ object renderbump {
                     j++
                     continue
                 }
-                normal.set(Vector.getVec3_origin())
+                normal.set(Vector.getVec3Origin())
                 var count = 0
                 k = -1
                 while (k < 2) {
@@ -484,7 +484,7 @@ object renderbump {
         }
 
         // triangularly interpolate the normals to the sample point
-        sampledNormal.set(Vector.getVec3_origin())
+        sampledNormal.set(Vector.getVec3Origin())
         j = 0
         while (j < 3) {
             sampledNormal.plusAssign(highMesh.verts!![highMesh.indexes!![faceNum * 3 + j]]!!.normal.times(bary[j]))
@@ -546,7 +546,7 @@ object renderbump {
         // the max distance will be the traceFrac times the longest axis of the high poly model
         bestDist = -rb.traceDist
         maxDist = rb.traceDist
-        sampledNormal.set(Vector.getVec3_origin())
+        sampledNormal.set(Vector.getVec3Origin())
         c_hits = 0
 
         // this is a pretty damn lazy way to walk through a 3D grid, and has a (very slight)
@@ -801,11 +801,11 @@ object renderbump {
                 }
 
                 // calculate the interpolated xyz, normal, and tangents of this sample
-                point.set(Vector.getVec3_origin())
-                traceNormal.set(Vector.getVec3_origin())
-                normal.set(Vector.getVec3_origin())
-                tangents[0].set(Vector.getVec3_origin())
-                tangents[1].set(Vector.getVec3_origin())
+                point.set(Vector.getVec3Origin())
+                traceNormal.set(Vector.getVec3Origin())
+                normal.set(Vector.getVec3Origin())
+                tangents[0].set(Vector.getVec3Origin())
+                tangents[1].set(Vector.getVec3Origin())
                 k = 0
                 while (k < 3) {
                     var index: Int

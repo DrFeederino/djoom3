@@ -85,7 +85,7 @@ object AASBuild_ledge {
             planes[0].FitThroughPoint(start)
             // axial bevels at start and end point
             i = if (size[1] > size[0]) 1 else 0
-            normal.set(Vector.getVec3_origin())
+            normal.set(Vector.getVec3Origin())
             normal[i] = 1.0f
             j = if (end[i] > start[i]) 1 else 0
             planes[1 + j].SetNormal(normal)
@@ -95,7 +95,7 @@ object AASBuild_ledge {
             numExpandedPlanes = 3
             // if additional bevels are required
             if (Math.abs(size[1 xor i]) > 0.01f) {
-                normal.set(Vector.getVec3_origin())
+                normal.set(Vector.getVec3Origin())
                 normal[1 xor i] = 1.0f
                 j = if (end[1 xor i] > start[1 xor i]) 1 else 0
                 planes[3 + j].SetNormal(normal)

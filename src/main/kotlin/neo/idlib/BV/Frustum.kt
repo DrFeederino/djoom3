@@ -239,7 +239,7 @@ object Frustum {
         }
 
         //
-        @JvmOverloads
+
         fun PlaneSide(plane: idPlane, epsilon: Float = Plane.ON_EPSILON): Int {
             val min = CFloat()
             val max = CFloat()
@@ -768,7 +768,7 @@ object Frustum {
         // returns true if the projection origin is far enough away from the bounding volume to create a valid frustum
         fun FromProjection(bounds: idBounds, projectionOrigin: idVec3, dFar: Float): Boolean {
             return FromProjection(
-                idBox(bounds, Vector.getVec3_origin(), idMat3.getMat3_identity()),
+                idBox(bounds, Vector.getVec3Origin(), idMat3.getMat3_identity()),
                 projectionOrigin,
                 dFar
             )
@@ -1131,7 +1131,7 @@ object Frustum {
         // calculates the bounds for the projection in this frustum
         fun ProjectionBounds(bounds: idBounds, projectionBounds: idBounds): Boolean {
             return ProjectionBounds(
-                idBox(bounds, Vector.getVec3_origin(), idMat3.getMat3_identity()),
+                idBox(bounds, Vector.getVec3Origin(), idMat3.getMat3_identity()),
                 projectionBounds
             )
         }

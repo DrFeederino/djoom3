@@ -522,7 +522,7 @@ object RenderSystem {
             max_y: Float /*= 480.0f */
         )
 
-        @JvmOverloads
+
         fun DrawStretchPic(
             verts: Array<idDrawVert>?,
             indexes: IntArray?,
@@ -619,7 +619,7 @@ object RenderSystem {
             forceDimensions: Boolean /*= false */
         )
 
-        @JvmOverloads
+
         fun CropRenderSize(width: Int, height: Int, makePowerOfTwo: Boolean = false /*= false*/) {
             CropRenderSize(width, height, makePowerOfTwo, false)
         }

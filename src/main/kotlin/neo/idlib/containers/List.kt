@@ -17,7 +17,7 @@ import java.util.logging.Logger
  *
  */
 object List {
-    @JvmStatic
+
     fun <T> idSwap(a1: Array<T>, a2: Array<T>, p1: Int, p2: Int) {
         val c = a1[p1]
         a1[p1] = a2[p2]
@@ -53,14 +53,14 @@ object List {
         b.set(c)
     }
 
-    @JvmStatic
+
     fun idSwap(a1: FloatArray, a2: FloatArray, p1: Int, p2: Int) {
         val c = a1[p1]
         a1[p1] = a2[p2]
         a2[p2] = c
     }
 
-    @JvmStatic
+
     fun idSwap(a: FloatArray, b: FloatArray) {
         val length = a.size
         val c = FloatArray(length)
@@ -69,7 +69,7 @@ object List {
         System.arraycopy(c, 0, b, 0, length)
     }
 
-    @JvmStatic
+
     fun idSwap(a: Array<Float>, b: Array<Float>) {
         val length = a.size
         val c = FloatArray(length)
@@ -378,7 +378,7 @@ object List {
          Resize to the exact size specified irregardless of granularity
          ================
          */
-        @JvmOverloads
+
         fun SetNum(
             newnum: Int,
             resize: Boolean = true
@@ -599,7 +599,7 @@ object List {
          Returns the index of the new element.
          ================
          */
-        @JvmOverloads
+
         fun Insert(obj: T, index: Int = 0): Int {            // insert the element at the given index
             var index = index
             if (TempDump.NOT(list)) {
@@ -794,7 +794,7 @@ object List {
          Sorts a subsection of the list.
          ================
          */
-        @JvmOverloads
+
         fun SortSubSection(
             startIndex: Int,
             endIndex: Int,

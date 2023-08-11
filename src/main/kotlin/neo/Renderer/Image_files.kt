@@ -35,7 +35,7 @@ object Image_files {
      ================
      */
     // data is an 8 bit index into palette, which is RGB (no A)
-    @JvmOverloads
+
     fun R_WritePalTGA(
         filename: String?,
         data: ByteArray?,
@@ -89,7 +89,7 @@ object Image_files {
      R_WriteTGA
      ================
      */
-    @JvmOverloads
+
     fun R_WriteTGA(filename: String?, data: ByteBuffer?, width: Int, height: Int, flipVertical: Boolean = false) {
         val buffer: ByteBuffer
         var i: Int

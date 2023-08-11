@@ -49,16 +49,16 @@ class Session {
     //
     // needed by the gui system for the load game menu
     class logStats_t : SERiAL {
-        @JvmField
+
         var combat = 0
 
-        @JvmField
+
         var health = 0
 
-        @JvmField
+
         var heartRate = 0f
 
-        @JvmField
+
         var stamina = 0
         override fun AllocBuffer(): ByteBuffer {
             throw TODO_Exception()
@@ -90,17 +90,17 @@ class Session {
     abstract class idSession {
         // The renderer and sound system will write changes to writeDemo.
         // Demos can be recorded and played at the same time when splicing.
-        @JvmField
+
         var readDemo: idDemoFile? = null
 
-        @JvmField
+
         var renderdemoVersion = 0
 
         // The render world and sound world used for this session.
         lateinit var rw: idRenderWorld
         lateinit var sw: idSoundWorld
 
-        @JvmField
+
         var writeDemo: idDemoFile? = null
 
         //	public abstract			~idSession() {}
@@ -1013,7 +1013,7 @@ class Session {
 
      ===============================================================================
      */
-        @JvmField
+
         val session: idSession = sessLocal
         var PREVIEW_HEIGHT = 298
         var PREVIEW_WIDTH = 398

@@ -19,7 +19,6 @@ import neo.Game.Physics.Physics_RigidBody.idPhysics_RigidBody
 import neo.Game.Player.idPlayer
 import neo.Renderer.Material
 import neo.Renderer.RenderSystem
-import neo.Renderer.RenderWorld
 import neo.Renderer.RenderWorld.deferredEntityCallback_t
 import neo.Renderer.RenderWorld.renderEntity_s
 import neo.Renderer.RenderWorld.renderView_s
@@ -42,7 +41,7 @@ import neo.idlib.geometry.TraceModel.idTraceModel
 import neo.idlib.math.Angles.idAngles
 import neo.idlib.math.Math_h.idMath
 import neo.idlib.math.Matrix.idMat3
-import neo.idlib.math.Vector.getVec3_origin
+import neo.idlib.math.Vector.getVec3Origin
 import neo.idlib.math.Vector.idVec3
 import java.nio.ByteBuffer
 import java.util.*
@@ -155,7 +154,7 @@ object Item {
             }
             if (spawnArgs.GetFloat("triggersize", "0", tsize)) {
                 GetPhysics().GetClipModel()!!
-                    .LoadModel(idTraceModel(idBounds(getVec3_origin()).Expand(tsize._val)))
+                    .LoadModel(idTraceModel(idBounds(getVec3Origin()).Expand(tsize._val)))
                 GetPhysics().GetClipModel()!!.Link(Game_local.gameLocal.clip)
             }
             if (spawnArgs.GetBool("start_off")) {
@@ -459,7 +458,7 @@ object Item {
             }
             val sfx = spawnArgs.GetString("fxRespawn")
             if (sfx != "" && !sfx.isEmpty()) {
-                idEntityFx.StartFx(sfx, getVec3_origin(), idMat3.getMat3_zero(), this, true)
+                idEntityFx.StartFx(sfx, getVec3Origin(), idMat3.getMat3_zero(), this, true)
             }
         }
 
@@ -818,7 +817,7 @@ object Item {
                         }
                         axis = angles.ToMat3().times(axis)
                         origin.plusAssign(ent.spawnArgs.GetVector(key2, "0 0 0"))
-                        item = DropItem(kv.GetValue().toString(), origin, axis, getVec3_origin(), 0, 0)
+                        item = DropItem(kv.GetValue().toString(), origin, axis, getVec3Origin(), 0, 0)
                         if (list != null && item != null) {
                             list.Append(item)
                         }
@@ -926,7 +925,7 @@ object Item {
 
             // create a trigger for item pickup
             spawnArgs.GetFloat("triggersize", "16.0", tsize)
-            trigger = idClipModel(idTraceModel(idBounds(getVec3_origin()).Expand(tsize._val)))
+            trigger = idClipModel(idTraceModel(idBounds(getVec3Origin()).Expand(tsize._val)))
             trigger!!.Link(Game_local.gameLocal.clip, this, 0, GetPhysics().GetOrigin(), GetPhysics().GetAxis())
             trigger!!.SetContents(Material.CONTENTS_TRIGGER)
 

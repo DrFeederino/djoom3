@@ -184,7 +184,7 @@ class Sphere {
             } else 0.0f
         }
 
-        @JvmOverloads
+
         fun PlaneSide(plane: idPlane, epsilon: Float = Plane.ON_EPSILON): Int {
             val d: Float
             d = plane.Distance(origin)

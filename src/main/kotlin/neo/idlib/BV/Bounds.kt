@@ -136,13 +136,13 @@ object Bounds {
         // returns rotated bounds
         operator fun times(r: idMat3): idBounds {
             val bounds = idBounds()
-            bounds.FromTransformedBounds(this, Vector.getVec3_origin(), r)
+            bounds.FromTransformedBounds(this, Vector.getVec3Origin(), r)
             return bounds
         }
 
         // rotate the bounds
         fun timesAssign(r: idMat3): idBounds {
-            FromTransformedBounds(this, Vector.getVec3_origin(), r)
+            FromTransformedBounds(this, Vector.getVec3Origin(), r)
             return this
         }
 
@@ -438,13 +438,13 @@ object Bounds {
         // return rotated bounds
         fun Rotate(rotation: idMat3): idBounds {
             val bounds = idBounds()
-            bounds.FromTransformedBounds(this, Vector.getVec3_origin(), rotation)
+            bounds.FromTransformedBounds(this, Vector.getVec3Origin(), rotation)
             return bounds
         }
 
         // rotate this bounds
         fun RotateSelf(rotation: idMat3): idBounds {
-            FromTransformedBounds(this, Vector.getVec3_origin(), rotation)
+            FromTransformedBounds(this, Vector.getVec3Origin(), rotation)
             return this
         }
 
@@ -465,7 +465,7 @@ object Bounds {
             } else 0.0f
         }
 
-        @JvmOverloads
+
         fun PlaneSide(plane: idPlane, epsilon: Float = Plane.ON_EPSILON): Int {
             val center = idVec3()
             val d1: Float

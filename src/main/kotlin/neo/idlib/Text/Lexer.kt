@@ -21,22 +21,22 @@ import java.util.*
  *
  */
 object Lexer {
-    @JvmField
+
     val LEXFL_ALLOWBACKSLASHSTRINGCONCAT: Int =
         Lib.BIT(12) // allow multiple strings seperated by '\' to be concatenated
     val LEXFL_ALLOWFLOATEXCEPTIONS: Int =
         Lib.BIT(10) // allow float exceptions like 1.#INF or 1.#IND to be parsed
     val LEXFL_ALLOWIPADDRESSES: Int = Lib.BIT(9) // allow ip addresses to be parsed as numbers
 
-    @JvmField
+
     val LEXFL_ALLOWMULTICHARLITERALS: Int = Lib.BIT(11) // allow multi character literals
     val LEXFL_ALLOWNUMBERNAMES: Int = Lib.BIT(8) // allow names to start with a number
 
-    @JvmField
+
     val LEXFL_ALLOWPATHNAMES: Int = Lib.BIT(7) // allow path seperators in names
     val LEXFL_NOBASEINCLUDES: Int = Lib.BIT(6) // don't include files embraced with < >
 
-    @JvmField
+
     val LEXFL_NODOLLARPRECOMPILE: Int = Lib.BIT(5) // don't use the $ sign for precompilation
 
     /**
@@ -61,14 +61,14 @@ object Lexer {
     // lexer flags
     val LEXFL_NOERRORS: Int = Lib.BIT(0) // don't print any errors
 
-    @JvmField
+
     val LEXFL_NOFATALERRORS: Int = Lib.BIT(2) // errors aren't fatal
 
-    @JvmField
+
     val LEXFL_NOSTRINGCONCAT: Int =
         Lib.BIT(3) // multiple strings seperated by whitespaces are not concatenated
 
-    @JvmField
+
     val LEXFL_NOSTRINGESCAPECHARS: Int = Lib.BIT(4) // no escape characters inside strings
     val LEXFL_NOWARNINGS: Int = Lib.BIT(1) // don't print any warnings
     val LEXFL_ONLYSTRINGS: Int =
@@ -347,7 +347,7 @@ object Lexer {
         }
 
         // load a script from the given file at the given offset with the given length
-        @JvmOverloads
+
         @Throws(idException::class)
         fun LoadFile(filename: String, OSPath: Boolean = false /*= false*/): Boolean {
 //        TODO:NIO
@@ -410,7 +410,7 @@ object Lexer {
             return LoadMemory(TempDump.atocb(ptr)!!, length, name, 1)
         }
 
-        @JvmOverloads
+
         @Throws(idException::class)
         fun LoadMemory(ptr: CharBuffer, length: Int, name: String, startLine: Int = 1): Boolean {
             if (loaded) {
@@ -745,7 +745,7 @@ object Lexer {
          =================
          */
         // skip the braced section
-        @JvmOverloads
+
         @Throws(idException::class)
         fun SkipBracedSection(parseFirstBrace: Boolean = true): Boolean {
             val token = idToken()
@@ -850,7 +850,7 @@ object Lexer {
 
         // read a floating point number.  If errorFlag is NULL, a non-numeric token will
         // issue an Error().  If it isn't NULL, it will issue a Warning() and set *errorFlag = true
-        @JvmOverloads
+
         @Throws(idException::class)
         fun ParseFloat(errorFlag: BooleanArray? = null /*= NULL*/): Float {
             val token = idToken()

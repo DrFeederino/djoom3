@@ -218,7 +218,7 @@ object Pvs {
             return SetupCurrentPVS(sourceAreas, numSourceAreas, type)
         }
 
-        @JvmOverloads
+
         fun SetupCurrentPVS(sourceArea: Int, type: pvsType_t? = pvsType_t.PVS_NORMAL /*= PVS_NORMAL*/): pvsHandle_t {
             var i: Int
             val handle: pvsHandle_t?
@@ -254,7 +254,7 @@ object Pvs {
             return handle
         }
 
-        @JvmOverloads
+
         fun SetupCurrentPVS(
             sourceAreas: IntArray,
             numSourceAreas: Int,

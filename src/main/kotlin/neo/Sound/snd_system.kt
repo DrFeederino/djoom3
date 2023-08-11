@@ -1554,7 +1554,7 @@ class snd_system {
     companion object {
         var soundSystemLocal: idSoundSystemLocal = idSoundSystemLocal()
 
-        @JvmField
+
         var soundSystem: idSoundSystem = soundSystemLocal
 
         fun setSoundSystems(soundSystem: idSoundSystem) {

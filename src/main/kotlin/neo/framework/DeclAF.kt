@@ -1337,12 +1337,12 @@ class DeclAF {
             f.WriteFloatString("\tcontents %s\n", ContentsToString(body.contents._val, str))
             f.WriteFloatString("\tclipMask %s\n", ContentsToString(body.clipMask._val, str))
             f.WriteFloatString("\tselfCollision %d\n", body.selfCollision)
-            if (body.frictionDirection.ToVec3() !== Vector.getVec3_origin()) {
+            if (body.frictionDirection.ToVec3() !== Vector.getVec3Origin()) {
                 f.WriteFloatString("\tfrictionDirection ")
                 body.frictionDirection.Write(f)
                 f.WriteFloatString("\n")
             }
-            if (body.contactMotorDirection.ToVec3() !== Vector.getVec3_origin()) {
+            if (body.contactMotorDirection.ToVec3() !== Vector.getVec3Origin()) {
                 f.WriteFloatString("\tcontactMotorDirection ")
                 body.contactMotorDirection.Write(f)
                 f.WriteFloatString("\n")

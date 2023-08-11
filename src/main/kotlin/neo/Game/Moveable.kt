@@ -638,9 +638,9 @@ object Moveable {
                             } else {
                                 additionalRotation -= angle
                             }
-                            dir.set(Vector.getVec3_origin())
+                            dir.set(Vector.getVec3Origin())
                             dir[barrelAxis] = 1.0f
-                            additionalAxis = idRotation(Vector.getVec3_origin(), dir, additionalRotation).ToMat3()
+                            additionalAxis = idRotation(Vector.getVec3Origin(), dir, additionalRotation).ToMat3()
                         }
                     }
                 }
@@ -662,7 +662,7 @@ object Moveable {
         }
 
         override fun GetPhysicsToVisualTransform(origin: idVec3, axis: idMat3): Boolean {
-            origin.set(Vector.getVec3_origin())
+            origin.set(Vector.getVec3Origin())
             axis.set(additionalAxis)
             return true
         }
@@ -1034,7 +1034,7 @@ object Moveable {
         }
 
         public override fun Event_Activate(activator: idEventArg<idEntity>) {
-            Killed(activator.value, activator.value, 0, Vector.getVec3_origin(), 0)
+            Killed(activator.value, activator.value, 0, Vector.getVec3Origin(), 0)
         }
 
         private fun Event_Respawn() {

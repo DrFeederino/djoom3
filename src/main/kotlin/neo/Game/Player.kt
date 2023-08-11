@@ -80,7 +80,7 @@ import neo.idlib.math.Math_h
 import neo.idlib.math.Math_h.RAD2DEG
 import neo.idlib.math.Math_h.idMath
 import neo.idlib.math.Matrix.idMat3
-import neo.idlib.math.Vector.getVec3_origin
+import neo.idlib.math.Vector.getVec3Origin
 import neo.idlib.math.Vector.getVec3_zero
 import neo.idlib.math.Vector.idVec3
 import neo.sys.sys_public.sysEvent_s
@@ -2593,7 +2593,7 @@ object Player {
             if (!spectating) {
                 SetCombatContents(true)
             }
-            physicsObj.SetLinearVelocity(getVec3_origin())
+            physicsObj.SetLinearVelocity(getVec3Origin())
 
             // setup our initial view
             if (!spectating) {
@@ -2670,7 +2670,7 @@ object Player {
         fun SetClipModel() {
             var bounds: idBounds = idBounds()
             if (spectating) {
-                bounds = idBounds(getVec3_origin()).Expand(SysCvar.pm_spectatebbox.GetFloat() * 0.5f)
+                bounds = idBounds(getVec3Origin()).Expand(SysCvar.pm_spectatebbox.GetFloat() * 0.5f)
             } else {
                 bounds[0].set(-SysCvar.pm_bboxwidth.GetFloat() * 0.5f, -SysCvar.pm_bboxwidth.GetFloat() * 0.5f, 0f)
                 bounds[1].set(
@@ -2866,7 +2866,7 @@ object Player {
             if (hud != null) {
                 hud!!.HandleNamedEvent("radioChatterDown")
             }
-            physicsObj.SetLinearVelocity(getVec3_origin())
+            physicsObj.SetLinearVelocity(getVec3Origin())
             SetState("EnterCinematic")
             UpdateScript()
             if (weaponEnabled && weapon.GetEntity() != null) {
@@ -3316,7 +3316,7 @@ object Player {
 
             // clear the ik heights so model doesn't appear in the wrong place
             walkIK.EnableAll()
-            GetPhysics().SetLinearVelocity(getVec3_origin())
+            GetPhysics().SetLinearVelocity(getVec3Origin())
             SetViewAngles(angles)
             legsYaw = 0f
             idealLegsYaw = 0f
@@ -3346,7 +3346,7 @@ object Player {
                     ServerSpectate(true)
                     forceRespawn = true
                 } else {
-                    Damage(this, this, getVec3_origin(), "damage_suicide", 1.0f, Model.INVALID_JOINT)
+                    Damage(this, this, getVec3Origin(), "damage_suicide", 1.0f, Model.INVALID_JOINT)
                     if (delayRespawn) {
                         forceRespawn = false
                         val delay = spawnArgs.GetFloat("respawn_delay")
@@ -4473,7 +4473,7 @@ object Player {
             val item: idEntity?
             item = if (died) {
                 // ain't gonna throw you no weapon if I'm dead
-                weapon.GetEntity()!!.DropItem(getVec3_origin(), 0, WEAPON_DROP_TIME, died)
+                weapon.GetEntity()!!.DropItem(getVec3Origin(), 0, WEAPON_DROP_TIME, died)
             } else {
                 viewAngles.ToVectors(forward, null, up)
                 weapon.GetEntity()!!
@@ -4813,7 +4813,7 @@ object Player {
                     val dmgTiming: Int =
                         (1000 * (if (damageDef != null) damageDef.GetFloat("delay", "3.0").toInt() else 3))
                     if (Game_local.gameLocal.time > lastAirDamage + dmgTiming) {
-                        Damage(null, null, getVec3_origin(), "damage_noair", 1.0f, 0)
+                        Damage(null, null, getVec3Origin(), "damage_noair", 1.0f, 0)
                         lastAirDamage = Game_local.gameLocal.time
                     }
                 }
@@ -5251,7 +5251,7 @@ object Player {
                         weapon.GetEntity()!!.EnterCinematic()
                     }
                 } else {
-                    physicsObj.SetLinearVelocity(getVec3_origin())
+                    physicsObj.SetLinearVelocity(getVec3Origin())
                     if (weaponEnabled && weapon.GetEntity() != null) {
                         weapon.GetEntity()!!.ExitCinematic()
                     }
@@ -5285,7 +5285,7 @@ object Player {
             PostEventSec(EV_Player_StopFxFov, duration)
         }
 
-        @JvmOverloads
+
         fun UpdateHudWeapon(flashWeapon: Boolean = true /*= true*/) {
             var hud = hud
 
@@ -6284,7 +6284,7 @@ object Player {
                         newOrig.plusAssign(2, SysCvar.pm_normalviewheight.GetFloat())
                     }
                     newOrig.plusAssign(2, SPECTATE_RAISE.toFloat())
-                    val b = idBounds(getVec3_origin()).Expand(SysCvar.pm_spectatebbox.GetFloat() * 0.5f)
+                    val b = idBounds(getVec3Origin()).Expand(SysCvar.pm_spectatebbox.GetFloat() * 0.5f)
                     val start = idVec3(player.GetPhysics().GetOrigin())
                     start.plusAssign(2, SysCvar.pm_spectatebbox.GetFloat() * 0.5f)
                     val t = trace_s()
@@ -7903,7 +7903,7 @@ object Player {
                 Damage(
                     Game_local.gameLocal.entities[teleportKiller],
                     Game_local.gameLocal.entities[teleportKiller],
-                    getVec3_origin(),
+                    getVec3Origin(),
                     "damage_telefrag",
                     1.0f,
                     Model.INVALID_JOINT

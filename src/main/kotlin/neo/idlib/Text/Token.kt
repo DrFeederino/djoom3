@@ -58,7 +58,7 @@ object Token {
         var subtype // token sub type
                 = 0
 
-        @JvmField
+
         var type // token type
                 = 0
         var floatValue // floating point value

@@ -71,7 +71,7 @@ class Common {
     class MemInfo_t {
         var assetTotals = 0
 
-        @JvmField
+
         val filebase: idStr = idStr()
 
         //
@@ -80,14 +80,14 @@ class Common {
 
         //
         // asset totals
-        @JvmField
+
         var imageAssetsTotal = 0
 
         //
         // memory manager totals
         var memoryManagerTotal = 0
 
-        @JvmField
+
         var modelAssetsTotal = 0
         var renderSubsystemTotal = 0
         var soundAssetsTotal = 0
@@ -3166,7 +3166,7 @@ class Common {
         val EDITOR_DEBUGGER: Int = Lib.BIT(3)
         val EDITOR_DECL: Int = Lib.BIT(7)
 
-        @JvmField
+
         val EDITOR_GUI: Int = Lib.BIT(2)
         val EDITOR_LIGHT: Int = Lib.BIT(5)
         val EDITOR_MATERIAL: Int = Lib.BIT(12)
@@ -3178,10 +3178,10 @@ class Common {
 
         //
         //
-        @JvmField
+
         val STRTABLE_ID: String = "#str_"
 
-        @JvmField
+
         val STRTABLE_ID_LENGTH = STRTABLE_ID.length //5
         val com_allowConsole: idCVar = idCVar(
             "com_allowConsole",
@@ -3216,7 +3216,7 @@ class Common {
             1f
         )
 
-        @JvmField
+
         val com_developer: idCVar = idCVar(
             "developer",
             "1",
@@ -3247,7 +3247,7 @@ class Common {
             "name of log file, if empty, qconsole.log will be used"
         )
 
-        @JvmField
+
         val com_machineSpec: idCVar = idCVar(
             "com_machineSpec",
             "-1",
@@ -3255,7 +3255,7 @@ class Common {
             "hardware classification, -1 = not detected, 0 = low quality, 1 = medium quality, 2 = high quality, 3 = ultra quality"
         )
 
-        @JvmField
+
         val com_makingBuild: idCVar =
             idCVar("com_makingBuild", "0", CVarSystem.CVAR_BOOL or CVarSystem.CVAR_SYSTEM, "1 when making a build")
         val com_memoryMarker: idCVar = idCVar(
@@ -3279,7 +3279,7 @@ class Common {
             "Extension to use when creating language files."
         )
 
-        @JvmField
+
         val com_purgeAll: idCVar = idCVar(
             "com_purgeAll",
             "0",
@@ -3341,7 +3341,7 @@ class Common {
             "update the load size after loading a map"
         )
 
-        @JvmField
+
         val com_videoRam: idCVar = idCVar(
             "com_videoRam",
             "512",
@@ -3366,21 +3366,21 @@ class Common {
         var com_editorActive // true if an editor has focus
                 = false
 
-        @JvmField
+
         var com_editors // currently opened editor(s)
                 = 0
         var com_frameNumber // variable frame number
                 = 0
 
         @Volatile
-        @JvmField
+
         var com_frameTime // time for the current frame in milliseconds
                 = 0
         var   /*HWND*/com_hwndMsg: Long = 0
         var com_outputMsg = false
 
         @Volatile
-        @JvmField
+
         var com_ticNumber // 60 hz tics
                 = 0
         var time_backend // renderSystem backend time
@@ -3398,7 +3398,7 @@ class Common {
         //
         private var commonLocal: idCommonLocal = idCommonLocal()
 
-        @JvmField
+
         var common: /*final*/idCommon = commonLocal
 
         fun LoadMapLocalizeData(listHash: ListHash) {

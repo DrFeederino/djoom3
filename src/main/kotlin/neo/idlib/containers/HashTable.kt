@@ -108,7 +108,7 @@ class HashTable {
             nextPtr.next = node
         }
 
-        @JvmOverloads
+
         fun Get(key: String?, value: Array<Type?>? = null): Boolean {
             var node: hashnode_s<*>?
             val hash: Int

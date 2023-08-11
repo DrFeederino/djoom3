@@ -664,7 +664,7 @@ object AsyncClient {
         }
 
         //
-        @JvmOverloads
+
         fun SendVersionCheck(fromMenu: Boolean = false /*= false */) {
             val msg = idBitMsg()
             val msgBuf = ByteBuffer.allocate(MsgChannel.MAX_MESSAGE_SIZE)

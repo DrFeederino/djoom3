@@ -313,7 +313,7 @@ object AI {
             nextWanderTime = 0
             blockTime = 0
             obstacle = idEntityPtr()
-            lastMoveOrigin = Vector.getVec3_origin()
+            lastMoveOrigin = Vector.getVec3Origin()
             lastMoveTime = 0
             anim = 0
         }
@@ -930,7 +930,7 @@ object AI {
                 }
 
                 // if no velocity or the projectile is not affected by gravity
-                if (projectileSpeed <= 0.0f || projGravity == Vector.getVec3_origin()) {
+                if (projectileSpeed <= 0.0f || projGravity == Vector.getVec3Origin()) {
                     aimDir.set(target.minus(firePos))
                     aimDir.Normalize()
                     Game_local.gameLocal.clip.Translation(
@@ -1975,7 +1975,7 @@ object AI {
             // move up to make sure the monster is at least an epsilon above the floor
             physicsObj.SetOrigin(GetPhysics().GetOrigin().plus(idVec3(0f, 0f, CollisionModel.CM_CLIP_EPSILON)))
             if (num_cinematics != 0) {
-                physicsObj.SetGravity(Vector.getVec3_origin())
+                physicsObj.SetGravity(Vector.getVec3Origin())
             } else {
                 val gravity = idVec3(spawnArgs.GetVector("gravityDir", "0 0 -1"))
                 gravity.timesAssign(SysCvar.g_gravity.GetFloat())
@@ -1993,7 +1993,7 @@ object AI {
             val projectileName = idStr()
             if (spawnArgs.GetString("def_projectile", "", projectileName) && projectileName.Length() != 0) {
                 projectileDef = Game_local.gameLocal.FindEntityDefDict(projectileName)
-                CreateProjectile(Vector.getVec3_origin(), viewAxis[0])
+                CreateProjectile(Vector.getVec3Origin(), viewAxis[0])
                 projectileRadius = projectile.GetEntity()!!.GetPhysics().GetClipModel()!!.GetBounds().GetRadius()
                 projectileVelocity.set(idProjectile.GetVelocity(projectileDef!!))
                 projectileGravity.set(idProjectile.GetGravity(projectileDef!!))
@@ -4718,7 +4718,7 @@ object AI {
         // attacks
         protected fun CreateProjectileClipModel() {
             if (projectileClipModel == null) {
-                val projectileBounds = idBounds(Vector.getVec3_origin())
+                val projectileBounds = idBounds(Vector.getVec3Origin())
                 projectileBounds.ExpandSelf(projectileRadius)
                 projectileClipModel = idClipModel(idTraceModel(projectileBounds))
             }
@@ -4869,7 +4869,7 @@ object AI {
                     CreateProjectile(muzzle, dir)
                 }
                 lastProjectile = projectile.GetEntity()!!
-                lastProjectile.Launch(muzzle, dir, Vector.getVec3_origin())
+                lastProjectile.Launch(muzzle, dir, Vector.getVec3Origin())
                 projectile.oSet(null)
                 i++
             }
@@ -5786,7 +5786,7 @@ object AI {
 
             // launch the projectile
             idThread.ReturnEntity(projectile.GetEntity())
-            projectile.GetEntity()!!.Launch(tr.endpos, axis[0], Vector.getVec3_origin())
+            projectile.GetEntity()!!.Launch(tr.endpos, axis[0], Vector.getVec3Origin())
             projectile.oSet(null)
             TriggerWeaponEffects(tr.endpos)
             lastAttackTime = Game_local.gameLocal.time
@@ -7424,8 +7424,8 @@ object AI {
             projectile = idEntityPtr()
             projectileClipModel = null
             projectileRadius = 0.0f
-            projectileVelocity = Vector.getVec3_origin()
-            projectileGravity = Vector.getVec3_origin()
+            projectileVelocity = Vector.getVec3Origin()
+            projectileGravity = Vector.getVec3Origin()
             projectileSpeed = 0.0f
             chat_snd = null
             chat_min = 0

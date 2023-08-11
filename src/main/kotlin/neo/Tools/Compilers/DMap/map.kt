@@ -79,7 +79,7 @@ object map {
      FindFloatPlane
      ===========
      */
-    @JvmOverloads
+
     fun FindFloatPlane(plane: idPlane, fixedDegeneracies: BooleanArray? = null): Int {
         val p = idPlane(plane) // not sure! however why re-declare it?
         val fixed = p.FixDegeneracies(DIST_EPSILON)

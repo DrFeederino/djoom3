@@ -825,7 +825,7 @@ object Physics_Player {
                 if (numplanes >= MAX_CLIP_PLANES) {
                     // MrElusive: I think we have some relatively high poly LWO models with a lot of slanted tris
                     // where it may hit the max clip planes
-                    current.velocity.set(Vector.getVec3_origin())
+                    current.velocity.set(Vector.getVec3Origin())
                     return true
                 }
 
@@ -914,7 +914,7 @@ object Physics_Player {
                             }
 
                             // stop dead at a tripple plane interaction
-                            current.velocity.set(Vector.getVec3_origin())
+                            current.velocity.set(Vector.getVec3Origin())
                             return true
                             k++
                         }
@@ -1094,7 +1094,7 @@ object Physics_Player {
             Friction()
             scale = CmdScale(command)
             if (0f == scale) {
-                wishvel.set(Vector.getVec3_origin())
+                wishvel.set(Vector.getVec3Origin())
             } else {
                 wishvel.set(
                     viewForward.times(command.forwardmove.toFloat())
@@ -1247,7 +1247,7 @@ object Physics_Player {
             forward = current.velocity.Length()
             forward -= 20f
             if (forward <= 0) {
-                current.velocity.set(Vector.getVec3_origin())
+                current.velocity.set(Vector.getVec3Origin())
             } else {
                 current.velocity.Normalize()
                 current.velocity.timesAssign(forward)
@@ -1267,7 +1267,7 @@ object Physics_Player {
             // friction
             speed = current.velocity.Length()
             if (speed < 20.0f) {
-                current.velocity.set(Vector.getVec3_origin())
+                current.velocity.set(Vector.getVec3Origin())
             } else {
                 stopspeed = playerSpeed * 0.3f
                 if (speed < stopspeed) {
@@ -1311,7 +1311,7 @@ object Physics_Player {
             Friction()
             scale = CmdScale(command)
             if (0f == scale) {
-                wishvel.set(Vector.getVec3_origin())
+                wishvel.set(Vector.getVec3Origin())
             } else {
                 wishvel.set(
                     viewForward.times(command.forwardmove.toFloat())

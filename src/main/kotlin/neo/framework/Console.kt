@@ -1039,7 +1039,7 @@ class Console {
         const val NUM_CON_TIMES = 4
         val localConsole: idConsoleLocal = idConsoleLocal()
 
-        @JvmField
+
         val console: idConsole = localConsole // statically initialized to an idConsoleLocal
 
         //

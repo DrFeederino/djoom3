@@ -85,7 +85,7 @@ object FX {
                 val nfx = Game_local.gameLocal.SpawnEntityType(idEntityFx::class.java, args) as idEntityFx
                 if (nfx.Joint() != null && !nfx.Joint()!!.isEmpty()) {
                     nfx.BindToJoint(ent!!, nfx.Joint()!!, true)
-                    nfx.SetOrigin(Vector.getVec3_origin())
+                    nfx.SetOrigin(Vector.getVec3Origin())
                 } else {
                     nfx.SetOrigin(useOrigin)
                     nfx.SetAxis(useAxis)
@@ -504,7 +504,7 @@ object FX {
                                     projectile.Launch(
                                         GetPhysics().GetOrigin(),
                                         GetPhysics().GetAxis()[0],
-                                        Vector.getVec3_origin()
+                                        Vector.getVec3Origin()
                                     )
                                 }
                             }

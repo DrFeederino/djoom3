@@ -134,7 +134,7 @@ class Curve {
             return length
         }
 
-        @JvmOverloads
+
         fun GetTimeForLength(length: Float, epsilon: Float = 1.0f): Float {
             var i: Int
             var index: Int

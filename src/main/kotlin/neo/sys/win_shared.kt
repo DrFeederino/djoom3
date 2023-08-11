@@ -15,7 +15,7 @@ object win_shared {
      Sys_Milliseconds
      ================
      */
-    @JvmStatic
+
     fun Sys_Milliseconds(): Int {
         return (System.currentTimeMillis() - sys_timeBase).toInt()
     }

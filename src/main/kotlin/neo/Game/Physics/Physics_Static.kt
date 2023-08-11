@@ -256,11 +256,11 @@ class Physics_Static {
         override fun SetLinearVelocity(newLinearVelocity: idVec3, id: Int /*= 0*/) {}
         override fun SetAngularVelocity(newAngularVelocity: idVec3, id: Int /*= 0*/) {}
         override fun GetLinearVelocity(id: Int /*= 0*/): idVec3 {
-            return Vector.getVec3_origin()
+            return Vector.getVec3Origin()
         }
 
         override fun GetAngularVelocity(id: Int /*= 0*/): idVec3 {
-            return Vector.getVec3_origin()
+            return Vector.getVec3Origin()
         }
 
         override fun SetGravity(newGravity: idVec3) {}
@@ -370,11 +370,11 @@ class Physics_Static {
 
         override fun SetPushed(deltaTime: Int) {}
         override fun GetPushedLinearVelocity(id: Int /*= 0*/): idVec3 {
-            return Vector.getVec3_origin()
+            return Vector.getVec3Origin()
         }
 
         override fun GetPushedAngularVelocity(id: Int /*= 0*/): idVec3 {
-            return Vector.getVec3_origin()
+            return Vector.getVec3Origin()
         }
 
         override fun SetMaster(master: idEntity?, orientated: Boolean /*= true*/) {

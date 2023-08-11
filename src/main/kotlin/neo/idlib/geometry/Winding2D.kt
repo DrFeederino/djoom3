@@ -763,7 +763,7 @@ object Winding2D {
             return true
         }
 
-        @JvmOverloads
+
         fun Plane2DFromVecs(start: idVec2, dir: idVec2, normalize: Boolean = false): idVec3 {
             val plane = idVec3()
             plane.x = -dir.y
@@ -801,7 +801,7 @@ object Winding2D {
         companion object {
             const val EDGE_LENGTH = 0.2f
 
-            @JvmOverloads
+
             fun Plane2DFromPoints(start: idVec2, end: idVec2, normalize: Boolean = false): idVec3 {
                 val plane = idVec3()
                 plane.x = start.y - end.y

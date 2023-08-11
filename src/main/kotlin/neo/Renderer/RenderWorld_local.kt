@@ -1616,7 +1616,7 @@ object RenderWorld_local {
             }
         }
 
-        @JvmOverloads
+
         fun DebugScreenRect(color: idVec4?, rect: idScreenRect, viewDef: viewDef_s, lifetime: Int = 0) {
             var i: Int
             val centerx: Float

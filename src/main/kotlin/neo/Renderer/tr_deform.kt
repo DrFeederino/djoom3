@@ -17,7 +17,7 @@ import neo.idlib.geometry.Winding.idWinding.Companion.TriangleArea
 import neo.idlib.math.Matrix.idMat3.Companion.getMat3_identity
 import neo.idlib.math.Plane.idPlane
 import neo.idlib.math.Random.idRandom
-import neo.idlib.math.Vector.getVec3_origin
+import neo.idlib.math.Vector.getVec3Origin
 import neo.idlib.math.Vector.idVec3
 import neo.idlib.math.Vector.idVec3.Companion.generateArray
 import java.util.*
@@ -293,7 +293,7 @@ object tr_deform {
         tr_main.R_GlobalVectorToLocal(surf.space!!.modelMatrix, tr_local.tr.viewDef!!.renderView.viewaxis[1], leftDir)
         tr_main.R_GlobalVectorToLocal(surf.space!!.modelMatrix, tr_local.tr.viewDef!!.renderView.viewaxis[2], upDir)
         if (tr_local.tr.viewDef!!.isMirror) {
-            leftDir.set(getVec3_origin().minus(leftDir))
+            leftDir.set(getVec3Origin().minus(leftDir))
         }
 
         // this srfTriangles_t and all its indexes and caches are in frame
@@ -646,7 +646,7 @@ object tr_deform {
             d1.Normalize()
             edgeDir[i][1].Cross(toEye, d1)
             edgeDir[i][1].Normalize()
-            edgeDir[i][1].set(getVec3_origin().minus(edgeDir[i][1]))
+            edgeDir[i][1].set(getVec3Origin().minus(edgeDir[i][1]))
             val d2: idVec3 = idVec3(tri.verts!![indexes[(i + 3) % 4]]!!.xyz.minus(localViewer))
             d2.Normalize()
             edgeDir[i][0].Cross(toEye, d2)

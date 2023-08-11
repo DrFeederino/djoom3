@@ -72,7 +72,7 @@ object Event {
         private val numargs: Int
         private val returnType: Int
 
-        @JvmOverloads
+
         constructor(command: String, formatspec: String? = null /*= NULL*/) : this(command, formatspec, 0.toChar())
 
         fun GetName(): String {
@@ -418,7 +418,7 @@ object Event {
                 }
             }
 
-            @JvmOverloads
+
             fun CancelEvents(obj: idClass, evdef: idEventDef? = null /*= NULL*/) {
                 var event: idEvent?
                 var next: idEvent?

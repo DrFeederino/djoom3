@@ -96,7 +96,7 @@ class Surface_Patch {
         }
 
         // subdivide the patch mesh based on error
-        @JvmOverloads
+
         @Throws(idException::class)
         fun Subdivide(
             maxHorizontalError: Float,
@@ -263,7 +263,7 @@ class Surface_Patch {
         // subdivide the patch up to an explicit number of horizontal and vertical subdivisions
         //						
         //		
-        @JvmOverloads
+
         @Throws(idException::class)
         fun SubdivideExplicit(
             horzSubdivisions: Int,
@@ -644,7 +644,7 @@ class Surface_Patch {
                     base.set(verts[j * width + i].xyz)
                     k = 0
                     while (k < 8) {
-                        around[k].set(Vector.getVec3_origin())
+                        around[k].set(Vector.getVec3Origin())
                         good[k] = false
                         dist = 1
                         while (dist <= 3) {
@@ -680,7 +680,7 @@ class Surface_Patch {
                         }
                         k++
                     }
-                    sum.set(Vector.getVec3_origin())
+                    sum.set(Vector.getVec3Origin())
                     k = 0
                     while (k < 8) {
                         if (!good[k] || !good[k + 1 and 7]) {

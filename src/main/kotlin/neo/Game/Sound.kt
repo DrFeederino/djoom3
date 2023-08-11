@@ -202,7 +202,7 @@ object Sound {
             BecomeInactive(Entity.TH_UPDATEVISUALS)
         }
 
-        @JvmOverloads
+
         fun SetSound(sound: String, channel: Int = gameSoundChannel_t.SND_CHANNEL_ANY.ordinal /*= SND_CHANNEL_ANY*/) {
             val shader = DeclManager.declManager.FindSound(sound)
             if (shader != refSound.shader) {

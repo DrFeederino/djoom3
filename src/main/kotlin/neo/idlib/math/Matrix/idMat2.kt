@@ -179,17 +179,17 @@ class idMat2 {
         mat[1] = getMat2_identity().mat[1]
     }
 
-    @JvmOverloads
+
     fun IsIdentity(epsilon: Float = idMat0.MATRIX_EPSILON.toFloat()): Boolean {
         return Compare(getMat2_identity(), epsilon)
     }
 
-    @JvmOverloads
+
     fun IsSymmetric(epsilon: Float = idMat0.MATRIX_EPSILON.toFloat()): Boolean {
         return Math.abs(mat[0].y - mat[1].x) < epsilon
     }
 
-    @JvmOverloads
+
     fun IsDiagonal(epsilon: Float = idMat0.MATRIX_EPSILON.toFloat()): Boolean {
         return (Math.abs(mat[0].y) <= epsilon
                 && Math.abs(mat[1].x) <= epsilon)
@@ -284,7 +284,7 @@ class idMat2 {
     }
 
     //public	float *			ToFloatPtr( void );
-    @JvmOverloads
+
     fun ToString(precision: Int = 2): String {
         return idStr.FloatArrayToString(ToFloatPtr(), GetDimension(), precision)
     }

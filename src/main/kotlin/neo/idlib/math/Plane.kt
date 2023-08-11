@@ -276,7 +276,7 @@ object Plane {
 
         // only normalizes the plane normal, does not adjust d
         // only normalizes the plane normal, does not adjust d
-        @JvmOverloads
+
         fun Normalize(fixDegenerate: Boolean = true): Float {
             val vec3 = idVec3(abc.x, abc.y, abc.z)
             val length = vec3.Normalize()
@@ -348,7 +348,7 @@ object Plane {
             }
         }
 
-        @JvmOverloads
+
         fun FromPoints(p1: idVec3, p2: idVec3, p3: idVec3, fixDegenerate: Boolean = true): Boolean {
             Normal().set((p1 - p2).Cross(p3 - p2))
             if (Normalize(fixDegenerate) == 0.0f) {
@@ -358,7 +358,7 @@ object Plane {
             return true
         }
 
-        @JvmOverloads
+
         fun FromVecs(dir1: idVec3, dir2: idVec3, p: idVec3, fixDegenerate: Boolean = true): Boolean {
             val vec3 = idVec3(Normal().set(dir1.Cross(dir2)))
             run {
@@ -470,7 +470,7 @@ object Plane {
             return abc.x * v.x + abc.y * v.y + abc.z * v.z + d
         }
 
-        @JvmOverloads
+
         fun Side(v: idVec3, epsilon: Float = 0.0f): Int {
             val dist = Distance(v)
             return if (dist > epsilon) {
@@ -584,7 +584,7 @@ object Plane {
             //
             //public	float			operator[]( int index ) const
             //public	float &			operator[]( int index )
-            @JvmStatic
+
             fun generateArray(length: Int): Array<idPlane> {
                 return Array(length) { idPlane() }
             }

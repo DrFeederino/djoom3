@@ -19,7 +19,7 @@ import neo.idlib.geometry.DrawVert.idDrawVert
 import neo.idlib.math.Math_h.idMath.RSqrt
 import neo.idlib.math.Plane.idPlane
 import neo.idlib.math.Simd.SIMDProcessor
-import neo.idlib.math.Vector.getVec3_origin
+import neo.idlib.math.Vector.getVec3Origin
 import neo.idlib.math.Vector.idVec3
 import java.util.*
 import kotlin.math.abs
@@ -1530,7 +1530,7 @@ object tr_trisurf {
      Builds tangents, normals, and face planes
      ==================
      */
-    @JvmOverloads
+
     fun R_DeriveTangents(tri: srfTriangles_s, allocFacePlanes: Boolean = true) {
         var i: Int
         var planes: Array<idPlane?>?
@@ -1985,7 +1985,7 @@ object tr_trisurf {
         // but if it has explicit normals, this will keep it on the correct side
         i = 0
         while (i < tri.numVerts) {
-            tri.verts!![i]!!.normal.set(getVec3_origin().minus(tri.verts!![i]!!.normal))
+            tri.verts!![i]!!.normal.set(getVec3Origin().minus(tri.verts!![i]!!.normal))
             i++
         }
 

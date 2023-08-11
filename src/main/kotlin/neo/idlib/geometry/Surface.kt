@@ -159,7 +159,7 @@ object Surface {
         // splits the surface into a front and back surface, the surface itself stays unchanged
         // frontOnPlaneEdges and backOnPlaneEdges optionally store the indexes to the edges that lay on the split plane
         // returns a SIDE_?
-        @JvmOverloads
+
         fun Split(
             plane: idPlane,
             epsilon: Float,
@@ -527,7 +527,7 @@ object Surface {
 
         // cuts off the part at the back side of the plane, returns true if some part was at the front
         // if there is nothing at the front the number of points is set to zero
-        @JvmOverloads
+
         fun ClipInPlace(plane: idPlane, epsilon: Float = Plane.ON_EPSILON, keepOn: Boolean = false): Boolean {
             val dists: FloatArray
             var f: Float
@@ -860,7 +860,7 @@ object Surface {
         }
 
         // returns true if the surface is a convex hull
-        @JvmOverloads
+
         fun IsPolytope(epsilon: Float = 0.1f): Boolean {
             var i: Int
             var j: Int
@@ -920,7 +920,7 @@ object Surface {
             } else 0.0f
         }
 
-        @JvmOverloads
+
         fun PlaneSide(plane: idPlane, epsilon: Float = Plane.ON_EPSILON): Int {
             var front: Boolean
             var back: Boolean
@@ -958,7 +958,7 @@ object Surface {
 
         // returns true if the line intersects one of the surface triangles
         //
-        @JvmOverloads
+
         fun LineIntersection(start: idVec3, end: idVec3, backFaceCull: Boolean = false): Boolean {
             val scale = CFloat()
             RayIntersection(start, end - start, scale, false)
@@ -966,7 +966,7 @@ object Surface {
         }
 
         // intersection point is start + dir * scale
-        @JvmOverloads
+
         fun RayIntersection(start: idVec3, dir: idVec3, scale: CFloat, backFaceCull: Boolean = false): Boolean {
             var i: Int
             var i0: Int

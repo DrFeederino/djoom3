@@ -655,7 +655,7 @@ object Physics_Parametric {
                 0,
                 current.origin,
                 newLinearVelocity,
-                Vector.getVec3_origin()
+                Vector.getVec3Origin()
             )
             current.linearInterpolation.Init(0f, 0f, 0f, 0f, Vector.getVec3_zero(), Vector.getVec3_zero())
             Activate()
@@ -666,7 +666,7 @@ object Physics_Parametric {
             val vec = idVec3(newAngularVelocity)
             val angle: Float
             angle = vec.Normalize()
-            rotation.Set(Vector.getVec3_origin(), vec, Vector.RAD2DEG(angle))
+            rotation.Set(Vector.getVec3Origin(), vec, Vector.RAD2DEG(angle))
             SetAngularExtrapolation(
                 Extrapolate.EXTRAPOLATION_LINEAR or Extrapolate.EXTRAPOLATION_NOSTOP,
                 Game_local.gameLocal.time,
@@ -736,8 +736,8 @@ object Physics_Parametric {
                         0,
                         0,
                         current.origin,
-                        Vector.getVec3_origin(),
-                        Vector.getVec3_origin()
+                        Vector.getVec3Origin(),
+                        Vector.getVec3Origin()
                     )
                     SetAngularExtrapolation(
                         Extrapolate.EXTRAPOLATION_NONE,

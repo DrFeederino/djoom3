@@ -1018,7 +1018,7 @@ object MultiplayerGame {
             return gameState
         }
 
-        @JvmOverloads
+
         fun PlayGlobalSound(to: Int, evt: snd_evt_t, shader: String? = null /*= NULL*/) {
             val shaderDecl: idSoundShader?
             if (to == -1 || to == Game_local.gameLocal.localClientNum) {
@@ -1053,7 +1053,7 @@ object MultiplayerGame {
             }
         }
 
-        @JvmOverloads
+
         fun PrintMessageEvent(to: Int, evt: msg_evt_t?, parm1: Int = -1 /*= -1*/, parm2: Int = -1 /*= -1*/) {
             when (evt) {
                 msg_evt_t.MSG_SUICIDE -> {

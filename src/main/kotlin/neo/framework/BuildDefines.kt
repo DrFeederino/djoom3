@@ -54,7 +54,7 @@ object BuildDefines {
     val MACOS_X = System.getProperty("os.name") == "MacOSX"
     const val _DEBUG = true
 
-    @JvmField
+
     val _WIN32 = System.getProperty("os.name").startsWith("Windows")
     val _MACOSX = System.getProperty("os.name").contains("Mac")
     val WIN32 = _WIN32

@@ -38,6 +38,11 @@ import java.util.concurrent.ScheduledExecutorService
 import java.util.logging.Level
 import java.util.logging.Logger
 
+
+fun main(args: Array<String>) {
+    win_main.main(args)
+}
+
 /**
  *
  */
@@ -214,7 +219,7 @@ object win_main {
      Sys_EnterCriticalSection
      ==================
      */
-    @JvmOverloads
+
     fun Sys_EnterCriticalSection(index: Int = sys_public.CRITICAL_SECTION_ZERO) {
         assert(index >= 0 && index < sys_public.MAX_CRITICAL_SECTIONS)
         //		Sys_DebugPrintf( "busy lock '%s' in thread '%s'\n", lock->name, Sys_GetThreadName() );
@@ -227,7 +232,7 @@ object win_main {
      Sys_LeaveCriticalSection
      ==================
      */
-    @JvmOverloads
+
     fun Sys_LeaveCriticalSection(index: Int = sys_public.CRITICAL_SECTION_ZERO) {
         assert(index >= 0 && index < sys_public.MAX_CRITICAL_SECTIONS)
 //        if (win_local.win32.criticalSections[index].isLocked) {
@@ -240,7 +245,7 @@ object win_main {
      Sys_WaitForEvent
      ==================
      */
-    @JvmOverloads
+
     fun Sys_WaitForEvent(index: Int = sys_public.TRIGGER_EVENT_ZERO) {
         return
         //	assert( index == 0 );
@@ -256,7 +261,7 @@ object win_main {
      Sys_TriggerEvent
      ==================
      */
-    @JvmOverloads
+
     fun Sys_TriggerEvent(index: Int = sys_public.TRIGGER_EVENT_ZERO) {
         throw TODO_Exception()
         //	assert( index == 0 );
@@ -1066,7 +1071,7 @@ object win_main {
      Sys_GetProcessorString
      ================
      */
-    @JvmStatic
+
     fun Sys_GetProcessorString(): String {
         throw TODO_Exception()
         //	return win32.sys_cpustring.GetString();
@@ -1474,7 +1479,7 @@ object win_main {
         return FileChannel.open(tmp.toPath(), TempDump.fopenOptions("wb+"))
     }
 
-    @JvmStatic
+
     fun main(lpCmdLine: Array<String>) { //cmd arguments need to be escaped and surrounded by quotes to preserve spacing.
         // TODO: check if any of the disabled commands below can be salvaged for java.
 

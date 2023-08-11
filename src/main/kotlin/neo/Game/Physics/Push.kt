@@ -95,7 +95,7 @@ object Push {
             results.endpos.set(newOrigin)
             results.endAxis.set(clipModel.GetAxis())
             results.c = contactInfo_t() //memset( &results.c, 0, sizeof( results.c ) );//TODO:
-            if (translation == Vector.getVec3_origin()) {
+            if (translation == Vector.getVec3Origin()) {
                 return totalMass
             }
             dir.set(translation)
@@ -228,7 +228,7 @@ object Push {
                     check.Damage(
                         clipModel.GetEntity(),
                         clipModel.GetEntity(),
-                        Vector.getVec3_origin(),
+                        Vector.getVec3Origin(),
                         "damage_crush",
                         1.0f,
                         Clip.CLIPMODEL_ID_TO_JOINT_HANDLE(pushResults.c.id)
@@ -406,7 +406,7 @@ object Push {
                         clipModel.GetEntity(),
                         clipModel.GetId(),
                         clipModel.GetOrigin(),
-                        Vector.getVec3_origin()
+                        Vector.getVec3Origin()
                     )
 
                     // add mass of pushed entity
@@ -431,7 +431,7 @@ object Push {
                     check.Damage(
                         clipModel.GetEntity(),
                         clipModel.GetEntity(),
-                        Vector.getVec3_origin(),
+                        Vector.getVec3Origin(),
                         "damage_crush",
                         1.0f,
                         Clip.CLIPMODEL_ID_TO_JOINT_HANDLE(pushResults.c.id)
@@ -495,7 +495,7 @@ object Push {
             translation.set(newOrigin.minus(oldOrigin))
 
             // if the pusher translates
-            if (translation != Vector.getVec3_origin()) {
+            if (translation != Vector.getVec3Origin()) {
                 mass += ClipTranslationalPush(results, pusher, flags, newOrigin, translation)
                 if (results.fraction < 1.0f) {
                     newOrigin.set(oldOrigin)

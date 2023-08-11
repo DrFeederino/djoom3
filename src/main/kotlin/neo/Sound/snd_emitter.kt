@@ -174,7 +174,7 @@ object snd_emitter {
                 a1 * inArr[inOffset + 0] + a2 * inArr[inOffset - 1] + a3 * inArr[inOffset - 2] - b1 * out[outOffset - 1] - b2 * out[outOffset - 2]
         }
 
-        @JvmOverloads
+
         fun SetParms(p1: Float = 0f /*= 0*/, p2: Float = 0f /*= 0*/, p3: Float = 0f /*= 0*/) {
             val c: Float
 

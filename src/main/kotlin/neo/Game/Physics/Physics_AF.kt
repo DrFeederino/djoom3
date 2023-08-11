@@ -380,7 +380,7 @@ object Physics_AF {
                 Game_local.gameRenderWorld.DebugLine(
                     Lib.colorRed,
                     body1!!.GetWorldOrigin(),
-                    Vector.getVec3_origin()
+                    Vector.getVec3Origin()
                 )
             }
         }
@@ -2048,13 +2048,13 @@ object Physics_AF {
             }
             J1.set(
                 idMat3.getMat3_zero(), idMat3.getMat3_identity(),
-                idMat3(vecX, vecY, Vector.getVec3_origin()), idMat3.getMat3_zero()
+                idMat3(vecX, vecY, Vector.getVec3Origin()), idMat3.getMat3_zero()
             )
             J1.SetSize(5, 6)
             if (body2 != null) {
                 J2.set(
                     idMat3.getMat3_zero(), idMat3.getMat3_identity().unaryMinus(),
-                    idMat3(vecX.unaryMinus(), vecY.unaryMinus(), Vector.getVec3_origin()), idMat3.getMat3_zero()
+                    idMat3(vecX.unaryMinus(), vecY.unaryMinus(), Vector.getVec3Origin()), idMat3.getMat3_zero()
                 )
                 J2.SetSize(5, 6)
             } else {
@@ -3919,7 +3919,7 @@ object Physics_AF {
             return bouncyness
         }
 
-        @JvmOverloads
+
         fun SetDensity(
             density: Float,
             inertiaScale: idMat3 = idMat3.getMat3_identity() /*= mat3_identity*/
@@ -3940,7 +3940,7 @@ object Physics_AF {
             }
 
             // make sure the center of mass is at the body origin
-            if (!centerOfMass.Compare(Vector.getVec3_origin(), CENTER_OF_MASS_EPSILON)) {
+            if (!centerOfMass.Compare(Vector.getVec3Origin(), CENTER_OF_MASS_EPSILON)) {
                 Game_local.gameLocal.Warning("idAFBody::SetDentity: center of mass not at origin for body '%s'", name)
             }
             centerOfMass.Zero()
@@ -4201,7 +4201,7 @@ object Physics_AF {
          solve for primary constraints in the tree
          ================
          */
-        @JvmOverloads
+
         fun Solve(auxiliaryIndex: Int = 0 /*= 0*/) {
             var i: Int
             var j: Int
@@ -5786,7 +5786,7 @@ object Physics_AF {
 
         override fun GetOrigin(id: Int /*= 0*/): idVec3 {
             return if (id < 0 || id >= bodies.Num()) {
-                Vector.getVec3_origin()
+                Vector.getVec3Origin()
             } else {
                 bodies[id].current.worldOrigin
             }
@@ -5818,7 +5818,7 @@ object Physics_AF {
 
         override fun GetLinearVelocity(id: Int /*= 0*/): idVec3 {
             return if (id < 0 || id >= bodies.Num()) {
-                Vector.getVec3_origin()
+                Vector.getVec3Origin()
             } else {
                 bodies[id].current.spatialVelocity.SubVec3(0)
             }
@@ -5826,7 +5826,7 @@ object Physics_AF {
 
         override fun GetAngularVelocity(id: Int /*= 0*/): idVec3 {
             return if (id < 0 || id >= bodies.Num()) {
-                Vector.getVec3_origin()
+                Vector.getVec3Origin()
             } else {
                 bodies[id].current.spatialVelocity.SubVec3(1)
             }
@@ -6419,7 +6419,7 @@ object Physics_AF {
                 axis = body.current.worldAxis.Transpose()
 
                 // if the center of mass is at the body point of reference
-                if (body.centerOfMass.Compare(Vector.getVec3_origin(), CENTER_OF_MASS_EPSILON)) {
+                if (body.centerOfMass.Compare(Vector.getVec3Origin(), CENTER_OF_MASS_EPSILON)) {
 
                     // spatial inertia in world space
                     body.I.set(
@@ -7013,7 +7013,7 @@ object Physics_AF {
                 // convert angular velocity to a rotation matrix
                 vec.set(body.next.spatialVelocity.SubVec3(1))
                 angle = -timeStep * Vector.RAD2DEG(vec.Normalize())
-                rotation = idRotation(Vector.getVec3_origin(), vec, angle)
+                rotation = idRotation(Vector.getVec3Origin(), vec, angle)
                 rotation.Normalize180()
 
                 // rotate world axis
@@ -7424,7 +7424,7 @@ object Physics_AF {
                         if (constrainedBody1 != null) {
                             CollisionModel_local.collisionModelManager.DrawModel(
                                 constrainedBody1.clipModel!!.Handle(), constrainedBody1.clipModel!!.GetOrigin(),
-                                constrainedBody1.clipModel!!.GetAxis(), Vector.getVec3_origin(), 0.0f
+                                constrainedBody1.clipModel!!.GetAxis(), Vector.getVec3Origin(), 0.0f
                             )
                         }
                         idLib.cvarSystem.SetCVarString("cm_drawColor", Lib.colorBlue.ToString(0))
@@ -7432,7 +7432,7 @@ object Physics_AF {
                         if (constrainedBody2 != null) {
                             CollisionModel_local.collisionModelManager.DrawModel(
                                 constrainedBody2.clipModel!!.Handle(), constrainedBody2.clipModel!!.GetOrigin(),
-                                constrainedBody2.clipModel!!.GetAxis(), Vector.getVec3_origin(), 0.0f
+                                constrainedBody2.clipModel!!.GetAxis(), Vector.getVec3Origin(), 0.0f
                             )
                         }
                         idLib.cvarSystem.SetCVarString("cm_drawColor", Lib.colorRed.ToString(0))
@@ -7445,7 +7445,7 @@ object Physics_AF {
                     idLib.cvarSystem.SetCVarString("cm_drawColor", Lib.colorYellow.ToString(0))
                     CollisionModel_local.collisionModelManager.DrawModel(
                         highlightBody.clipModel!!.Handle(), highlightBody.clipModel!!.GetOrigin(),
-                        highlightBody.clipModel!!.GetAxis(), Vector.getVec3_origin(), 0.0f
+                        highlightBody.clipModel!!.GetAxis(), Vector.getVec3Origin(), 0.0f
                     )
                     idLib.cvarSystem.SetCVarString("cm_drawColor", Lib.colorRed.ToString(0))
                 }
@@ -7464,7 +7464,7 @@ object Physics_AF {
                     }
                     CollisionModel_local.collisionModelManager.DrawModel(
                         body.clipModel!!.Handle(), body.clipModel!!.GetOrigin(),
-                        body.clipModel!!.GetAxis(), Vector.getVec3_origin(), 0.0f
+                        body.clipModel!!.GetAxis(), Vector.getVec3Origin(), 0.0f
                     )
                     DrawTraceModelSilhouette(
                         Game_local.gameLocal.GetLocalPlayer()!!.GetEyePosition(),

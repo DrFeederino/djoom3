@@ -15,7 +15,7 @@ import neo.idlib.Text.Str.idStr
 import neo.idlib.Text.Str.idStr.Companion.Icmp
 import neo.idlib.math.Angles.idAngles
 import neo.idlib.math.Math_h.idMath
-import neo.idlib.math.Vector.getVec3_origin
+import neo.idlib.math.Vector.getVec3Origin
 import neo.idlib.math.Vector.idVec3
 import neo.idlib.math.Vector.idVec4
 import neo.ui.DeviceContext.idDeviceContext
@@ -180,7 +180,7 @@ class RenderWindow {
                         worldEntity!!.numJoints,
                         worldEntity!!.joints,
                         animLength - (animEndTime - time),
-                        getVec3_origin(),
+                        getVec3Origin(),
                         false
                     )
                 }

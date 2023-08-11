@@ -26,7 +26,7 @@ import neo.idlib.geometry.Winding.idFixedWinding
 import neo.idlib.geometry.Winding.idWinding
 import neo.idlib.math.Matrix.idMat3
 import neo.idlib.math.Plane.idPlane
-import neo.idlib.math.Vector.getVec3_origin
+import neo.idlib.math.Vector.getVec3Origin
 import neo.idlib.math.Vector.idVec3
 import neo.idlib.math.Vector.idVec4
 import neo.ui.UserInterface.idUserInterface
@@ -884,7 +884,7 @@ object RenderWorld {
             skipPlayer: Boolean /* = false*/
         ): Boolean
 
-        @JvmOverloads
+
         fun Trace(
             trace: modelTrace_s,
             start: idVec3,
@@ -931,7 +931,7 @@ object RenderWorld {
             depthTest: Boolean /* = false*/
         )
 
-        @JvmOverloads
+
         fun DebugLine(color: idVec4?, start: idVec3?, end: idVec3?, lifetime: Int = 0 /*= 0*/) {
             DebugLine(color, start, end, lifetime, false)
         }
@@ -950,7 +950,7 @@ object RenderWorld {
             depthTest: Boolean /*= false*/
         )
 
-        @JvmOverloads
+
         fun DebugWinding(color: idVec4?, w: idWinding, origin: idVec3, axis: idMat3?, lifetime: Int = 0 /*= 0*/) {
             DebugWinding(color, w, origin, axis, lifetime, false)
         }
@@ -965,7 +965,7 @@ object RenderWorld {
             depthTest: Boolean /*= false */
         )
 
-        @JvmOverloads
+
         fun DebugCircle(
             color: idVec4?,
             origin: idVec3,
@@ -984,7 +984,7 @@ object RenderWorld {
             depthTest: Boolean /* = false */
         )
 
-        @JvmOverloads
+
         fun DebugSphere(color: idVec4?, sphere: idSphere, lifetime: Int = 0 /* = 0*/) {
             DebugSphere(color, sphere, lifetime, false)
         }
@@ -996,8 +996,8 @@ object RenderWorld {
             lifetime: Int /* = 0*/
         )
 
-        @JvmOverloads
-        fun DebugBounds(color: idVec4?, bounds: idBounds, org: idVec3 = getVec3_origin() /* = vec3_origin*/) {
+
+        fun DebugBounds(color: idVec4?, bounds: idBounds, org: idVec3 = getVec3Origin() /* = vec3_origin*/) {
             DebugBounds(color, bounds, org, 0)
         }
 
@@ -1013,7 +1013,7 @@ object RenderWorld {
             lifetime: Int /*= 0*/
         )
 
-        @JvmOverloads
+
         fun DebugFrustum(color: idVec4?, frustum: idFrustum, showFromOrigin: Boolean = false /* = false*/) {
             DebugFrustum(color, frustum, showFromOrigin, 0)
         }
@@ -1042,7 +1042,7 @@ object RenderWorld {
             depthTest: Boolean /*= false*/
         )
 
-        @JvmOverloads
+
         fun DebugPolygon(color: idVec4?, winding: idWinding?, lifeTime: Int = 0 /* = 0*/) {
             DebugPolygon(color, winding, lifeTime, false)
         }
@@ -1059,7 +1059,7 @@ object RenderWorld {
             depthTest: Boolean /* = false*/
         )
 
-        @JvmOverloads
+
         fun DrawText(
             text: String?,
             origin: idVec3?,

@@ -109,7 +109,7 @@ object Physics_StaticMulti {
             isOrientated = savefile.ReadBool()
         }
 
-        @JvmOverloads
+
         fun RemoveIndex(id: Int /*= 0*/, freeClipModel: Boolean = true /*= true*/) {
             if (id < 0 || id >= clipModels.Num()) {
                 return
@@ -409,7 +409,7 @@ object Physics_StaticMulti {
             return if (clipModels.Num() != 0) {
                 current[0].origin
             } else {
-                Vector.getVec3_origin()
+                Vector.getVec3Origin()
             }
         }
 
@@ -427,11 +427,11 @@ object Physics_StaticMulti {
         override fun SetLinearVelocity(newLinearVelocity: idVec3, id: Int /*= 0*/) {}
         override fun SetAngularVelocity(newAngularVelocity: idVec3, id: Int /*= 0*/) {}
         override fun GetLinearVelocity(id: Int /*= 0*/): idVec3 {
-            return Vector.getVec3_origin()
+            return Vector.getVec3Origin()
         }
 
         override fun GetAngularVelocity(id: Int /*= 0*/): idVec3 {
-            return Vector.getVec3_origin()
+            return Vector.getVec3Origin()
         }
 
         override fun SetGravity(newGravity: idVec3) {}
@@ -546,11 +546,11 @@ object Physics_StaticMulti {
 
         override fun SetPushed(deltaTime: Int) {}
         override fun GetPushedLinearVelocity(id: Int /*= 0*/): idVec3 {
-            return Vector.getVec3_origin()
+            return Vector.getVec3Origin()
         }
 
         override fun GetPushedAngularVelocity(id: Int /*= 0*/): idVec3 {
-            return Vector.getVec3_origin()
+            return Vector.getVec3Origin()
         }
 
         override fun SetMaster(master: idEntity?, orientated: Boolean /*= true*/) {

@@ -251,7 +251,7 @@ object VertexCache {
         // Alloc does NOT do a touch, which allows purging of things
         // created at level load time even if a frame hasn't passed yet.
         // These allocations can be purged, which will zero the pointer.
-        @JvmOverloads
+
         fun Alloc(
             data: ByteBuffer?,
             size: Int,

@@ -285,7 +285,7 @@ object Angles {
         }
 
         //
-        @JvmOverloads
+
         fun ToVectors(forward: idVec3?, right: idVec3? = null, up: idVec3? = null) {
             val sr = CFloat()
             val sp = CFloat()
@@ -361,13 +361,13 @@ object Angles {
             val cxsy: Float
             if (pitch == 0.0f) {
                 if (yaw == 0.0f) {
-                    return idRotation(Vector.getVec3_origin(), idVec3(-1.0f, 0.0f, 0.0f), roll)
+                    return idRotation(Vector.getVec3Origin(), idVec3(-1.0f, 0.0f, 0.0f), roll)
                 }
                 if (roll == 0.0f) {
-                    return idRotation(Vector.getVec3_origin(), idVec3(0.0f, 0.0f, -1.0f), yaw)
+                    return idRotation(Vector.getVec3Origin(), idVec3(0.0f, 0.0f, -1.0f), yaw)
                 }
             } else if (yaw == 0.0f && roll == 0.0f) {
-                return idRotation(Vector.getVec3_origin(), idVec3(0.0f, -1.0f, 0.0f), pitch)
+                return idRotation(Vector.getVec3Origin(), idVec3(0.0f, -1.0f, 0.0f), pitch)
             }
             idMath.SinCos(Math_h.DEG2RAD(yaw) * 0.5f, sz, cz)
             idMath.SinCos(Math_h.DEG2RAD(pitch) * 0.5f, sy, cy)
@@ -389,7 +389,7 @@ object Angles {
                 vec.FixDegenerateNormal()
                 angle *= 2.0f * idMath.M_RAD2DEG
             }
-            return idRotation(Vector.getVec3_origin(), vec, angle)
+            return idRotation(Vector.getVec3Origin(), vec, angle)
         }
 
         fun ToMat3(): idMat3 {
@@ -433,7 +433,7 @@ object Angles {
         }
 
         //public	float *			ToFloatPtr( void );
-        @JvmOverloads
+
         fun ToString(precision: Int = 2): String {
             return idStr.FloatArrayToString(ToFloatPtr(), GetDimension(), precision)
         }

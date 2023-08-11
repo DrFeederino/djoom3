@@ -33,7 +33,7 @@ object Simd {
     var baseClocks: Long = 0
     var generic: idSIMDProcessor = idSIMD_Generic() // pointer to generic SIMD implementation
 
-    @JvmField
+
     var SIMDProcessor: idSIMDProcessor = generic
 
     //

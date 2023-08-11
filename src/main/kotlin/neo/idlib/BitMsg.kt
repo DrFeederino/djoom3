@@ -69,7 +69,7 @@ object BitMsg {
             this.Init(ByteBuffer.wrap(data), data.size)
         }
 
-        @JvmOverloads
+
         fun Init(data: ByteBuffer, length: Int = data.capacity()) {
             writeData = data
             readData = data
@@ -341,7 +341,7 @@ object BitMsg {
             WriteBits(DirToBits(dir, numBits), numBits)
         }
 
-        @JvmOverloads
+
         @Throws(idException::class)
         fun WriteString(s: String?, maxLength: Int = -1, make7Bit: Boolean = true) {
             if (null == s) {

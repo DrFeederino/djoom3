@@ -8,7 +8,7 @@ import neo.idlib.Text.Lexer.LEXFL_NOSTRINGESCAPECHARS
 import neo.idlib.Text.Lexer.idLexer
 import neo.idlib.Text.Token.idToken
 import neo.idlib.math.Math_h.idMath.Sqrt
-import neo.idlib.math.Vector.getVec3_origin
+import neo.idlib.math.Vector.getVec3Origin
 import neo.idlib.math.Vector.idVec3
 import org.lwjgl.BufferUtils
 import java.nio.ByteBuffer
@@ -27,7 +27,7 @@ object Image_program {
      R_LoadImageProgram
      ===================
      */
-    @JvmOverloads
+
     fun R_LoadImageProgram(
         name: String, width: IntArray?, height: IntArray?,  /*ID_TIME_T */
         timestamps: LongArray?, depth: Array<textureDepth_t>? = null
@@ -403,7 +403,7 @@ object Image_program {
         while (i < width) {
             j = 0
             while (j < height) {
-                normal.set(getVec3_origin())
+                normal.set(getVec3Origin())
                 k = -1
                 while (k < 2) {
                     l = -1

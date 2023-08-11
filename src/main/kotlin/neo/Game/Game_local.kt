@@ -177,7 +177,7 @@ import neo.idlib.math.Math_h.idMath
 import neo.idlib.math.Matrix.idMat3
 import neo.idlib.math.Random.idRandom
 import neo.idlib.math.Simd.idSIMD
-import neo.idlib.math.Vector.getVec3_origin
+import neo.idlib.math.Vector.getVec3Origin
 import neo.idlib.math.Vector.idVec2
 import neo.idlib.math.Vector.idVec3
 import neo.idlib.math.Vector.idVec5
@@ -2790,7 +2790,7 @@ class Game_local {
             }
         }
 
-        @JvmOverloads
+
         fun CheatsOk(requirePlayer: Boolean = true /*= true*/): Boolean {
             val player: idPlayer?
             if (isMultiplayer && !CVarSystem.cvarSystem.GetCVarBool("net_allowCheats")) {
@@ -2863,7 +2863,7 @@ class Game_local {
             return SpawnEntityType(classdef, args, false)
         }
 
-        @JvmOverloads
+
         fun SpawnEntityType(classdef: Class<*>, args: idDict? = null /*= NULL*/): idEntity? {
             var obj: idEntity? = null
             if (!idEntity::class.java.isAssignableFrom(classdef)) {
@@ -2888,7 +2888,7 @@ class Game_local {
             return SpawnEntityType(classdef, null)
         }
 
-        @JvmOverloads
+
         fun SpawnEntityDef(
             args: idDict,
             ent: Array<idEntity?>? = null /*= NULL*/,
@@ -2953,7 +2953,7 @@ class Game_local {
             return gameLocal.spawnIds[ent.entityNumber] shl GENTITYNUM_BITS or ent.entityNumber
         }
 
-        @JvmOverloads
+
         fun FindEntityDef(name: String, makeDefault: Boolean = true /*= true*/): idDeclEntityDef? {
             var decl: idDecl? = null
             if (isMultiplayer) {
@@ -2965,7 +2965,7 @@ class Game_local {
             return decl as idDeclEntityDef?
         }
 
-        @JvmOverloads
+
         fun FindEntityDefDict(name: String, makeDefault: Boolean = true /*= true*/): idDict? {
             val decl = FindEntityDef(name, makeDefault)
             return decl?.dict
@@ -3421,7 +3421,7 @@ class Game_local {
          If catch_teleport, this only marks teleport players for death on exit
          =================
          */
-        @JvmOverloads
+
         fun KillBox(ent: idEntity, catch_teleport: Boolean = false /*= false*/) {
             var i: Int
             val num: Int
@@ -3462,7 +3462,7 @@ class Game_local {
                 if (hit is idPlayer && hit.IsInTeleport()) {
                     hit.TeleportDeath(ent.entityNumber)
                 } else if (!catch_teleport) {
-                    hit.Damage(ent, ent, getVec3_origin(), "damage_telefrag", 1.0f, Model.INVALID_JOINT)
+                    hit.Damage(ent, ent, getVec3Origin(), "damage_telefrag", 1.0f, Model.INVALID_JOINT)
                 }
                 if (!gameLocal.isMultiplayer) {
                     // let the mapper know about it
@@ -3472,7 +3472,7 @@ class Game_local {
             }
         }
 
-        @JvmOverloads
+
         fun RadiusDamage(
             origin: idVec3,
             inflictor: idEntity?,
@@ -3740,7 +3740,7 @@ class Game_local {
             }
         }
 
-        @JvmOverloads
+
         fun ProjectDecal(
             origin: idVec3,
             dir: idVec3,
@@ -4867,7 +4867,7 @@ class Game_local {
             if (SysCvar.g_showCollisionWorld.GetBool()) {
                 CollisionModel_local.collisionModelManager.DrawModel(
                     0,
-                    getVec3_origin(),
+                    getVec3Origin(),
                     idMat3.getMat3_identity(),
                     origin,
                     128.0f
@@ -6318,7 +6318,7 @@ class Game_local {
         val gameLocal: idGameLocal =
             idGameLocal() //TODO:these globals should either be collected to a single file, or always be set at the top.
 
-        @JvmField
+
         val game: idGame = gameLocal // statically pointed at an idGameLocal
 
         // if set to 1 the server sends the client PVS with snapshots and the client compares against what it sees
@@ -6461,7 +6461,7 @@ class Game_local {
                 RenderSystem.setRenderSystems(gameImport.renderSystem)
                 snd_system.setSoundSystems(gameImport.soundSystem)
                 ModelManager.setRenderModelManagers(gameImport.renderModelManager)
-                UserInterface.setUiManager(gameImport.uiManager)
+                UserInterface.setUiManagers(gameImport.uiManager)
                 DeclManager.setDeclManagers(gameImport.declManager)
                 AASFileManager.setAASFileManagers(gameImport.AASFileManager)
                 CollisionModel_local.setCollisionModelManagers(gameImport.collisionModelManager)

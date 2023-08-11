@@ -54,7 +54,7 @@ object GameEdit {
     const val MAX_DRAG_TRACE_DISTANCE = 2048.0f
     private val gameEditLocal: idGameEdit = idGameEdit()
 
-    @JvmField
+
     val gameEdit = GameEdit.gameEditLocal
     private fun sscanf(key: idStr, pattern: String): Int {
         var pattern = pattern
@@ -613,7 +613,7 @@ object GameEdit {
             }
         }
 
-        @JvmOverloads
+
         fun EntityIsSelectable(
             ent: idEntity,
             color: idVec4? = null /* = NULL*/,

@@ -45,7 +45,7 @@ import neo.idlib.math.Angles.idAngles
 import neo.idlib.math.Math_h
 import neo.idlib.math.Matrix.idMat3
 import neo.idlib.math.Rotation.idRotation
-import neo.idlib.math.Vector.getVec3_origin
+import neo.idlib.math.Vector.getVec3Origin
 import neo.idlib.math.Vector.idVec3
 import java.util.*
 import kotlin.math.abs
@@ -1084,10 +1084,10 @@ object AF {
                 }
                 AddBody(body, joints, fb.jointName.toString(), mod)
             }
-            if (fb.frictionDirection.ToVec3() != getVec3_origin()) {
+            if (fb.frictionDirection.ToVec3() != getVec3Origin()) {
                 body.SetFrictionDirection(fb.frictionDirection.ToVec3())
             }
-            if (fb.contactMotorDirection.ToVec3() != getVec3_origin()) {
+            if (fb.contactMotorDirection.ToVec3() != getVec3Origin()) {
                 body.SetContactMotorDirection(fb.contactMotorDirection.ToVec3())
             }
 
@@ -1212,7 +1212,7 @@ object AF {
                             axis2.set(
                                 left.times(
                                     idRotation(
-                                        getVec3_origin(),
+                                        getVec3Origin(),
                                         fc.axis.ToVec3(),
                                         fc.limitAngles[0]
                                     )
@@ -1221,7 +1221,7 @@ object AF {
                             shaft.set(
                                 left.times(
                                     idRotation(
-                                        getVec3_origin(),
+                                        getVec3Origin(),
                                         fc.axis.ToVec3(),
                                         fc.limitAngles[2]
                                     )

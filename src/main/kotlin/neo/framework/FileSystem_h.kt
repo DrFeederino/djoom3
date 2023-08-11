@@ -262,7 +262,7 @@ object FileSystem_h {
     var initExclusions: idInitExclusions? = null
     private var fileSystemLocal: idFileSystemLocal = idFileSystemLocal()
 
-    @JvmField
+
     var fileSystem: idFileSystem = fileSystemLocal //TODO:make a [] pointer of this?? NO BOI
     fun setFileSystems(fileSystem: idFileSystem) {
         fileSystemLocal = fileSystem as idFileSystemLocal
@@ -335,13 +335,13 @@ object FileSystem_h {
     }
 
     class fileDownload_s {
-        @JvmField
+
         var buffer: ByteBuffer? = null
 
-        @JvmField
+
         var length = 0
 
-        @JvmField
+
         var position = 0
 
         constructor()
@@ -356,30 +356,30 @@ object FileSystem_h {
 
     class backgroundDownload_s {
         @Volatile
-        @JvmField
+
         var completed = false
 
-        @JvmField
+
         var f: idFile? = null
 
-        @JvmField
+
         var file: fileDownload_s = fileDownload_s()
 
-        @JvmField
+
         var next // set by the fileSystem
                 : backgroundDownload_s? = null
 
-        @JvmField
+
         var opcode: dlType_t = dlType_t.DLTYPE_URL
 
-        @JvmField
+
         var url: urlDownload_s = urlDownload_s()
 
         constructor()
 
         companion object {
             @Transient
-            @JvmField
+
             val SIZE = (TempDump.CPP_class.Pointer.SIZE //backgroundDownload_s next
                     + TempDump.CPP_class.Enum.SIZE
                     + TempDump.CPP_class.Pointer.SIZE //idFile f
@@ -1965,7 +1965,7 @@ object FileSystem_h {
          separate file or a ZIP file.
          ===========
          */
-        @JvmOverloads
+
         fun OpenFileReadFlags(
             relativePath: String,
             searchFlags: Int,

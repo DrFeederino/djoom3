@@ -1535,7 +1535,7 @@ object Physics_RigidBody {
                     clipModel!!.Handle(),
                     clipModel!!.GetOrigin(),
                     clipModel!!.GetAxis(),
-                    Vector.getVec3_origin(),
+                    Vector.getVec3Origin(),
                     0.0f
                 )
             }

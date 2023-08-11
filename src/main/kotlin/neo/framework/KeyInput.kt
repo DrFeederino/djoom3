@@ -467,7 +467,7 @@ object KeyInput {
             }
         }
 
-        @JvmStatic
+
         fun IsDown(keyNum: Int): Boolean {
             return if (keyNum == -1) {
                 false
@@ -689,7 +689,7 @@ object KeyInput {
         }
 
         @Throws(idException::class)
-        @JvmStatic
+
         fun KeysFromBinding(bind: String?): String {
             var i: Int
             keyName[0] = '\u0000'

@@ -167,7 +167,7 @@ object DeviceContext {
             this.mat = mat
         }
 
-        @JvmOverloads
+
         fun DrawMaterial(
             x: Float,
             y: Float,
@@ -272,7 +272,7 @@ object DeviceContext {
             aaaa++
         }
 
-        @JvmOverloads
+
         fun DrawText(
             text: String?,
             textScale: Float,
@@ -1045,7 +1045,7 @@ object DeviceContext {
             }
         }
 
-        @JvmOverloads
+
         fun ClippedCoords(
             x: FloatArray,
             y: FloatArray,
@@ -1355,17 +1355,17 @@ object DeviceContext {
         companion object {
             var colorBlack: idVec4? = null
 
-            @JvmField
+
             var colorBlue: idVec4? = null
             var colorGreen: idVec4? = null
             var colorNone: idVec4? = null
             var colorOrange: idVec4? = null
             var colorPurple: idVec4? = null
 
-            @JvmField
+
             var colorRed: idVec4? = null
 
-            @JvmField
+
             var colorWhite: idVec4? = null
             var colorYellow: idVec4? = null
             var aaaa = 0

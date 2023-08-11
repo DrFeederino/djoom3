@@ -535,7 +535,7 @@ object Box {
             } else 0.0f
         }
 
-        @JvmOverloads
+
         fun PlaneSide(plane: idPlane, epsilon: Float = Plane.ON_EPSILON): Int {
             val d1: Float
             val d2: Float

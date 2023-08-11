@@ -268,12 +268,12 @@ class idMat3 {
         this.set(getMat3_identity())
     }
 
-    @JvmOverloads
+
     fun IsIdentity(epsilon: Float = idMat0.MATRIX_EPSILON.toFloat()): Boolean {
         return Compare(getMat3_identity(), epsilon)
     }
 
-    @JvmOverloads
+
     fun IsSymmetric(epsilon: Float = idMat0.MATRIX_EPSILON.toFloat()): Boolean {
         if (abs(mat[0].y - mat[1].x) > epsilon) {
             return false
@@ -283,7 +283,7 @@ class idMat3 {
         } else abs(mat[1].z - mat[2].y) <= epsilon
     }
 
-    @JvmOverloads
+
     fun IsDiagonal(epsilon: Float = idMat0.MATRIX_EPSILON.toFloat()): Boolean {
         return (abs(mat[0].y) <= epsilon
                 && abs(mat[0].z) <= epsilon
@@ -644,7 +644,7 @@ class idMat3 {
     }
 
     //
-    @JvmOverloads
+
     fun ToString(precision: Int = 2): String {
         return idStr.FloatArrayToString(ToFloatPtr(), GetDimension(), precision)
     }
@@ -739,7 +739,7 @@ class idMat3 {
             return idMat3(mat3_zero)
         }
 
-        @JvmStatic
+
         fun getMat3_identity(): idMat3 {
             return idMat3(mat3_identity)
         }

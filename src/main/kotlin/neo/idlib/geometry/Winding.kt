@@ -368,7 +368,7 @@ object Winding {
 
         // returns the winding fragment at the front of the clipping plane,
         // if there is nothing at the front the winding itself is destroyed and NULL is returned
-        @JvmOverloads
+
         fun Clip(plane: idPlane, epsilon: Float = Plane.ON_EPSILON, keepOn: Boolean = false): idWinding? {
             val dists: FloatArray
             val sides: IntArray
@@ -484,7 +484,7 @@ object Winding {
 
         // cuts off the part at the back side of the plane, returns true if some part was at the front
         // if there is nothing at the front the number of points is set to zero
-        @JvmOverloads
+
         fun ClipInPlace(plane: idPlane, epsilon: Float = Plane.ON_EPSILON, keepOn: Boolean = false): Boolean {
             val dists: FloatArray
             val sides: IntArray
@@ -631,7 +631,7 @@ object Winding {
             }
         }
 
-        @JvmOverloads
+
         fun RemoveEqualPoints(epsilon: Float = Plane.ON_EPSILON) {
             var i: Int
             var j: Int
@@ -653,7 +653,7 @@ object Winding {
             }
         }
 
-        @JvmOverloads
+
         fun RemoveColinearPoints(normal: idVec3, epsilon: Float = Plane.ON_EPSILON) {
             var i: Int
             var j: Int
@@ -712,7 +712,7 @@ object Winding {
             numPoints++
         }
 
-        @JvmOverloads
+
         fun InsertPointIfOnEdge(point: idVec3, plane: idPlane, epsilon: Float = Plane.ON_EPSILON): Boolean {
             var dist: Float
             var dot: Float
@@ -763,7 +763,7 @@ object Winding {
          =============
          */
         // add a winding to the convex hull
-        @JvmOverloads
+
         fun AddToConvexHull(
             winding: idWinding?,
             normal: idVec3,
@@ -869,7 +869,7 @@ object Winding {
          =============
          */
         // add a point to the convex hull
-        @JvmOverloads
+
         fun AddToConvexHull(
             point: idVec3,
             normal: idVec3,
@@ -990,7 +990,7 @@ object Winding {
 
         // tries to merge 'this' with the given winding, returns NULL if merge fails, both 'this' and 'w' stay intact
         // 'keep' tells if the contacting points should stay even if they create colinear edges
-        @JvmOverloads
+
         fun TryMerge(w: idWinding, planenormal: idVec3, keep: Int = 0): idWinding? {
             val p1 = idVec3()
             val p2 = idVec3()
@@ -1106,7 +1106,7 @@ object Winding {
         }
 
         // check whether the winding is valid or not
-        @JvmOverloads
+
         fun Check(print: Boolean = true): Boolean {
             var i: Int
             var j: Int
@@ -1387,7 +1387,7 @@ object Winding {
             } else 0.0f
         }
 
-        @JvmOverloads
+
         fun PlaneSide(plane: idPlane, epsilon: Float = Plane.ON_EPSILON): Int {
             var front: Boolean
             var back: Boolean
@@ -1464,7 +1464,7 @@ object Winding {
         }
 
         // returns true if the line or ray intersects the winding
-        @JvmOverloads
+
         fun LineIntersection(
             windingPlane: idPlane,
             start: idVec3,
@@ -1504,7 +1504,7 @@ object Winding {
         }
 
         // intersection point is start + dir * scale
-        @JvmOverloads
+
         fun RayIntersection(
             windingPlane: idPlane,
             start: idVec3,
@@ -1572,7 +1572,7 @@ object Winding {
             //
             private const val WCONVEX_EPSILON = 0.2f
 
-            @JvmStatic
+
             fun TriangleArea(a: idVec3, b: idVec3, c: idVec3): Float {
                 val v1 = idVec3()
                 val v2 = idVec3()
@@ -1689,7 +1689,7 @@ object Winding {
 
         // splits the winding in a back and front part, 'this' becomes the front part
         // returns a SIDE_
-        @JvmOverloads
+
         fun Split(back: idFixedWinding, plane: idPlane, epsilon: Float = Plane.ON_EPSILON): Int {
             val counts = IntArray(3)
             val dists = FloatArray(MAX_POINTS_ON_WINDING + 4)

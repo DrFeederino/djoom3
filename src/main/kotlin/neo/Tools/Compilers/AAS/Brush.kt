@@ -320,7 +320,7 @@ object Brush {
                 }
                 i++
             }
-            axialNormal.set(Vector.getVec3_origin())
+            axialNormal.set(Vector.getVec3Origin())
             if (windingPlane.Normal()[bestAxis] > 0.0f) {
                 axialNormal[bestAxis] = 1.0f
             } else {
@@ -365,7 +365,7 @@ object Brush {
             while (axis < 3) {
                 dir = -1
                 while (dir <= 1) {
-                    normal.set(Vector.getVec3_origin())
+                    normal.set(Vector.getVec3Origin())
                     normal[axis] = dir.toFloat()
                     plane.SetNormal(normal)
                     plane.SetDist(dir * bounds[if (dir == 1) 1 else 0, axis])
@@ -383,12 +383,12 @@ object Brush {
             if (axis.IsRotated()) {
                 i = 0
                 while (i < sides.Num()) {
-                    sides[i].plane.RotateSelf(Vector.getVec3_origin(), axis)
+                    sides[i].plane.RotateSelf(Vector.getVec3Origin(), axis)
                     i++
                 }
                 transformed = true
             }
-            if (origin != Vector.getVec3_origin()) {
+            if (origin != Vector.getVec3Origin()) {
                 i = 0
                 while (i < sides.Num()) {
                     sides[i].plane.TranslateSelf(origin)
@@ -962,7 +962,7 @@ object Brush {
                         i++
                     }
                     if (i >= sides.Num()) {
-                        normal.set(Vector.getVec3_origin())
+                        normal.set(Vector.getVec3Origin())
                         normal[axis] = dir.toFloat()
                         plane.SetNormal(normal)
                         plane.SetDist(dir * bounds[if (dir == 1) 1 else 0, axis])
@@ -1016,7 +1016,7 @@ object Brush {
                         dir = -1
                         while (dir <= 1) {
                             // construct a plane
-                            normal.set(Vector.getVec3_origin())
+                            normal.set(Vector.getVec3Origin())
                             normal[axis] = dir.toFloat()
                             normal.set(vec.Cross(normal))
                             if (normal.Normalize() < 0.5f) {
@@ -1319,7 +1319,7 @@ object Brush {
         }
 
         // split the brushes in the list into two lists
-        @JvmOverloads
+
         fun Split(
             plane: idPlane,
             planeNum: Int,

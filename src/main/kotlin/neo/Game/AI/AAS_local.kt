@@ -193,7 +193,7 @@ class AAS_local {
 
         override fun AreaCenter(areaNum: Int): idVec3 {
             return if (null == file) {
-                Vector.getVec3_origin()
+                Vector.getVec3Origin()
             } else file!!.GetArea(areaNum).center
         }
 
@@ -2349,7 +2349,7 @@ class AAS_local {
             face = file!!.GetFace(faceNum)
             numEdges = face.numEdges
             firstEdge = face.firstEdge
-            mid.set(Vector.getVec3_origin())
+            mid.set(Vector.getVec3Origin())
             i = 0
             while (i < numEdges) {
                 DrawEdge(abs(file!!.GetEdgeIndex(firstEdge + i)), face.flags and AASFile.FACE_FLOOR != 0)

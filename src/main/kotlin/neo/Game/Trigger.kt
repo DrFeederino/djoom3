@@ -994,7 +994,7 @@ object Trigger {
             val damage: String
             if (on && Game_local.gameLocal.time >= nextTime) {
                 damage = spawnArgs.GetString("def_damage", "damage_painTrigger")!!
-                other.Damage(null, null, Vector.getVec3_origin(), damage, 1.0f, Model.INVALID_JOINT)
+                other.Damage(null, null, Vector.getVec3Origin(), damage, 1.0f, Model.INVALID_JOINT)
                 ActivateTargets(other)
                 CallScript()
                 nextTime = (Game_local.gameLocal.time + Math_h.SEC2MS(delay)).toInt()

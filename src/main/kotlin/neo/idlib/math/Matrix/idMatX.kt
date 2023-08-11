@@ -328,7 +328,7 @@ class idMatX {
     }
 
     // change the size keeping data intact where possible
-    @JvmOverloads
+
     fun ChangeSize(rows: Int, columns: Int, makeZero: Boolean = false) {
         val alloc = rows * columns + 3 and 3.inv()
         if (alloc > alloced && alloced != -1) {
@@ -436,7 +436,7 @@ class idMatX {
         }
     }
 
-    @JvmOverloads
+
     fun Random(seed: Int, l: Float = 0.0f, u: Float = 1.0f) { // fill matrix with random values
         val rnd = idRandom(seed)
         val c: Float = u - l
@@ -448,7 +448,7 @@ class idMatX {
         }
     }
 
-    @JvmOverloads
+
     fun Random(rows: Int, columns: Int, seed: Int, l: Float = 0.0f, u: Float = 1.0f) {
         val rnd = idRandom(seed)
         SetSize(rows, columns)
@@ -643,7 +643,7 @@ class idMatX {
         return numRows == numColumns
     }
 
-    @JvmOverloads
+
     fun IsZero(epsilon: Float = idMat0.MATRIX_EPSILON.toFloat()): Boolean {
         // returns true if (*this) == Zero
         for (i in 0 until numRows) {
@@ -656,7 +656,7 @@ class idMatX {
         return true
     }
 
-    @JvmOverloads
+
     fun IsIdentity(epsilon: Float = idMat0.MATRIX_EPSILON.toFloat()): Boolean {
         // returns true if (*this) == Identity
         assert(numRows == numColumns)
@@ -674,7 +674,7 @@ class idMatX {
         return true
     }
 
-    @JvmOverloads
+
     fun IsDiagonal(epsilon: Float = idMat0.MATRIX_EPSILON.toFloat()): Boolean {
         // returns true if all elements are zero except for the elements on the diagonal
         assert(numRows == numColumns)
@@ -688,7 +688,7 @@ class idMatX {
         return true
     }
 
-    @JvmOverloads
+
     fun IsTriDiagonal(epsilon: Float = idMat0.MATRIX_EPSILON.toFloat()): Boolean {
         // returns true if all elements are zero except for the elements on the diagonal plus or minus one column
         if (numRows != numColumns) {
@@ -707,7 +707,7 @@ class idMatX {
         return true
     }
 
-    @JvmOverloads
+
     fun IsSymmetric(epsilon: Float = idMat0.MATRIX_EPSILON.toFloat()): Boolean {
         // (*this)[i][j] == (*this)[j][i]
         if (numRows != numColumns) {
@@ -735,7 +735,7 @@ class idMatX {
      *
      * returns true if (*this) * this->Transpose() == Identity ============
      */
-    @JvmOverloads
+
     fun IsOrthogonal(epsilon: Float = idMat0.MATRIX_EPSILON.toFloat()): Boolean {
         var ptr2: Int
         var sum: Float
@@ -760,7 +760,7 @@ class idMatX {
         return true
     }
 
-    @JvmOverloads
+
     fun IsOrthonormal(epsilon: Float = idMat0.MATRIX_EPSILON.toFloat()): Boolean {
         var ptr2: Int
         var sum: Float
@@ -805,7 +805,7 @@ class idMatX {
      * returns true if the matrix is a P-matrix A square matrix is a P-matrix if
      * all its principal minors are positive. ============
      */
-    @JvmOverloads
+
     fun IsPMatrix(epsilon: Float = idMat0.MATRIX_EPSILON.toFloat()): Boolean {
         var j: Int
         var d: Float
@@ -864,7 +864,7 @@ class idMatX {
      * returns true if the matrix is a Z-matrix A square matrix M is a Z-matrix
      * if M[i][j] <= 0 for all i != j. ============
      */
-    @JvmOverloads
+
     fun IsZMatrix(epsilon: Float = idMat0.MATRIX_EPSILON.toFloat()): Boolean {
         var j: Int
         if (!IsSquare()) {
@@ -884,7 +884,7 @@ class idMatX {
         return true
     }
 
-    @JvmOverloads
+
     fun IsPositiveDefinite(epsilon: Float = idMat0.MATRIX_EPSILON.toFloat()): Boolean {
         var j: Int
         var k: Int
@@ -947,7 +947,7 @@ class idMatX {
      * returns true if the matrix is Symmetric Positive Definite (PD)
      * ============
      */
-    @JvmOverloads
+
     fun IsSymmetricPositiveDefinite(epsilon: Float = idMat0.MATRIX_EPSILON.toFloat()): Boolean {
         val m = idMatX()
 
@@ -973,7 +973,7 @@ class idMatX {
      * matrix M of order n is said to be PSD if y'My >= 0 for all vectors y of
      * dimension n, y != 0. ============
      */
-    @JvmOverloads
+
     fun IsPositiveSemiDefinite(epsilon: Float = idMat0.MATRIX_EPSILON.toFloat()): Boolean {
         var j: Int
         var k: Int
@@ -1047,7 +1047,7 @@ class idMatX {
         return true
     }
 
-    @JvmOverloads
+
     fun IsSymmetricPositiveSemiDefinite(epsilon: Float = idMat0.MATRIX_EPSILON.toFloat()): Boolean {
         // the matrix must be symmetric
         return if (!IsSymmetric(epsilon)) {
@@ -1646,7 +1646,7 @@ class idMatX {
         return mat
     }
 
-    @JvmOverloads
+
     fun ToFloatBufferPtr(offset: Int = 0): FloatBuffer {
         return FloatBuffer.wrap(mat).position(offset).slice()
     }
@@ -2107,7 +2107,7 @@ class idMatX {
      If det != NULL the determinant of the matrix is calculated and stored.
      ============
      */
-    @JvmOverloads
+
     fun LU_Factor(index: IntArray?, det: FloatArray? = null): Boolean {
         var i: Int
         var j: Int
@@ -3456,7 +3456,7 @@ class idMatX {
      * matrix: LL' + alpha * v * v' If offset > 0 only the lower right corner
      * starting at (offset, offset) is updated. ============
      */
-    @JvmOverloads
+
     fun Cholesky_UpdateRankOne(v: idVecX, alpha: Float, offset: Int = 0): Boolean {
         var alpha = alpha
         var j: Int

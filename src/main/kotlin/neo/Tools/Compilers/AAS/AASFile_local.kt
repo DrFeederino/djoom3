@@ -63,7 +63,7 @@ object AASFile_local {
             var edgeNum: Int
             val face: aasFace_s
             var edge: aasEdge_s
-            val center = idVec3(Vector.getVec3_origin())
+            val center = idVec3(Vector.getVec3Origin())
             face = faces[faceNum]
             if (face.numEdges > 0) {
                 i = 0
@@ -82,7 +82,7 @@ object AASFile_local {
             var i: Int
             var faceNum: Int
             val area: aasArea_s
-            val center = idVec3(Vector.getVec3_origin())
+            val center = idVec3(Vector.getVec3Origin())
             area = areas[areaNum]
             if (area.numFaces > 0) {
                 i = 0
@@ -299,7 +299,7 @@ object AASFile_local {
                     if (areas[-nodeNum].flags and trace.flags != 0 || areas[-nodeNum].travelFlags and trace.travelFlags != 0) {
                         if (TempDump.NOT(trace.lastAreaNum.toDouble())) {
                             trace.fraction = 0.0f
-                            v1.set(Vector.getVec3_origin())
+                            v1.set(Vector.getVec3Origin())
                         } else {
                             v1.set(end.minus(start))
                             v2.set(tracestack[tstack_p].start.minus(start))
@@ -332,7 +332,7 @@ object AASFile_local {
                 if (0 == nodeNum) {
                     if (0 == trace.lastAreaNum) {
                         trace.fraction = 0.0f
-                        v1.set(Vector.getVec3_origin())
+                        v1.set(Vector.getVec3Origin())
                     } else {
                         v1.set(end.minus(start))
                         v2.set(tracestack[tstack_p].start.minus(start))
@@ -1244,7 +1244,7 @@ object AASFile_local {
             if (0 == area.flags and (AASFile.AREA_REACHABLE_WALK or AASFile.AREA_REACHABLE_FLY) || area.flags and AASFile.AREA_LIQUID != 0) {
                 return AreaCenter(areaNum)
             }
-            center.set(Vector.getVec3_origin())
+            center.set(Vector.getVec3Origin())
             numFaces = 0
             i = 0
             while (i < area.numFaces) {

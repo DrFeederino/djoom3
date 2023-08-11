@@ -191,8 +191,8 @@ class DeclFX {
             FXAction.rotate = 0.0f
             FXAction.random1 = 0.0f
             FXAction.random2 = 0.0f
-            FXAction.lightColor.set(Vector.getVec3_origin())
-            FXAction.offset.set(Vector.getVec3_origin())
+            FXAction.lightColor.set(Vector.getVec3Origin())
+            FXAction.offset.set(Vector.getVec3Origin())
             FXAction.axis.set(idMat3.getMat3_identity())
             FXAction.bindParticles = false
             FXAction.explicitAxis = false

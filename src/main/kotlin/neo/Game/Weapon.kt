@@ -2059,7 +2059,7 @@ object Weapon {
                 ent.GetPhysics().SetContents(0)
                 ent.GetPhysics().SetClipModel(null, 1.0f)
                 ent.BindToJoint(owner!!, attach, true)
-                ent.GetPhysics().SetOrigin(Vector.getVec3_origin())
+                ent.GetPhysics().SetOrigin(Vector.getVec3Origin())
                 ent.GetPhysics().SetAxis(idMat3.getMat3_identity())
 
                 // supress model in player views, but allow it in mirrors and remote views
@@ -2599,7 +2599,7 @@ object Weapon {
                                 this,
                                 projectileDict,
                                 tr,
-                                Vector.getVec3_origin(),
+                                Vector.getVec3Origin(),
                                 true
                             )
                         }
@@ -2926,7 +2926,7 @@ object Weapon {
             worldMuzzleFlash = renderLight_s() //memset( &worldMuzzleFlash, 0, sizeof( worldMuzzleFlash ) );
             nozzleGlow = renderLight_s() //memset( &nozzleGlow, 0, sizeof( nozzleGlow ) );
             muzzleFlashEnd = 0
-            flashColor = Vector.getVec3_origin()
+            flashColor = Vector.getVec3Origin()
             muzzleFlashHandle = -1
             worldMuzzleFlashHandle = -1
             guiLightHandle = -1

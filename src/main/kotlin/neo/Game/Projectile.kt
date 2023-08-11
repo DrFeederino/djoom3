@@ -512,7 +512,7 @@ object Projectile {
             state = projectileState_t.LAUNCHED
         }
 
-        @JvmOverloads
+
         fun Launch(
             start: idVec3,
             dir: idVec3,
@@ -994,12 +994,12 @@ object Projectile {
             while (state != newState) {
                 when (state) {
                     projectileState_t.SPAWNED -> {
-                        Create(owner.GetEntity(), Vector.getVec3_origin(), idVec3(1, 0, 0))
+                        Create(owner.GetEntity(), Vector.getVec3Origin(), idVec3(1, 0, 0))
                     }
                     projectileState_t.CREATED -> {
 
                         // the right origin and direction are required if you want bullet traces
-                        Launch(Vector.getVec3_origin(), idVec3(1, 0, 0), Vector.getVec3_origin())
+                        Launch(Vector.getVec3Origin(), idVec3(1, 0, 0), Vector.getVec3Origin())
                     }
                     projectileState_t.LAUNCHED -> {
                         if (newState == projectileState_t.FIZZLED) {

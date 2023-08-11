@@ -1811,7 +1811,7 @@ object Actor {
 
         override fun Teleport(origin: idVec3, angles: idAngles, destination: idEntity?) {
             GetPhysics().SetOrigin(origin.plus(idVec3(0f, 0f, CollisionModel.CM_CLIP_EPSILON)))
-            GetPhysics().SetLinearVelocity(Vector.getVec3_origin())
+            GetPhysics().SetLinearVelocity(Vector.getVec3Origin())
             viewAxis = angles.ToMat3()
             UpdateVisuals()
             if (!IsHidden()) {

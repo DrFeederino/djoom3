@@ -797,7 +797,7 @@ object File_h {
         }
 
         // clear the file
-        @JvmOverloads
+
         fun Clear(freeMemory: Boolean = true /*= true*/) {
             fileSize = 0
             granularity = 16384

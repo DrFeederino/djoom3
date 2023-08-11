@@ -99,61 +99,61 @@ object CVarSystem {
      */
     const val CVAR_ALL = -1 // all flags
 
-    @JvmField
+
     val CVAR_ARCHIVE: Int = Lib.BIT(17) // set to cause it to be saved to a config file
 
-    @JvmField
+
     val CVAR_BOOL: Int = Lib.BIT(0) // variable is a boolean
 
-    @JvmField
+
     val CVAR_CHEAT: Int = Lib.BIT(13) // variable is considered a cheat
 
-    @JvmField
+
     val CVAR_FLOAT: Int = Lib.BIT(2) // variable is a float
 
-    @JvmField
+
     val CVAR_GAME: Int = Lib.BIT(7) // game variable
 
-    @JvmField
+
     val CVAR_GUI: Int = Lib.BIT(6) // gui variable
 
-    @JvmField
+
     val CVAR_INIT: Int = Lib.BIT(15) // can only be set from the command-line
 
-    @JvmField
+
     val CVAR_INTEGER: Int = Lib.BIT(1) // variable is an longeger
 
-    @JvmField
+
     val CVAR_MODIFIED: Int = Lib.BIT(18) // set when the variable is modified
 
-    @JvmField
+
     val CVAR_NETWORKSYNC: Int = Lib.BIT(11) // cvar is synced from the server to clients
 
-    @JvmField
+
     val CVAR_NOCHEAT: Int = Lib.BIT(14) // variable is not considered a cheat
 
-    @JvmField
+
     val CVAR_RENDERER: Int = Lib.BIT(4) // renderer variable
 
-    @JvmField
+
     val CVAR_ROM: Int = Lib.BIT(16) // display only; cannot be set by user at all
 
-    @JvmField
+
     val CVAR_SERVERINFO: Int = Lib.BIT(10) // sent from servers; available to menu
 
-    @JvmField
+
     val CVAR_SOUND: Int = Lib.BIT(5) // sound variable
 
-    @JvmField
+
     val CVAR_STATIC: Int = Lib.BIT(12) // statically declared; not user created
 
-    @JvmField
+
     val CVAR_SYSTEM: Int = Lib.BIT(3) // system variable
 
-    @JvmField
+
     val CVAR_TOOL: Int = Lib.BIT(8) // tool variable
 
-    @JvmField
+
     val CVAR_USERINFO: Int = Lib.BIT(9) // sent to servers; available to menu
     private val FORMAT_STRING: String = "%-32s "
 
@@ -201,7 +201,7 @@ object CVarSystem {
     private const val NUM_DESCRIPTION_CHARS = NUM_COLUMNS - NUM_NAME_CHARS
     private var localCVarSystem: idCVarSystemLocal = idCVarSystemLocal()
 
-    @JvmField
+
     var cvarSystem: idCVarSystem = localCVarSystem
     fun CreateColumn(textString: String, columnWidth: Int, indent: String, string: idStr): String {
         var i: Int

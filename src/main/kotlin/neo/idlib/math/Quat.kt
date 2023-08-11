@@ -23,7 +23,7 @@ class Quat {
      */
     class idQuat {
         //        public:
-        @JvmField
+
         var w = 0f
         var x //TODO:prime candidate to turn into an array.
                 = 0f
@@ -258,7 +258,7 @@ class Quat {
                 vec.FixDegenerateNormal()
                 angle *= 2.0f * idMath.M_RAD2DEG
             }
-            return idRotation(Vector.getVec3_origin(), vec, angle)
+            return idRotation(Vector.getVec3Origin(), vec, angle)
         }
 
         fun ToMat3(): idMat3 {

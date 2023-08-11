@@ -745,7 +745,7 @@ object GameSSDWindow {
 
             //
             protected val explosionPool = arrayOfNulls<SSDExplosion>(MAX_EXPLOSIONS)
-            @JvmOverloads
+
             fun GetNewExplosion(
                 _game: idGameSSDWindow?,
                 _position: idVec3?,

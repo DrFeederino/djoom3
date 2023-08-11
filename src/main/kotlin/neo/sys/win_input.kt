@@ -1591,7 +1591,7 @@ object win_input {
      Sys_ShutdownInput
      ===========
      */
-    @JvmStatic
+
     fun Sys_ShutdownInput() {
         IN_DeactivateMouse()
         IN_DeactivateKeyboard()
@@ -1615,7 +1615,7 @@ object win_input {
      Sys_InitInput
      ===========
      */
-    @JvmStatic
+
     fun Sys_InitInput() {
         Common.common.Printf("\n------- Input Initialization -------\n")
         //        IN_InitDirectInput();
@@ -1676,7 +1676,7 @@ object win_input {
      Sys_GetConsoleKey
      ===============
      */
-    @JvmStatic
+
     fun Sys_GetConsoleKey(shifted: Boolean): Char {
         return keyScanTable[41 + if (shifted) 128 else 0]
     }
@@ -1729,7 +1729,6 @@ object win_input {
     }
 
 
-    @JvmStatic
     fun Sys_GrabMouseCursor(grabIt: Boolean) {
 //        if (Mouse.isGrabbed() == grabIt) {//otherwise resetMouse in setGrabbed will keep erasing our mouse data.
 //            Mouse.setGrabbed(grabIt);

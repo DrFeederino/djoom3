@@ -72,7 +72,7 @@ import neo.idlib.math.Math_h
 import neo.idlib.math.Math_h.idMath
 import neo.idlib.math.Matrix.idMat3
 import neo.idlib.math.Plane.idPlane
-import neo.idlib.math.Vector.getVec3_origin
+import neo.idlib.math.Vector.getVec3Origin
 import neo.idlib.math.Vector.idVec3
 import neo.idlib.math.Vector.idVec4
 import neo.ui.UserInterface
@@ -601,7 +601,7 @@ object Entity {
             }
 
             private fun Event_StartFx(e: idEntity, fx: idEventArg<String>) {
-                idEntityFx.StartFx(fx.value, getVec3_origin(), idMat3.getMat3_zero(), e, true)
+                idEntityFx.StartFx(fx.value, getVec3Origin(), idMat3.getMat3_zero(), e, true)
             }
 
             init {
@@ -2313,7 +2313,7 @@ object Entity {
                 if (bindJoint != Model.INVALID_JOINT) {
                     masterAnimator = bindMaster!!.GetAnimator()
                     if (null == masterAnimator) {
-                        masterOrigin.set(getVec3_origin())
+                        masterOrigin.set(getVec3Origin())
                         masterAxis.set(idMat3.getMat3_identity())
                         return false
                     } else {
@@ -2330,7 +2330,7 @@ object Entity {
                 }
                 true
             } else {
-                masterOrigin.set(getVec3_origin())
+                masterOrigin.set(getVec3Origin())
                 masterAxis.set(idMat3.getMat3_identity())
                 false
             }

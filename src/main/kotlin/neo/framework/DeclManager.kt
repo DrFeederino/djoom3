@@ -136,7 +136,7 @@ class DeclManager {
     // The constructor should initialize variables such that
     // an immediate call to FreeData() does no harm.
     {
-        @JvmField
+
         var base: idDeclBase? = null
 
         // public /*abstract*/ 				~idDecl() {};
@@ -287,7 +287,7 @@ class DeclManager {
 
         companion object {
             @Transient
-            @JvmField
+
             val SIZE = TempDump.CPP_class.Pointer.SIZE //base is an abstract class.
         }
     }
@@ -337,7 +337,7 @@ class DeclManager {
         @Throws(idException::class)
         abstract fun FindType(type: declType_t, name: String?, makeDefault: Boolean /*= true*/): idDecl?
 
-        @JvmOverloads
+
         fun FindType(type: declType_t, name: idStr, makeDefault: Boolean = true): idDecl? {
             return FindType(type, name.toString(), makeDefault)
         }
@@ -2354,7 +2354,7 @@ class DeclManager {
         const val MAX_HUFFMAN_SYMBOLS = 256
         const val USE_COMPRESSED_DECLS = true
 
-        @JvmField
+
         val DECL_LEXER_FLAGS =
             Lexer.LEXFL_NOSTRINGCONCAT or  // multiple strings seperated by whitespaces are not concatenated
                     Lexer.LEXFL_NOSTRINGESCAPECHARS or  // no escape characters inside strings
@@ -2407,7 +2407,7 @@ class DeclManager {
         var totalUncompressedLength = 0
         private var declManagerLocal: idDeclManagerLocal = idDeclManagerLocal()
 
-        @JvmField
+
         var declManager: idDeclManager = declManagerLocal
 
         /*

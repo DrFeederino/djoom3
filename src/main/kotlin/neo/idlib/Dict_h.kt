@@ -407,38 +407,38 @@ class Dict_h {
         }
 
         // these return default values of 0.0, 0 and false
-        @JvmOverloads
+
         @Throws(idException::class)
         fun GetString(key: String?, defaultString: String?): String? {
             val kv = FindKey(key)
             return kv?.GetValue()?.toString() ?: defaultString
         }
 
-        @JvmOverloads
+
         @Throws(idException::class)
         fun GetString(key: String?): String {
             return GetString(key, "")!!
         }
 
-        @JvmOverloads
+
         @Throws(idException::class)
         fun GetFloat(key: String?, defaultString: String = "0" /*= "0"*/): Float {
             return TempDump.atof(GetString(key, defaultString)!!)
         }
 
-        @JvmOverloads
+
         @Throws(idException::class)
         fun GetInt(key: String?, defaultString: String = "0"): Int {
             return TempDump.atoi(GetString(key, defaultString)!!)
         }
 
-        @JvmOverloads
+
         @Throws(idException::class)
         fun GetBool(key: String?, defaultString: String = "0"): Boolean {
             return TempDump.atob(GetString(key, defaultString)!!)
         }
 
-        @JvmOverloads
+
         @Throws(idException::class)
         fun GetVector(key: String?, defaultString: String? = null): idVec3 {
             val out = idVec3()
@@ -446,7 +446,7 @@ class Dict_h {
             return out
         }
 
-        @JvmOverloads
+
         @Throws(idException::class)
         fun GetVec2(key: String?, defaultString: String? = null): idVec2 {
             val out = idVec2()
@@ -454,7 +454,7 @@ class Dict_h {
             return out
         }
 
-        @JvmOverloads
+
         @Throws(idException::class)
         fun GetVec4(key: String?, defaultString: String? = null): idVec4 {
             val out = idVec4()
@@ -462,7 +462,7 @@ class Dict_h {
             return out
         }
 
-        @JvmOverloads
+
         @Throws(idException::class)
         fun GetAngles(key: String?, defaultString: String? = null): idAngles {
             val out = idAngles()
@@ -703,7 +703,7 @@ class Dict_h {
             Delete(key.toString())
         }
 
-        @JvmOverloads
+
         fun MatchPrefix(prefix: String, lastMatch: idKeyValue? = null): idKeyValue? {
             var i: Int
             val len: Int

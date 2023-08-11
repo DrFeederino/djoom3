@@ -63,7 +63,7 @@ import neo.idlib.geometry.JointTransform.idJointQuat
 import neo.idlib.math.Matrix.idMat3
 import neo.idlib.math.Quat.idQuat
 import neo.idlib.math.Simd
-import neo.idlib.math.Vector.getVec3_origin
+import neo.idlib.math.Vector.getVec3Origin
 import neo.idlib.math.Vector.getVec3_zero
 import neo.idlib.math.Vector.idVec3
 
@@ -4175,7 +4175,7 @@ object Anim_Blend {
             return if (anim != null) {
                 anim.TotalMovementDelta()
             } else {
-                getVec3_origin()
+                getVec3Origin()
             }
         }
 

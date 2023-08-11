@@ -371,8 +371,8 @@ object Mover {
                 0,
                 0,
                 dest_position,
-                Vector.getVec3_origin(),
-                Vector.getVec3_origin()
+                Vector.getVec3Origin(),
+                Vector.getVec3Origin()
             )
             physicsObj.SetAngularExtrapolation(
                 Extrapolate.EXTRAPOLATION_NONE,
@@ -602,7 +602,7 @@ object Mover {
                 blockingEntity.value.Damage(
                     this,
                     this,
-                    Vector.getVec3_origin(),
+                    Vector.getVec3Origin(),
                     "damage_moverCrush",
                     damage,
                     Model.INVALID_JOINT
@@ -717,8 +717,8 @@ object Mover {
                     0,
                     0,
                     dest_position,
-                    Vector.getVec3_origin(),
-                    Vector.getVec3_origin()
+                    Vector.getVec3Origin(),
+                    Vector.getVec3Origin()
                 )
             }
             lastCommand = moverCommand_t.MOVER_NONE
@@ -981,7 +981,7 @@ object Mover {
                         move.acceleration,
                         org,
                         move.dir,
-                        Vector.getVec3_origin()
+                        Vector.getVec3Origin()
                     )
                     if (move.movetime > 0) {
                         move.stage = moveStage_t.LINEAR_STAGE
@@ -998,7 +998,7 @@ object Mover {
                         move.movetime,
                         org,
                         move.dir,
-                        Vector.getVec3_origin()
+                        Vector.getVec3Origin()
                     )
                     if (move.deceleration != 0) {
                         move.stage = moveStage_t.DECELERATION_STAGE
@@ -1013,7 +1013,7 @@ object Mover {
                         move.deceleration,
                         org,
                         move.dir,
-                        Vector.getVec3_origin()
+                        Vector.getVec3Origin()
                     )
                     move.stage = moveStage_t.FINISHED_STAGE
                 }
@@ -1311,7 +1311,7 @@ object Mover {
                 (speed.value * 500).toInt(),
                 org,
                 depth.value.times(2.0f),
-                Vector.getVec3_origin()
+                Vector.getVec3Origin()
             )
         }
 
@@ -1412,8 +1412,8 @@ object Mover {
                 0,
                 0,
                 dest_position,
-                Vector.getVec3_origin(),
-                Vector.getVec3_origin()
+                Vector.getVec3Origin(),
+                Vector.getVec3Origin()
             )
         }
 
@@ -1447,8 +1447,8 @@ object Mover {
                 0,
                 0,
                 dest_position,
-                Vector.getVec3_origin(),
-                Vector.getVec3_origin()
+                Vector.getVec3Origin(),
+                Vector.getVec3Origin()
             )
         }
 
@@ -2124,8 +2124,8 @@ object Mover {
                 0,
                 0,
                 GetPhysics().GetOrigin(),
-                Vector.getVec3_origin(),
-                Vector.getVec3_origin()
+                Vector.getVec3Origin(),
+                Vector.getVec3Origin()
             )
             physicsObj.SetAngularExtrapolation(
                 Extrapolate.EXTRAPOLATION_NONE,
@@ -2296,10 +2296,10 @@ object Mover {
                 0,
                 0,
                 pos1,
-                Vector.getVec3_origin(),
-                Vector.getVec3_origin()
+                Vector.getVec3Origin(),
+                Vector.getVec3Origin()
             )
-            physicsObj.SetLinearInterpolation(0, 0, 0, 0, Vector.getVec3_origin(), Vector.getVec3_origin())
+            physicsObj.SetLinearInterpolation(0, 0, 0, 0, Vector.getVec3Origin(), Vector.getVec3Origin())
             SetOrigin(pos1)
             PostEventMS(EV_Mover_InitGuiTargets, 0)
         }
@@ -2326,10 +2326,10 @@ object Mover {
                 0,
                 0,
                 pos1,
-                Vector.getVec3_origin(),
-                Vector.getVec3_origin()
+                Vector.getVec3Origin(),
+                Vector.getVec3Origin()
             )
-            physicsObj.SetLinearInterpolation(0, 0, 0, 0, Vector.getVec3_origin(), Vector.getVec3_origin())
+            physicsObj.SetLinearInterpolation(0, 0, 0, 0, Vector.getVec3Origin(), Vector.getVec3Origin())
             SetOrigin(pos1)
             PostEventMS(EV_Mover_InitGuiTargets, 0)
         }
@@ -2631,8 +2631,8 @@ object Mover {
                         time,
                         0,
                         pos1,
-                        Vector.getVec3_origin(),
-                        Vector.getVec3_origin()
+                        Vector.getVec3Origin(),
+                        Vector.getVec3Origin()
                     )
                 }
                 moverState_t.MOVER_POS2 -> {
@@ -2642,8 +2642,8 @@ object Mover {
                         time,
                         0,
                         pos2,
-                        Vector.getVec3_origin(),
-                        Vector.getVec3_origin()
+                        Vector.getVec3Origin(),
+                        Vector.getVec3Origin()
                     )
                 }
                 moverState_t.MOVER_1TO2 -> {
@@ -2654,7 +2654,7 @@ object Mover {
                         duration,
                         pos1,
                         pos2.minus(pos1).times(1000.0f).div(duration.toFloat()),
-                        Vector.getVec3_origin()
+                        Vector.getVec3Origin()
                     )
                     if (accelTime != 0 || decelTime != 0) {
                         physicsObj.SetLinearInterpolation(time, accelTime, decelTime, duration, pos1, pos2)
@@ -2670,7 +2670,7 @@ object Mover {
                         duration,
                         pos2,
                         pos1.minus(pos2).times(1000.0f).div(duration.toFloat()),
-                        Vector.getVec3_origin()
+                        Vector.getVec3Origin()
                     )
                     if (accelTime != 0 || decelTime != 0) {
                         physicsObj.SetLinearInterpolation(time, accelTime, decelTime, duration, pos2, pos1)
@@ -3403,7 +3403,7 @@ object Mover {
                 blockingEntity.value.Damage(
                     this,
                     this,
-                    Vector.getVec3_origin(),
+                    Vector.getVec3Origin(),
                     "damage_moverCrush",
                     damage,
                     Model.INVALID_JOINT
@@ -3875,7 +3875,7 @@ object Mover {
                 blockingEntity.value.Damage(
                     this,
                     this,
-                    Vector.getVec3_origin(),
+                    Vector.getVec3Origin(),
                     "damage_moverCrush",
                     damage,
                     Model.INVALID_JOINT
@@ -3997,7 +3997,7 @@ object Mover {
                 blockingEntity.value.Damage(
                     this,
                     this,
-                    Vector.getVec3_origin(),
+                    Vector.getVec3Origin(),
                     "damage_moverCrush",
                     damage._val,
                     Model.INVALID_JOINT
@@ -4064,8 +4064,8 @@ object Mover {
                 Game_local.gameLocal.time,
                 0,
                 GetPhysics().GetOrigin(),
-                Vector.getVec3_origin(),
-                Vector.getVec3_origin()
+                Vector.getVec3Origin(),
+                Vector.getVec3Origin()
             )
             physicsObj.SetAngularExtrapolation(
                 Extrapolate.EXTRAPOLATION_LINEAR or Extrapolate.EXTRAPOLATION_NOSTOP,
@@ -4158,7 +4158,7 @@ object Mover {
             spawnArgs.GetBool("y_axis", "0", y_axis)
 
             // set the axis of bobbing
-            delta.set(Vector.getVec3_origin())
+            delta.set(Vector.getVec3Origin())
             if (x_axis._val) {
                 delta[0] = height._val
             } else if (y_axis._val) {
@@ -4180,7 +4180,7 @@ object Mover {
                 (speed._val * 500).toInt(),
                 GetPhysics().GetOrigin(),
                 delta.times(2.0f),
-                Vector.getVec3_origin()
+                Vector.getVec3Origin()
             )
             SetPhysics(physicsObj)
         }
@@ -4230,8 +4230,8 @@ object Mover {
                 0,
                 0,
                 GetPhysics().GetOrigin(),
-                Vector.getVec3_origin(),
-                Vector.getVec3_origin()
+                Vector.getVec3Origin(),
+                Vector.getVec3Origin()
             )
             physicsObj.SetAngularExtrapolation(
                 Extrapolate.EXTRAPOLATION_DECELSINE or Extrapolate.EXTRAPOLATION_NOSTOP,
@@ -4286,8 +4286,8 @@ object Mover {
                 0,
                 0,
                 GetPhysics().GetOrigin(),
-                Vector.getVec3_origin(),
-                Vector.getVec3_origin()
+                Vector.getVec3Origin(),
+                Vector.getVec3Origin()
             )
             SetPhysics(physicsObj)
         }
@@ -4302,7 +4302,7 @@ object Mover {
                 val delta = idVec3()
                 spawnArgs.GetFloat("time", "4", time)
                 spawnArgs.GetFloat("height", "32", height)
-                delta.set(Vector.getVec3_origin())
+                delta.set(Vector.getVec3Origin())
                 delta[2] = height._val
                 physicsObj.SetLinearExtrapolation(
                     Extrapolate.EXTRAPOLATION_LINEAR,
@@ -4310,7 +4310,7 @@ object Mover {
                     (time._val * 1000).toInt(),
                     physicsObj.GetOrigin(),
                     delta,
-                    Vector.getVec3_origin()
+                    Vector.getVec3Origin()
                 )
             }
         }

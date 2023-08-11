@@ -911,7 +911,7 @@ object AsyncServer {
         }
 
         //
-        @JvmOverloads
+
         fun MasterHeartbeat(force: Boolean = false /*= false*/) {
             if (idAsyncNetwork.LANServer.GetBool()) {
                 if (force) {

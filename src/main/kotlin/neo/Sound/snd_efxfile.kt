@@ -176,7 +176,7 @@ class snd_efxfile {
 //            return false;
         }
 
-        @JvmOverloads
+
         fun LoadFile(filename: String, OSPath: Boolean = false /*= false*/): Boolean {
             val src = idLexer(Lexer.LEXFL_NOSTRINGCONCAT)
             var token: idToken

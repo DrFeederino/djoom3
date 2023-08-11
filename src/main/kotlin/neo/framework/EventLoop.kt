@@ -91,7 +91,7 @@ class EventLoop {
         }
 
         // Dispatches all pending events and returns the current time.
-        @JvmOverloads
+
         @Throws(idException::class)
         fun RunEventLoop(commandExecution: Boolean = true /*= true*/): Int {
             var ev: sysEvent_s
@@ -258,7 +258,7 @@ class EventLoop {
 
                  ===============================================================================
                  */
-        @JvmField
+
         val eventLoop: idEventLoop = idEventLoop()
     }
 }

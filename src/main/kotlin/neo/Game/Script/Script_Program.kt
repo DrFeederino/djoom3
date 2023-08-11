@@ -1046,7 +1046,7 @@ object Script_Program {
         }
     }
 
-    class idVarDef @JvmOverloads constructor( //
+    class idVarDef constructor( //
         private var typeDef: idTypeDef? = null /*= NULL*/
     ) {
         //
