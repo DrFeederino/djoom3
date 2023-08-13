@@ -1053,7 +1053,7 @@ object win_main {
      ================
      */
     fun Sys_Shutdown() {
-        throw TODO_Exception()
+        // Nothing else to shutdown
         //        CoUninitialize();
     }
 

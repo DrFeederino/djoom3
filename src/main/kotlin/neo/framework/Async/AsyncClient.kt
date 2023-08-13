@@ -142,7 +142,7 @@ object AsyncClient {
                 = 0
 
         //
-        private lateinit var guiNetMenu: idUserInterface
+        private var guiNetMenu: idUserInterface? = null
         private var lastConnectTime // last time a connect message was sent
                 = 0
         private var lastEmptyTime // last time an empty message was sent
@@ -199,7 +199,7 @@ object AsyncClient {
             Array(AsyncNetwork.MAX_USERCMD_BACKUP) { Array(AsyncNetwork.MAX_ASYNC_CLIENTS) { usercmd_t() } }
 
         fun Shutdown() {
-            //guiNetMenu = null
+            guiNetMenu = null
             updateMSG.Clear()
             updateURL.Clear()
             updateFile.Clear()
@@ -253,7 +253,7 @@ object AsyncClient {
             clientState = clientState_t.CS_CHALLENGING
             active = true
             guiNetMenu = UserInterface.uiManager.FindGui("guis/netmenu.gui", true, false, true)!!
-            guiNetMenu.SetStateString(
+            guiNetMenu!!.SetStateString(
                 "status",
                 Str.va(Common.common.GetLanguageDict().GetString("#str_06749"), win_net.Sys_NetAdrToString(adr))
             )
@@ -1431,7 +1431,7 @@ object AsyncClient {
             ReadLocalizedServerString(msg, str, Lib.MAX_STRING_CHARS)
             string = TempDump.ctos(str)
             Common.common.Printf("%s\n", string)
-            guiNetMenu.SetStateString("status", string)
+            guiNetMenu!!.SetStateString("status", string)
             if (opcode == SERVER_PRINT.SERVER_PRINT_GAMEDENY.ordinal) {
                 if (game_opcode == allowReply_t.ALLOW_BADPASS.ordinal) {
                     retpass = Session.session.MessageBox(
@@ -1442,7 +1442,7 @@ object AsyncClient {
                         "passprompt_ok"
                     )
                     ClearPendingPackets()
-                    guiNetMenu.SetStateString("status", Common.common.GetLanguageDict().GetString("#str_04322"))
+                    guiNetMenu!!.SetStateString("status", Common.common.GetLanguageDict().GetString("#str_04322"))
                     if (retpass != null) {
                         // #790
                         CVarSystem.cvarSystem.SetCVarString("password", "")

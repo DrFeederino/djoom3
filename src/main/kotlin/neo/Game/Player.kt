@@ -4899,6 +4899,8 @@ object Player {
                             StartSoundShader(shader, gameSoundChannel_t.SND_CHANNEL_PDA.ordinal, 0, false)
                         }
                     }
+                    // This is a vanilla bug where pdavideo event never truly returned anything
+                    return true
                 }
             }
             if (token.Icmp("playpdaaudio") == 0) {

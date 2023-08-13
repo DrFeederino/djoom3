@@ -108,7 +108,7 @@ class ServerScan {
         //
         private var lan_pingtime // holds the time of LAN scan
                 = 0
-        private var listGUI: idListGUI = UserInterface.uiManager.AllocListGUI()
+        private var listGUI: idListGUI? = null
 
         ///
         private var m_pGUI: idUserInterface? = null
@@ -175,10 +175,10 @@ class ServerScan {
             val index = Append(server)
             // for now, don't maintain sorting when adding new info response servers
             m_sortedServers.Append(Num() - 1)
-            if (listGUI.IsConfigured() && !IsFiltered(server)) {
+            if (listGUI!!.IsConfigured() && !IsFiltered(server)) {
                 GUIAdd(Num() - 1, server)
             }
-            if (listGUI.GetSelection(null, 0) == Num() - 1) {
+            if (listGUI!!.GetSelection(null, 0) == Num() - 1) {
                 GUIUpdateSelected()
             }
             return index
@@ -241,7 +241,7 @@ class ServerScan {
             m_sortedServers.Clear()
             cur_info = 0
             net_info.Clear()
-            listGUI.Clear()
+            listGUI!!.Clear()
             GUIUpdateSelected()
             Common.common.DPrintf("NetScan with challenge %d\n", challenge)
             while (cur_info < Lib.Min(net_servers.Num(), MAX_PINGREQUESTS)) {
@@ -352,10 +352,10 @@ class ServerScan {
         //
         fun GUIConfig(pGUI: idUserInterface, name: String) {
             m_pGUI = pGUI
-//            if (listGUI == null) {
-//                listGUI = UserInterface.uiManager.AllocListGUI()
-//            }
-            listGUI.Config(pGUI, name)
+            if (listGUI == null) {
+                listGUI = UserInterface.uiManager.AllocListGUI()
+            }
+            listGUI!!.Config(pGUI, name)
         }
 
         // update the GUI fields with information about the currently selected server
@@ -365,7 +365,7 @@ class ServerScan {
             if (null == m_pGUI) {
                 return
             }
-            val i = listGUI.GetSelection(null, 0)
+            val i = listGUI!!.GetSelection(null, 0)
             if (i == -1 || i >= Num()) {
                 m_pGUI!!.SetStateString("server_name", "")
                 m_pGUI!!.SetStateString("player1", "")
@@ -410,9 +410,9 @@ class ServerScan {
         fun Shutdown() {
             m_pGUI = null
             if (listGUI != null) {
-                //listGUI.Config(null, null)
-                UserInterface.uiManager.FreeListGUI(listGUI)
-                //listGUI = null
+                listGUI!!.Config(null, null)
+                UserInterface.uiManager.FreeListGUI(listGUI!!)
+                listGUI = null
             }
             screenshot.Clear()
         }
@@ -421,8 +421,8 @@ class ServerScan {
         fun ApplyFilter() {
             var i: Int
             var serv: networkServer_t?
-            listGUI.SetStateChanges(false)
-            listGUI.Clear()
+            listGUI!!.SetStateChanges(false)
+            listGUI!!.Clear()
             i = if (m_sortAscending) 0 else m_sortedServers.Num() - 1
             while (if (m_sortAscending) i < m_sortedServers.Num() else i >= 0) {
                 serv = get(m_sortedServers[i])
@@ -432,7 +432,7 @@ class ServerScan {
                 i += if (m_sortAscending) 1 else -1
             }
             GUIUpdateSelected()
-            listGUI.SetStateChanges(true)
+            listGUI!!.SetStateChanges(true)
         }
 
         // there is an internal toggle, call twice with same sort to switch
@@ -462,7 +462,7 @@ class ServerScan {
             net_servers.Clear()
             cur_info = 0
             if (listGUI != null) {
-                listGUI.Clear()
+                listGUI!!.Clear()
             }
             incoming_useTimeout = false
             m_sortedServers.Clear()
@@ -506,7 +506,7 @@ class ServerScan {
             name += "\t"
             name += server.serverInfo.GetString("si_mapName")
             name += "\t"
-            listGUI.Add(id, idStr(name))
+            listGUI!!.Add(id, idStr(name))
         }
 
         @Throws(idException::class)

@@ -18,11 +18,13 @@ import neo.Tools.Compilers.RenderBump.renderbump.RenderBump_f
 import neo.Tools.Compilers.RoqVQ.Roq.RoQFileEncode_f
 import neo.Tools.edit_public
 import neo.framework.Async.AsyncNetwork.idAsyncNetwork
+import neo.framework.CVarSystem.cvarSystem
 import neo.framework.CVarSystem.idCVar
 import neo.framework.CmdSystem.cmdExecution_t
 import neo.framework.CmdSystem.cmdFunction_t
 import neo.framework.CmdSystem.idCmdSystem.*
 import neo.framework.Compressor.idCompressor
+import neo.framework.Console.Companion.console
 import neo.framework.FileSystem_h.idFileList
 import neo.framework.File_h.idFile
 import neo.framework.File_h.idFile_Memory
@@ -49,6 +51,7 @@ import neo.idlib.math.Simd.idSIMD.Test_f
 import neo.idlib.math.Vector.idVec4
 import neo.sys.*
 import neo.sys.win_main.Sys_GenerateEvents
+import neo.sys.win_main.Sys_Shutdown
 import neo.ui.UserInterface
 import java.io.IOException
 import java.nio.ByteBuffer
@@ -267,7 +270,7 @@ class Common {
                 // set interface pointers used by idLib
                 idLib.sys = sys_public.sys
                 idLib.common = common
-                idLib.cvarSystem = CVarSystem.cvarSystem
+                idLib.cvarSystem = cvarSystem
                 idLib.fileSystem = FileSystem_h.fileSystem
 
                 // initialize idLib
@@ -296,7 +299,7 @@ class Common {
                 CmdSystem.cmdSystem.Init()
 
                 // init CVar system
-                CVarSystem.cvarSystem.Init()
+                cvarSystem.Init()
 
                 // start file logging right away, before early console or whatever
                 StartupVariable("win_outputDebugString", false)
@@ -311,7 +314,7 @@ class Common {
                 idKeyInput.Init()
 
                 // init the console so we can take printsF
-                Console.console.Init()
+                console.Init()
 
                 // get architecture info
                 win_main.Sys_Init()
@@ -357,7 +360,7 @@ class Common {
                 }
 
                 // remove any prints from the notify lines
-                Console.console.ClearNotifyLines()
+                console.ClearNotifyLines()
                 ClearCommandLine()
                 com_fullyInitialized = true
             } catch (e: idException) {
@@ -374,16 +377,16 @@ class Common {
             ShutdownGame(false)
 
 //            // shut down non-portable system services
-//            Sys_Shutdown();
+            Sys_Shutdown();
 //
             // shut down the console
-            Console.console.Shutdown()
+            console.Shutdown()
 
             // shut down the key system
             idKeyInput.Shutdown()
 
             // shut down the cvar system
-            CVarSystem.cvarSystem.Shutdown()
+            cvarSystem.Shutdown()
 
             // shut down the console command system
             CmdSystem.cmdSystem.Shutdown()
@@ -596,7 +599,7 @@ class Common {
                 }
                 s = com_consoleLines[i].Argv(1)
                 if (null == match || 0 == idStr.Icmp(s, match)) {
-                    CVarSystem.cvarSystem.SetCVarString(s, com_consoleLines[i].Argv(2))
+                    cvarSystem.SetCVarString(s, com_consoleLines[i].Argv(2))
                     if (once) {
                         // kill the line
                         var j = i + 1
@@ -654,7 +657,7 @@ class Common {
                 assert(config_compressor != null)
                 //                ID_TIME_T = time(null);
                 curTime = Date().toString()
-                runtag = String.format("%s - %s", CVarSystem.cvarSystem.GetCVarString("si_version"), curTime)
+                runtag = String.format("%s - %s", cvarSystem.GetCVarString("si_version"), curTime)
                 config_compressor!!.Init(compressed, true, 8)
                 config_compressor!!.WriteString(runtag) //
                 config_compressor!!.FinishCompress()
@@ -662,7 +665,7 @@ class Common {
                 f.Printf("// %s\n", out.c_str())
             }
             idKeyInput.WriteBindings(f)
-            CVarSystem.cvarSystem.WriteFlaggedVariables(CVarSystem.CVAR_ARCHIVE, "seta", f)
+            cvarSystem.WriteFlaggedVariables(CVarSystem.CVAR_ARCHIVE, "seta", f)
             FileSystem_h.fileSystem.CloseFile(f)
         }
 
@@ -674,7 +677,7 @@ class Common {
                 Printf("Couldn't write %s.\n", filename)
                 return
             }
-            CVarSystem.cvarSystem.WriteFlaggedVariables(flags, setCmd, f)
+            cvarSystem.WriteFlaggedVariables(flags, setCmd, f)
             FileSystem_h.fileSystem.CloseFile(f)
         }
 
@@ -730,7 +733,7 @@ class Common {
             val timeLength: Int
 
             // if the cvar system is not initialized
-            if (!CVarSystem.cvarSystem.IsInitialized()) {
+            if (!cvarSystem.IsInitialized()) {
                 return
             }
 
@@ -766,7 +769,7 @@ class Common {
             }
 
             // echo to console buffer
-            Console.console.Print(msg[0])
+            console.Print(msg[0])
 
             // remove any color codes
             idStr.RemoveColors(msg[0])
@@ -853,7 +856,7 @@ class Common {
         override fun DPrintf(fmt: String, vararg args: Any) {
 //	va_list		argptr;
             val msg = arrayOf<String>("") //new char[MAX_PRINT_MSG_SIZE];
-            if (!CVarSystem.cvarSystem.IsInitialized() || !com_developer.GetBool()) {
+            if (!cvarSystem.IsInitialized() || !com_developer.GetBool()) {
                 return  // don't confuse non-developers with techie stuff...
             }
 
@@ -966,7 +969,7 @@ class Common {
 
             // when we are running automated scripts, make sure we
             // know if anything failed
-            if (CVarSystem.cvarSystem.GetCVarInteger("fs_copyfiles") != 0) {
+            if (cvarSystem.GetCVarInteger("fs_copyfiles") != 0) {
                 code = TempDump.etoi(errorParm_t.ERP_FATAL)
             }
 
@@ -1029,7 +1032,7 @@ class Common {
             } else {
                 Printf("********************\nERROR: %s\n********************\n", errorMessage[0])
             }
-            if (CVarSystem.cvarSystem.GetCVarBool("r_fullscreen")) {
+            if (cvarSystem.GetCVarBool("r_fullscreen")) {
                 CmdSystem.cmdSystem.BufferCommandText(cmdExecution_t.CMD_EXEC_NOW, "vid_restart partial windowed\n")
             }
             Shutdown()
@@ -1071,7 +1074,7 @@ class Common {
             idStr.vsnPrintf(errorMessage, MAX_PRINT_MSG_SIZE, fmt, *args)
             //	va_end( argptr );
 //            errorMessage[errorMessage.length - 1] = '\0';
-            if (CVarSystem.cvarSystem.GetCVarBool("r_fullscreen")) {
+            if (cvarSystem.GetCVarBool("r_fullscreen")) {
                 CmdSystem.cmdSystem.BufferCommandText(cmdExecution_t.CMD_EXEC_NOW, "vid_restart partial windowed\n")
             }
             win_main.Sys_SetFatalError(errorMessage[0])
@@ -1166,7 +1169,7 @@ class Common {
             PrintLoadingMessage(common.GetLanguageDict().GetString("#str_04344"))
 
             // load the font, etc
-            Console.console.LoadGraphics()
+            console.LoadGraphics()
             // init journalling, etc
             EventLoop.eventLoop.Init()
             PrintLoadingMessage(common.GetLanguageDict().GetString("#str_04345"))
@@ -1196,7 +1199,7 @@ class Common {
             StartupVariable(null, false)
 
             // if any archived cvars are modified after this, we will trigger a writing of the config file
-            CVarSystem.cvarSystem.ClearModifiedFlags(CVarSystem.CVAR_ARCHIVE)
+            cvarSystem.ClearModifiedFlags(CVarSystem.CVAR_ARCHIVE)
 
             // cvars are initialized, but not the rendering system. Allow preference startup dialog
             win_main.Sys_DoPreferences()
@@ -1213,11 +1216,11 @@ class Common {
             idAsyncNetwork.Init()
             if (BuildDefines.ID_DEDICATED) {
                 idAsyncNetwork.server.InitPort()
-                CVarSystem.cvarSystem.SetCVarBool("s_noSound", true)
+                cvarSystem.SetCVarBool("s_noSound", true)
             } else {
                 if (idAsyncNetwork.serverDedicated.GetInteger() == 1) {
                     idAsyncNetwork.server.InitPort()
-                    CVarSystem.cvarSystem.SetCVarBool("s_noSound", true)
+                    cvarSystem.SetCVarBool("s_noSound", true)
                 } else {
                     // init OpenGL, which will open a window and connect sound and input hardware
                     PrintLoadingMessage(common.GetLanguageDict().GetString("#str_04348"))
@@ -1246,7 +1249,7 @@ class Common {
             if (sysDetect) {
                 SetMachineSpec()
                 Com_ExecMachineSpec_f.getInstance().run(args)
-                CVarSystem.cvarSystem.SetCVarInteger("s_numberOfSpeakers", 6)
+                cvarSystem.SetCVarInteger("s_numberOfSpeakers", 6)
                 CmdSystem.cmdSystem.BufferCommandText(cmdExecution_t.CMD_EXEC_NOW, "s_restart\n")
                 CmdSystem.cmdSystem.ExecuteCommandBuffer()
             }
@@ -1318,7 +1321,7 @@ class Common {
                 "sys_lang",
                 false
             ) // let it be set on the command line - this is needed because this init happens very early
-            var langName = idStr(CVarSystem.cvarSystem.GetCVarString("sys_lang"))
+            var langName = idStr(cvarSystem.GetCVarString("sys_lang"))
 
             //Loop through the list and filter
             var currentLangList = langList
@@ -1326,7 +1329,7 @@ class Common {
             if (currentLangList.size() == 0) {
                 // reset cvar to default and try to load again
                 CmdSystem.cmdSystem.BufferCommandText(cmdExecution_t.CMD_EXEC_NOW, "reset sys_lang")
-                langName = idStr(CVarSystem.cvarSystem.GetCVarString("sys_lang"))
+                langName = idStr(cvarSystem.GetCVarString("sys_lang"))
                 currentLangList = langList
                 FilterLangList(currentLangList, langName)
             }
@@ -1923,7 +1926,7 @@ class Common {
                         "dmap"
                     ) || 0 == idStr.Icmp(com_consoleLines[i].Argv(0), "materialEditor")
                 ) {
-                    CVarSystem.cvarSystem.SetCVarBool("r_fullscreen", false)
+                    cvarSystem.SetCVarBool("r_fullscreen", false)
                     return
                 }
                 i++
@@ -1951,10 +1954,10 @@ class Common {
             if (!com_fullyInitialized) {
                 return
             }
-            if (0 == CVarSystem.cvarSystem.GetModifiedFlags() and CVarSystem.CVAR_ARCHIVE) {
+            if (0 == cvarSystem.GetModifiedFlags() and CVarSystem.CVAR_ARCHIVE) {
                 return
             }
-            CVarSystem.cvarSystem.ClearModifiedFlags(CVarSystem.CVAR_ARCHIVE)
+            cvarSystem.ClearModifiedFlags(CVarSystem.CVAR_ARCHIVE)
 
             // disable printing out the "Writing to:" message
             val developer = com_developer.GetBool()
@@ -2339,7 +2342,7 @@ class Common {
     internal class Com_EditLights_f : cmdFunction_t() {
         override fun run(args: CmdArgs.idCmdArgs?) {
             edit_public.LightEditorInit(idDict())
-            CVarSystem.cvarSystem.SetCVarInteger("g_editEntityMode", 1)
+            cvarSystem.SetCVarInteger("g_editEntityMode", 1)
         }
 
         companion object {
@@ -2358,7 +2361,7 @@ class Common {
     internal class Com_EditSounds_f : cmdFunction_t() {
         override fun run(args: CmdArgs.idCmdArgs?) {
             edit_public.SoundEditorInit(idDict())
-            CVarSystem.cvarSystem.SetCVarInteger("g_editEntityMode", 2)
+            cvarSystem.SetCVarInteger("g_editEntityMode", 2)
         }
 
         companion object {
@@ -2631,123 +2634,123 @@ class Common {
     internal class Com_ExecMachineSpec_f : cmdFunction_t() {
         override fun run(args: CmdArgs.idCmdArgs?) {
             if (com_machineSpec.GetInteger() == 3) {
-                CVarSystem.cvarSystem.SetCVarInteger("image_anisotropy", 1, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_lodbias", 0, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_forceDownSize", 0, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_roundDown", 1, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_preload", 1, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_useAllFormats", 1, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_downSizeSpecular", 0, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_downSizeBump", 0, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_downSizeSpecularLimit", 64, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_downSizeBumpLimit", 256, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_usePrecompressedTextures", 0, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_downsize", 0, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarString("image_filter", "GL_LINEAR_MIPMAP_LINEAR", CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_anisotropy", 8, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_useCompression", 0, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_ignoreHighQuality", 0, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("s_maxSoundsPerShader", 0, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("r_mode", 5, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_useNormalCompression", 0, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("r_multiSamples", 0, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_anisotropy", 1, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_lodbias", 0, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_forceDownSize", 0, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_roundDown", 1, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_preload", 1, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_useAllFormats", 1, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_downSizeSpecular", 0, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_downSizeBump", 0, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_downSizeSpecularLimit", 64, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_downSizeBumpLimit", 256, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_usePrecompressedTextures", 0, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_downsize", 0, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarString("image_filter", "GL_LINEAR_MIPMAP_LINEAR", CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_anisotropy", 8, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_useCompression", 0, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_ignoreHighQuality", 0, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("s_maxSoundsPerShader", 0, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("r_mode", 5, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_useNormalCompression", 0, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("r_multiSamples", 0, CVarSystem.CVAR_ARCHIVE)
             } else if (com_machineSpec.GetInteger() == 2) {
-                CVarSystem.cvarSystem.SetCVarString("image_filter", "GL_LINEAR_MIPMAP_LINEAR", CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_anisotropy", 1, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_lodbias", 0, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_forceDownSize", 0, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_roundDown", 1, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_preload", 1, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_useAllFormats", 1, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_downSizeSpecular", 0, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_downSizeBump", 0, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_downSizeSpecularLimit", 64, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_downSizeBumpLimit", 256, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_usePrecompressedTextures", 1, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_downsize", 0, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_anisotropy", 8, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_useCompression", 1, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_ignoreHighQuality", 0, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("s_maxSoundsPerShader", 0, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_useNormalCompression", 0, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("r_mode", 4, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("r_multiSamples", 0, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarString("image_filter", "GL_LINEAR_MIPMAP_LINEAR", CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_anisotropy", 1, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_lodbias", 0, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_forceDownSize", 0, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_roundDown", 1, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_preload", 1, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_useAllFormats", 1, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_downSizeSpecular", 0, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_downSizeBump", 0, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_downSizeSpecularLimit", 64, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_downSizeBumpLimit", 256, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_usePrecompressedTextures", 1, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_downsize", 0, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_anisotropy", 8, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_useCompression", 1, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_ignoreHighQuality", 0, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("s_maxSoundsPerShader", 0, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_useNormalCompression", 0, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("r_mode", 4, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("r_multiSamples", 0, CVarSystem.CVAR_ARCHIVE)
             } else if (com_machineSpec.GetInteger() == 1) {
-                CVarSystem.cvarSystem.SetCVarString("image_filter", "GL_LINEAR_MIPMAP_LINEAR", CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_anisotropy", 1, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_lodbias", 0, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_downSize", 0, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_forceDownSize", 0, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_roundDown", 1, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_preload", 1, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_useCompression", 1, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_useAllFormats", 1, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_usePrecompressedTextures", 1, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_downSizeSpecular", 0, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_downSizeBump", 0, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_downSizeSpecularLimit", 64, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_downSizeBumpLimit", 256, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_useNormalCompression", 2, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("r_mode", 3, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("r_multiSamples", 0, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarString("image_filter", "GL_LINEAR_MIPMAP_LINEAR", CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_anisotropy", 1, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_lodbias", 0, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_downSize", 0, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_forceDownSize", 0, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_roundDown", 1, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_preload", 1, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_useCompression", 1, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_useAllFormats", 1, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_usePrecompressedTextures", 1, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_downSizeSpecular", 0, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_downSizeBump", 0, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_downSizeSpecularLimit", 64, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_downSizeBumpLimit", 256, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_useNormalCompression", 2, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("r_mode", 3, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("r_multiSamples", 0, CVarSystem.CVAR_ARCHIVE)
             } else {
-                CVarSystem.cvarSystem.SetCVarString("image_filter", "GL_LINEAR_MIPMAP_LINEAR", CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_anisotropy", 1, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_lodbias", 0, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_roundDown", 1, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_preload", 1, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_useAllFormats", 1, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_usePrecompressedTextures", 1, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_downSize", 1, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_anisotropy", 0, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_useCompression", 1, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_ignoreHighQuality", 1, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("s_maxSoundsPerShader", 1, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_downSizeSpecular", 1, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_downSizeBump", 1, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_downSizeSpecularLimit", 64, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_downSizeBumpLimit", 256, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("r_mode", 3, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_useNormalCompression", 2, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("r_multiSamples", 0, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarString("image_filter", "GL_LINEAR_MIPMAP_LINEAR", CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_anisotropy", 1, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_lodbias", 0, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_roundDown", 1, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_preload", 1, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_useAllFormats", 1, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_usePrecompressedTextures", 1, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_downSize", 1, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_anisotropy", 0, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_useCompression", 1, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_ignoreHighQuality", 1, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("s_maxSoundsPerShader", 1, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_downSizeSpecular", 1, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_downSizeBump", 1, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_downSizeSpecularLimit", 64, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_downSizeBumpLimit", 256, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("r_mode", 3, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_useNormalCompression", 2, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("r_multiSamples", 0, CVarSystem.CVAR_ARCHIVE)
             }
             if (win_shared.Sys_GetVideoRam() < 128) {
-                CVarSystem.cvarSystem.SetCVarBool("image_ignoreHighQuality", true, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_downSize", 1, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_downSizeLimit", 256, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_downSizeSpecular", 1, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_downSizeSpecularLimit", 64, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_downSizeBump", 1, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_downSizeBumpLimit", 256, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarBool("image_ignoreHighQuality", true, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_downSize", 1, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_downSizeLimit", 256, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_downSizeSpecular", 1, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_downSizeSpecularLimit", 64, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_downSizeBump", 1, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_downSizeBumpLimit", 256, CVarSystem.CVAR_ARCHIVE)
             }
             if (win_shared.Sys_GetSystemRam() < 512) {
-                CVarSystem.cvarSystem.SetCVarBool("image_ignoreHighQuality", true, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("s_maxSoundsPerShader", 1, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_downSize", 1, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_downSizeLimit", 256, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_downSizeSpecular", 1, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarInteger("image_downSizeSpecularLimit", 64, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarBool("com_purgeAll", true, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarBool("r_forceLoadImages", true, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarBool("image_ignoreHighQuality", true, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("s_maxSoundsPerShader", 1, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_downSize", 1, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_downSizeLimit", 256, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_downSizeSpecular", 1, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_downSizeSpecularLimit", 64, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarBool("com_purgeAll", true, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarBool("r_forceLoadImages", true, CVarSystem.CVAR_ARCHIVE)
             } else {
-                CVarSystem.cvarSystem.SetCVarBool("com_purgeAll", false, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarBool("r_forceLoadImages", false, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarBool("com_purgeAll", false, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarBool("r_forceLoadImages", false, CVarSystem.CVAR_ARCHIVE)
             }
             val oldCard = booleanArrayOf(false)
             val nv10or20 = booleanArrayOf(false)
             if (oldCard[0]) {
-                CVarSystem.cvarSystem.SetCVarBool("g_decals", false, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarBool("g_projectileLights", false, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarBool("g_doubleVision", false, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarBool("g_muzzleFlash", false, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarBool("g_decals", false, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarBool("g_projectileLights", false, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarBool("g_doubleVision", false, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarBool("g_muzzleFlash", false, CVarSystem.CVAR_ARCHIVE)
             } else {
-                CVarSystem.cvarSystem.SetCVarBool("g_decals", true, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarBool("g_projectileLights", true, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarBool("g_doubleVision", true, CVarSystem.CVAR_ARCHIVE)
-                CVarSystem.cvarSystem.SetCVarBool("g_muzzleFlash", true, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarBool("g_decals", true, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarBool("g_projectileLights", true, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarBool("g_doubleVision", true, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarBool("g_muzzleFlash", true, CVarSystem.CVAR_ARCHIVE)
             }
             if (nv10or20[0]) {
-                CVarSystem.cvarSystem.SetCVarInteger("image_useNormalCompression", 1, CVarSystem.CVAR_ARCHIVE)
+                cvarSystem.SetCVarInteger("image_useNormalCompression", 1, CVarSystem.CVAR_ARCHIVE)
             }
 
 //if( MACOS_X){
@@ -2903,7 +2906,7 @@ class Common {
             }
             var files: idFileList
             if (idStr.Icmp(args.Argv(1), "all") == 0) {
-                val game = CVarSystem.cvarSystem.GetCVarString("fs_game")
+                val game = cvarSystem.GetCVarString("fs_game")
                 files = if (!game.isEmpty()) {
                     FileSystem_h.fileSystem.ListFilesTree("guis", "*.gui", true, game)
                 } else {

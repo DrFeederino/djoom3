@@ -1710,7 +1710,11 @@ object Anim_Blend {
             if (channel < 0 || channel >= ANIM_NumAnimChannels) {
                 idGameLocal.Error("idDeclModelDef::GetChannelJoints : channel out of range")
             }
-            return channelJoints[channel].getList(Array<Int>::class.java)!!
+            val arrayInt = Array(channelJoints[channel].Num()) { 0 }
+            for (i in 0..channelJoints[channel].Num() - 1) {
+                arrayInt[i] = channelJoints[channel][i]
+            }
+            return arrayInt
         }
 
         fun GetVisualOffset(): idVec3 {

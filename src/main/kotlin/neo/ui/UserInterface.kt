@@ -176,7 +176,7 @@ object UserInterface {
             abstract fun AllocListGUI(): idListGUI
 
             // De-allocates a list gui
-            abstract fun FreeListGUI(listgui: idListGUI)
+            abstract fun FreeListGUI(listgui: idListGUI?)
         }
     }
 }

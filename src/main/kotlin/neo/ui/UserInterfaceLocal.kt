@@ -705,9 +705,10 @@ class UserInterfaceLocal {
             return idListGUILocal()
         }
 
-        override fun FreeListGUI(listgui: idListGUI) {
+        // This is unnecessary.
+        override fun FreeListGUI(listgui: idListGUI?) {
 //            delete listgui;
-            listgui.Clear()
+//            listgui = null
         }
     }
 }
