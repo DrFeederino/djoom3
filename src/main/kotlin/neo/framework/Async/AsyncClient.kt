@@ -378,7 +378,7 @@ object AsyncClient {
             i = 0
             while (i < AsyncNetwork.MAX_SERVER_PORTS) {
                 broadcastAddress.port = (Licensee.PORT_SERVER + i)
-                clientPort.SendPacket(broadcastAddress, msg.GetData()!!!!, msg.GetSize())
+                clientPort.SendPacket(broadcastAddress, msg.GetData()!!, msg.GetSize())
                 i++
             }
         }
@@ -682,9 +682,12 @@ object AsyncClient {
             msg.WriteString(CVarSystem.cvarSystem.GetCVarString("com_guid"))
             clientPort.SendPacket(idAsyncNetwork.GetMasterAddress(), msg.GetData()!!, msg.GetSize())
             Common.common.DPrintf("sent a version check request\n")
+            val sizePackage = CInt()
+            sizePackage._val = MsgChannel.MAX_MESSAGE_SIZE
             updateState = clientUpdateState_t.UPDATE_SENT
             updateSentTime = clientTime
             showUpdateMessage = fromMenu
+
         }
 
         // pass NULL for the keys you don't care to auth for
@@ -792,11 +795,11 @@ object AsyncClient {
         private fun SendUserInfoToServer() {
             val msg = idBitMsg()
             val msgBuf = ByteBuffer.allocate(MsgChannel.MAX_MESSAGE_SIZE)
-            val info: idDict?
+            val info: idDict = idDict()
             if (clientState.ordinal < clientState_t.CS_CONNECTED.ordinal) {
                 return
             }
-            info = CVarSystem.cvarSystem.MoveCVarsToDict(CVarSystem.CVAR_USERINFO)
+            info.set(CVarSystem.cvarSystem.MoveCVarsToDict(CVarSystem.CVAR_USERINFO))
 
             // send reliable client info to server
             msg.Init(msgBuf, msgBuf.capacity())
@@ -888,7 +891,7 @@ object AsyncClient {
             msg.WriteLong(gameFrame)
             msg.WriteByte(numUsercmds.toByte())
             last = null
-            i = gameFrame - numUsercmds + 1
+            i = (gameFrame - numUsercmds + 1)
             while (i <= gameFrame) {
                 index = i and AsyncNetwork.MAX_USERCMD_BACKUP - 1
                 idAsyncNetwork.WriteUserCmdDelta(msg, userCmds[index][clientNum], last)

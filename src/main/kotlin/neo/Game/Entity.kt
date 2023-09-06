@@ -541,7 +541,7 @@ object Entity {
             }
 
             private fun Event_GetKey(e: idEntity, key: idEventArg<String>) {
-                val value = arrayOf("")
+                val value = arrayOfNulls<String>(1)
                 e.spawnArgs.GetString(key.value, "", value)
                 idThread.ReturnString(value[0])
             }
@@ -568,12 +568,12 @@ object Entity {
 
             private fun Event_GetEntityKey(e: idEntity, key: idEventArg<String>) {
                 val ent: idEntity?
-                val entName = arrayOf("")
+                val entName = arrayOfNulls<String>(1)
                 if (!e.spawnArgs.GetString(key.value, "", entName)) {
                     idThread.ReturnEntity(null)
                     return
                 }
-                ent = Game_local.gameLocal.FindEntity(entName[0])
+                ent = Game_local.gameLocal.FindEntity(entName[0]!!)
                 if (null == ent) {
                     Game_local.gameLocal.Warning(
                         "Couldn't find entity '%s' specified in '%s' key in entity '%s'",
@@ -998,15 +998,15 @@ object Entity {
         override fun Spawn() {
             super.Spawn()
             var i: Int
-            val temp = arrayOf("")
+            val temp = arrayOfNulls<String>(1)
             val origin = idVec3()
             val axis: idMat3
             val networkSync: idKeyValue?
-            val classname = arrayOf("")
-            val scriptObjectName = arrayOf("")
+            val classname = arrayOfNulls<String>(1)
+            val scriptObjectName = arrayOfNulls<String>(1)
             Game_local.gameLocal.RegisterEntity(this)
             spawnArgs.GetString("classname", "", classname)
-            val def = Game_local.gameLocal.FindEntityDef(classname[0], false)
+            val def = Game_local.gameLocal.FindEntityDef(classname[0]!!, false)
             if (def != null) {
                 entityDefNumber = def.Index()
             }
@@ -1029,7 +1029,7 @@ object Entity {
             refSound.listenerId = entityNumber + 1
             cameraTarget = null
             temp[0] = spawnArgs.GetString("cameraTarget")
-            if (temp.isNotEmpty() && !temp[0].isEmpty()) {
+            if (temp.isNotEmpty() && !temp[0].isNullOrEmpty()) {
                 // update the camera taget
                 PostEventMS(EV_UpdateCameraTarget, 0)
             }
@@ -1083,8 +1083,8 @@ object Entity {
             SetOrigin(origin)
             SetAxis(axis)
             temp[0] = spawnArgs.GetString("model")
-            if (temp.isNotEmpty() && !temp[0].isEmpty()) {
-                SetModel(temp[0])
+            if (temp.isNotEmpty() && !temp[0].isNullOrEmpty()) {
+                SetModel(temp[0]!!)
             }
             if (spawnArgs.GetString("bind", "", temp)) {
                 PostEventMS(EV_SpawnBind, 0)
@@ -1239,7 +1239,7 @@ object Entity {
 
             // restore must retrieve modelDefHandle from the renderer
             if (modelDefHandle != -1) {
-                modelDefHandle = Game_local.gameRenderWorld.AddEntityDef(renderEntity!!)
+                modelDefHandle = Game_local.gameRenderWorld!!.AddEntityDef(renderEntity!!)
             }
         }
 
@@ -1490,10 +1490,10 @@ object Entity {
 
             // add to refresh list
             if (modelDefHandle == -1) {
-                modelDefHandle = Game_local.gameRenderWorld.AddEntityDef(renderEntity!!)
+                modelDefHandle = Game_local.gameRenderWorld!!.AddEntityDef(renderEntity!!)
                 val a = 0
             } else {
-                Game_local.gameRenderWorld.UpdateEntityDef(modelDefHandle, renderEntity!!)
+                Game_local.gameRenderWorld!!.UpdateEntityDef(modelDefHandle, renderEntity!!)
             }
         }
 
@@ -1576,7 +1576,7 @@ object Entity {
 
         open fun FreeModelDef() {
             if (modelDefHandle != -1) {
-                Game_local.gameRenderWorld.FreeEntityDef(modelDefHandle)
+                Game_local.gameRenderWorld!!.FreeEntityDef(modelDefHandle)
                 modelDefHandle = -1
             }
         }
@@ -1672,7 +1672,7 @@ object Entity {
             val mtr: Material.idMaterial? = DeclManager.declManager.FindMaterial(material)
 
             // project an overlay onto the model
-            Game_local.gameRenderWorld.ProjectOverlay(modelDefHandle, localPlane as Array<idPlane?>, mtr)
+            Game_local.gameRenderWorld!!.ProjectOverlay(modelDefHandle, localPlane as Array<idPlane?>, mtr)
 
             // make sure non-animating models update their overlay
             UpdateVisuals()
@@ -1766,11 +1766,10 @@ object Entity {
             channel: Int,
             soundShaderFlags: Int,
             broadcast: Boolean,
-            length: CInt
+            length: CInt? = null
         ): Boolean {
             val shader: idSoundShader?
             val sound = idStr()
-            length._val = 0
             assert(idStr.Icmpn(soundName, "snd_", 4) == 0)
             if (!spawnArgs.GetString(soundName, "", sound)) {
                 return false
@@ -1791,7 +1790,7 @@ object Entity {
             channel: Enum<*>,
             soundShaderFlags: Int,
             broadcast: Boolean,
-            length: CInt = CInt()
+            length: CInt? = null
         ): Boolean {
             return StartSound(soundName, channel.ordinal, soundShaderFlags, broadcast, length)
         }
@@ -1801,11 +1800,10 @@ object Entity {
             channel: Int,
             soundShaderFlags: Int,
             broadcast: Boolean,
-            length: CInt = CInt()
+            length: CInt? = null
         ): Boolean {
             val diversity: Float
             val len: Int
-            length._val = 0
             if (null == shader) {
                 return false
             }
@@ -1831,11 +1829,12 @@ object Entity {
 
             // if we don't have a soundEmitter allocated yet, get one now
             if (TempDump.NOT(refSound.referenceSound)) {
-                refSound.referenceSound = Game_local.gameSoundWorld.AllocSoundEmitter()
+                refSound.referenceSound = Game_local.gameSoundWorld!!.AllocSoundEmitter()
             }
             UpdateSound()
             len = refSound.referenceSound!!.StartSound(shader, channel, diversity, soundShaderFlags)
-            length._val = len
+
+            length?._val = len
 
             // set reference to the sound for shader synced effects
             renderEntity!!.referenceSound = refSound.referenceSound
@@ -2446,7 +2445,9 @@ object Entity {
             part = this
             while (part != null) {
                 if (part.physics != null) {
-                    if (name.toString() == "marscity_civilian1_1_head") DBG_RunPhysics++
+                    if (name.toString() == "marscity_civilian1_1_head") {
+                        DBG_RunPhysics++
+                    }
                     // run physics
                     moved = part.physics.Evaluate(endTime - startTime, endTime)
 
@@ -3696,13 +3697,13 @@ object Entity {
         }
 
         private fun InitDefaultPhysics(origin: idVec3, axis: idMat3) {
-            val temp = arrayOf("")
+            val temp = arrayOfNulls<String>(1)
             var clipModel: idClipModel? = null
 
             // check if a clipmodel key/value pair is set
             if (spawnArgs.GetString("clipmodel", "", temp)) {
-                if (idClipModel.CheckModel(temp[0]) != 0) {
-                    clipModel = idClipModel(temp[0])
+                if (idClipModel.CheckModel(temp[0]!!) != 0) {
+                    clipModel = idClipModel(temp[0]!!)
                 }
             }
             if (!spawnArgs.GetBool("noclipmodel", "0")) {
@@ -3751,9 +3752,9 @@ object Entity {
                 // check if the visual model can be used as collision model
                 if (TempDump.NOT(clipModel)) {
                     temp[0] = spawnArgs.GetString("model")
-                    if (temp.isNotEmpty() && !temp[0].isEmpty()) {
-                        if (idClipModel.CheckModel(temp[0]) != 0) {
-                            clipModel = idClipModel(temp[0])
+                    if (temp.isNotEmpty() && !temp[0].isNullOrEmpty()) {
+                        if (idClipModel.CheckModel(temp[0]!!) != 0) {
+                            clipModel = idClipModel(temp[0]!!)
                         }
                     }
                 }
@@ -3945,9 +3946,9 @@ object Entity {
 
         private fun Event_SpawnBind() {
             val parent: idEntity?
-            val bind = arrayOf("")
-            val joint = arrayOf("")
-            val bindanim = arrayOf("")
+            val bind = arrayOfNulls<String>(1)
+            val joint = arrayOfNulls<String>(1)
+            val bindanim = arrayOfNulls<String>(1)
             val   /*jointHandle_t*/bindJoint: Int
             val bindOrientated: Boolean
             val id = CInt(0)
@@ -3955,11 +3956,11 @@ object Entity {
             val animNum: Int
             val parentAnimator: idAnimator?
             if (spawnArgs.GetString("bind", "", bind)) {
-                if (idStr.Icmp(bind[0], "worldspawn") == 0) {
+                if (idStr.Icmp(bind[0]!!, "worldspawn") == 0) {
                     //FIXME: Completely unneccessary since the worldspawn is called "world"
                     parent = Game_local.gameLocal.world
                 } else {
-                    parent = Game_local.gameLocal.FindEntity(bind[0])
+                    parent = Game_local.gameLocal.FindEntity(bind[0]!!)
                 }
                 bindOrientated = spawnArgs.GetBool("bindOrientated", "1")
                 if (parent != null) {
@@ -3979,7 +3980,7 @@ object Entity {
                             )
                             return
                         }
-                        bindJoint = parentAnimator.GetJointHandle(joint[0])
+                        bindJoint = parentAnimator.GetJointHandle(joint[0]!!)
                         if (bindJoint == Model.INVALID_JOINT) {
                             idGameLocal.Error("Joint '%s' not found for bind on '%s'", joint[0], name)
                         }
@@ -3991,7 +3992,7 @@ object Entity {
                                 bindanim
                             )) && bindanim.isNotEmpty()
                         ) {
-                            animNum = parentAnimator.GetAnim(bindanim[0])
+                            animNum = parentAnimator.GetAnim(bindanim[0]!!)
                             if (0 == animNum) {
                                 idGameLocal.Error("Anim '%s' not found for bind on '%s'", bindanim[0], name)
                             }
@@ -4015,10 +4016,10 @@ object Entity {
                                 parentAnimator.ModelDef()!!.GetVisualOffset(),
                                 parentAnimator.RemoveOrigin()
                             )
-                            BindToJoint(parent, joint[0], bindOrientated)
+                            BindToJoint(parent, joint[0]!!, bindOrientated)
                             parentAnimator.ForceUpdate()
                         } else {
-                            BindToJoint(parent, joint[0], bindOrientated)
+                            BindToJoint(parent, joint[0]!!, bindOrientated)
                         }
                     } // bind to a body of the physics object of the parent
                     else if (spawnArgs.GetInt("bindToBody", "0", id)) {
@@ -4288,7 +4289,7 @@ object Entity {
         //        public static idEventFunc<idEntity>[] eventCallbacks;
         //
         init {
-            targets = idList(idEntityPtr<idEntity>().javaClass)
+            targets = idList(idEntityPtr<idEntity>(null).javaClass)
             entityNumber = Game_local.ENTITYNUM_NONE
             entityDefNumber = -1
             spawnNode = idLinkList()
@@ -4534,7 +4535,7 @@ object Entity {
                 renderEntity!!.numJoints = animator.GetJoints(renderEntity!!)
                 animator.GetBounds(Game_local.gameLocal.time, renderEntity!!.bounds)
                 if (modelDefHandle != -1) {
-                    Game_local.gameRenderWorld.UpdateEntityDef(modelDefHandle, renderEntity!!)
+                    Game_local.gameRenderWorld!!.UpdateEntityDef(modelDefHandle, renderEntity!!)
                 }
             }
         }

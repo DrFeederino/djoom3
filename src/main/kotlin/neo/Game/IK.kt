@@ -665,7 +665,7 @@ object IK /*ea*/ {
                     for (j in 0 until footModel!!.GetTraceModel()!!.numVerts) {
                         w.plusAssign(footModel!!.GetTraceModel()!!.verts[j])
                     }
-                    Game_local.gameRenderWorld.DebugWinding(Lib.colorRed, w, results.endpos, results.endAxis)
+                    Game_local.gameRenderWorld!!.DebugWinding(Lib.colorRed, w, results.endpos, results.endAxis)
                 }
                 i++
             }
@@ -785,14 +785,14 @@ object IK /*ea*/ {
                     kneeOrigin
                 )
                 if (SysCvar.ik_debug.GetBool()) {
-                    Game_local.gameRenderWorld.DebugLine(Lib.colorCyan, hipOrigin, kneeOrigin)
-                    Game_local.gameRenderWorld.DebugLine(Lib.colorRed, kneeOrigin, jointOrigins[i])
-                    Game_local.gameRenderWorld.DebugLine(
+                    Game_local.gameRenderWorld!!.DebugLine(Lib.colorCyan, hipOrigin, kneeOrigin)
+                    Game_local.gameRenderWorld!!.DebugLine(Lib.colorRed, kneeOrigin, jointOrigins[i])
+                    Game_local.gameRenderWorld!!.DebugLine(
                         Lib.colorYellow,
                         kneeOrigin,
                         kneeOrigin.plus(hipDir)
                     )
-                    Game_local.gameRenderWorld.DebugLine(
+                    Game_local.gameRenderWorld!!.DebugLine(
                         Lib.colorGreen,
                         kneeOrigin,
                         kneeOrigin.plus(kneeDir)
@@ -1218,14 +1218,14 @@ object IK /*ea*/ {
                     elbowOrigin
                 )
                 if (SysCvar.ik_debug.GetBool()) {
-                    Game_local.gameRenderWorld.DebugLine(Lib.colorCyan, shoulderOrigin, elbowOrigin)
-                    Game_local.gameRenderWorld.DebugLine(Lib.colorRed, elbowOrigin, handOrigin)
-                    Game_local.gameRenderWorld.DebugLine(
+                    Game_local.gameRenderWorld!!.DebugLine(Lib.colorCyan, shoulderOrigin, elbowOrigin)
+                    Game_local.gameRenderWorld!!.DebugLine(Lib.colorRed, elbowOrigin, handOrigin)
+                    Game_local.gameRenderWorld!!.DebugLine(
                         Lib.colorYellow,
                         elbowOrigin,
                         elbowOrigin.plus(elbowDir)
                     )
-                    Game_local.gameRenderWorld.DebugLine(
+                    Game_local.gameRenderWorld!!.DebugLine(
                         Lib.colorGreen,
                         elbowOrigin,
                         elbowOrigin.plus(shoulderDir)

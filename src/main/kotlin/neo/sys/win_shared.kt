@@ -6,9 +6,10 @@ import neo.idlib.Text.Str.idStr
 import neo.sys.sys_public.sysMemoryStats_s
 import java.io.File
 import java.lang.management.ManagementFactory
+import java.time.Instant
 
 object win_shared {
-    public val sys_timeBase = System.currentTimeMillis()
+    public val sys_timeBase = Instant.now().toEpochMilli()
 
     /*
      ================
@@ -17,7 +18,7 @@ object win_shared {
      */
 
     fun Sys_Milliseconds(): Int {
-        return (System.currentTimeMillis() - sys_timeBase).toInt()
+        return (Instant.now().toEpochMilli() - sys_timeBase).toInt()
     }
 
     /*

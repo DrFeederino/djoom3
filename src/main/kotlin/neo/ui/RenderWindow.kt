@@ -2,6 +2,7 @@ package neo.ui
 
 import neo.Game.Animation.Anim.idMD5Anim
 import neo.Game.GameEdit.gameEdit
+import neo.Renderer.GuiModel
 import neo.Renderer.RenderSystem
 import neo.Renderer.RenderWorld
 import neo.Renderer.RenderWorld.idRenderWorld
@@ -76,6 +77,9 @@ class RenderWindow {
         }
 
         override fun Draw(time: Int, x: Float, y: Float) {
+            if (GuiModel.idGuiModel.bla) {
+                bla1++
+            }
             PreRender()
             Render(time)
 

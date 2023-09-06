@@ -104,7 +104,7 @@ class Anim_Testmodel {
         private val copyJoints: List.idList<copyJoints_t> = List.idList()
         private val customAnim: idAnim? = null
         private var frame = 0
-        private val head: idEntityPtr<idEntity?>? = null
+        private val head: idEntityPtr<idEntity?> = idEntityPtr(null)
         private var headAnim = 0
         private var headAnimator: idAnimator? = null
         private var mode = 0

@@ -1092,7 +1092,7 @@ class AAS_local {
                 if (null == reach[0]) {
                     break
                 }
-                Game_local.gameRenderWorld.DebugArrow(Lib.colorGreen, org, reach[0]!!.start, 2)
+                Game_local.gameRenderWorld!!.DebugArrow(Lib.colorGreen, org, reach[0]!!.start, 2)
                 DrawReachability(reach[0]!!)
                 if (reach[0]!!.toAreaNum.toInt() == goalAreaNum) {
                     break
@@ -1102,7 +1102,7 @@ class AAS_local {
                 i++
             }
             if (WalkPathToGoal(path, areaNum, origin, goalAreaNum, goalOrigin, AASFile.TFL_WALK or AASFile.TFL_AIR)) {
-                Game_local.gameRenderWorld.DebugArrow(Lib.colorBlue, origin, path.moveGoal, 2)
+                Game_local.gameRenderWorld!!.DebugArrow(Lib.colorBlue, origin, path.moveGoal, 2)
             }
         }
 
@@ -1138,7 +1138,7 @@ class AAS_local {
                 if (null == reach[0]) {
                     break
                 }
-                Game_local.gameRenderWorld.DebugArrow(Lib.colorPurple, org, reach[0]!!.start, 2)
+                Game_local.gameRenderWorld!!.DebugArrow(Lib.colorPurple, org, reach[0]!!.start, 2)
                 DrawReachability(reach[0]!!)
                 if (reach[0]!!.toAreaNum.toInt() == goalAreaNum) {
                     break
@@ -1156,7 +1156,7 @@ class AAS_local {
                     AASFile.TFL_WALK or AASFile.TFL_FLY or AASFile.TFL_AIR
                 )
             ) {
-                Game_local.gameRenderWorld.DebugArrow(Lib.colorBlue, origin, path.moveGoal, 2)
+                Game_local.gameRenderWorld!!.DebugArrow(Lib.colorBlue, origin, path.moveGoal, 2)
             }
         }
 
@@ -2304,8 +2304,8 @@ class AAS_local {
             i = 20
             while (i <= 360) {
                 p.set(center + axis[0] * sin(DEG2RAD(i.toFloat())) * radius + axis[1] * cos(DEG2RAD(i.toFloat())) * radius)
-                Game_local.gameRenderWorld.DebugLine(color, lastp, p, 0)
-                Game_local.gameRenderWorld.DebugLine(color, p, top, 0)
+                Game_local.gameRenderWorld!!.DebugLine(color, lastp, p, 0)
+                Game_local.gameRenderWorld!!.DebugLine(color, p, top, 0)
                 lastp.set(p)
                 i += 20
             }
@@ -2363,7 +2363,7 @@ class AAS_local {
             } else {
                 end.set(mid + file!!.GetPlane(file!!.GetFace(faceNum).planeNum).Normal() * 5.0f)
             }
-            Game_local.gameRenderWorld.DebugArrow(Lib.colorGreen, mid, end, 1)
+            Game_local.gameRenderWorld!!.DebugArrow(Lib.colorGreen, mid, end, 1)
         }
 
         private fun DrawEdge(edgeNum: Int, arrow: Boolean) {
@@ -2375,16 +2375,16 @@ class AAS_local {
             edge = file!!.GetEdge(edgeNum)
             color = Lib.colorRed
             if (arrow) {
-                Game_local.gameRenderWorld.DebugArrow(
+                Game_local.gameRenderWorld!!.DebugArrow(
                     color, file!!.GetVertex(edge.vertexNum[0]), file!!.GetVertex(edge.vertexNum[1]), 1
                 )
             } else {
-                Game_local.gameRenderWorld.DebugLine(
+                Game_local.gameRenderWorld!!.DebugLine(
                     color, file!!.GetVertex(edge.vertexNum[0]), file!!.GetVertex(edge.vertexNum[1])
                 )
             }
             if (Game_local.gameLocal.GetLocalPlayer() != null) {
-                Game_local.gameRenderWorld.DrawText(
+                Game_local.gameRenderWorld!!.DrawText(
                     Str.va("%d", edgeNum),
                     (file!!.GetVertex(edge.vertexNum[0]) + file!!.GetVertex(edge.vertexNum[1])) * 0.5f + idVec3(
                         0f,
@@ -2399,9 +2399,9 @@ class AAS_local {
         }
 
         private fun DrawReachability(reach: idReachability) {
-            Game_local.gameRenderWorld.DebugArrow(Lib.colorCyan, reach.start, reach.end, 2)
+            Game_local.gameRenderWorld!!.DebugArrow(Lib.colorCyan, reach.start, reach.end, 2)
             if (Game_local.gameLocal.GetLocalPlayer() != null) {
-                Game_local.gameRenderWorld.DrawText(
+                Game_local.gameRenderWorld!!.DrawText(
                     Str.va("%d", reach.edgeNum),
                     (reach.start + reach.end) * 0.5f,
                     0.1f,
@@ -2464,7 +2464,7 @@ class AAS_local {
             if (org != origin) {
                 val bnds = file!!.GetSettings().boundingBoxes[0]
                 bnds[1].z = bnds[0].z
-                Game_local.gameRenderWorld.DebugBounds(Lib.colorYellow, bnds, org)
+                Game_local.gameRenderWorld!!.DebugBounds(Lib.colorYellow, bnds, org)
             }
             DrawArea(areaNum)
         }
@@ -2488,8 +2488,8 @@ class AAS_local {
             i = 0
             while (i < numEdges) {
                 GetEdge(edges[i], start, end)
-                Game_local.gameRenderWorld.DebugLine(Lib.colorRed, start, end)
-                Game_local.gameRenderWorld.DrawText(
+                Game_local.gameRenderWorld!!.DebugLine(Lib.colorRed, start, end)
+                Game_local.gameRenderWorld!!.DrawText(
                     Str.va("%d", edges[i]), (start + end) * 0.5f, 0.1f, Lib.colorWhite, player.viewAxis
                 )
                 i++
@@ -2603,7 +2603,7 @@ class AAS_local {
                 target, DefaultSearchBounds(), AASFile.AREA_REACHABLE_WALK or AASFile.AREA_REACHABLE_FLY
             )
             PushPointIntoAreaNum(areaNum, target)
-            Game_local.gameRenderWorld.DebugArrow(Lib.colorGreen, origin, target, 1)
+            Game_local.gameRenderWorld!!.DebugArrow(Lib.colorGreen, origin, target, 1)
         }
 
         companion object {

@@ -53,7 +53,6 @@ import neo.ui.UserInterface
 import neo.ui.UserInterface.idUserInterface
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
-import java.util.*
 
 /**
  *
@@ -536,7 +535,7 @@ object SaveGame {
         }
 
         fun WriteSoundCommands() {
-            Game_local.gameSoundWorld.WriteToSaveGame(file)
+            Game_local.gameSoundWorld!!.WriteToSaveGame(file)
         }
 
         fun WriteBuildNumber(value: Int) {
@@ -578,9 +577,26 @@ object SaveGame {
         private val file: idFile
     ) {
         private var buildNumber = 0
+        private var internalSavegameVersion = 0 // DG added this
+
 
         //
         private val objects: idList<idClass> = idList()
+
+        // DG: added these methods, internalSavegameVersion makes us independent of the global BUILD_NUMBER
+        fun ReadInternalSavegameVersion() {
+            val readVersion = CInt()
+            ReadInt(readVersion)
+            internalSavegameVersion = readVersion._val
+        }
+
+        // if it's 0, this is from a GetBuildNumber() < 1305 savegame
+        // otherwise, compare it to idGameLocal::INTERNAL_SAVEGAME_VERSION
+        fun GetInternalSavegameVersion(): Int {
+            return internalSavegameVersion;
+        }
+        // DG end
+
         fun CreateObjects() {
             var i: Int
             val num = CInt()
@@ -591,7 +607,6 @@ object SaveGame {
             // create all the objects
             objects.SetNum(num._val + 1)
             //            memset(objects.Ptr(), 0, sizeof(objects[ 0]) * objects.Num());
-            Arrays.fill(objects.getList(Array<idClass>::class.java), 0, objects.Num(), 0)
             i = 1
             while (i < objects.Num()) {
                 ReadString(className)
@@ -645,18 +660,9 @@ object SaveGame {
             objects.DeleteContents(true)
         }
 
-        fun Error(fmt: String?, vararg objects: Any?) { // id_attribute((format(printf,2,3)));
-            throw TODO_Exception()
-            //            va_list argptr;
-//            char[] text = new char[1024];
-//
-//            va_start(argptr, fmt);
-//            vsprintf(text, fmt, argptr);
-//            va_end(argptr);
-//
-//            objects.DeleteContents(true);
-//
-//            gameLocal.Error("%s", text);
+        fun Error(fmt: String, vararg objects: Any?) { // id_attribute((format(printf,2,3)));
+            this.objects.DeleteContents(true)
+            idGameLocal.Error(fmt, objects)
         }
 
         fun Read(buffer: ByteBuffer, len: Int) {
@@ -744,7 +750,7 @@ object SaveGame {
                 Error("idRestoreGame::ReadString: invalid length")
             }
             string.Fill(' ', len._val)
-            file.Read(StandardCharsets.UTF_8.encode(string.toString()), len._val)
+            file.Read(string, len._val)
         }
 
         fun ReadVec2(vec: idVec2) {
@@ -937,7 +943,7 @@ object SaveGame {
             ReadMaterial(renderEntity.referenceShader!!)
             ReadSkin(renderEntity.customSkin!!)
             ReadInt(index)
-            renderEntity.referenceSound = Game_local.gameSoundWorld.EmitterForIndex(index._val)
+            renderEntity.referenceSound = Game_local.gameSoundWorld!!.EmitterForIndex(index._val)
             i = 0
             while (i < Material.MAX_ENTITY_SHADER_PARMS) {
                 renderEntity.shaderParms[i] = ReadFloat()
@@ -991,13 +997,13 @@ object SaveGame {
                 i++
             }
             ReadInt(index)
-            renderLight.referenceSound = Game_local.gameSoundWorld.EmitterForIndex(index._val)
+            renderLight.referenceSound = Game_local.gameSoundWorld!!.EmitterForIndex(index._val)
         }
 
         fun ReadRefSound(refSound: refSound_t) {
             val index = CInt()
             ReadInt(index)
-            refSound.referenceSound = Game_local.gameSoundWorld.EmitterForIndex(index._val)
+            refSound.referenceSound = Game_local.gameSoundWorld!!.EmitterForIndex(index._val)
             ReadVec3(refSound.origin)
             refSound.listenerId = ReadInt()
             ReadSoundShader(refSound.shader!!)
@@ -1121,8 +1127,8 @@ object SaveGame {
         }
 
         fun ReadSoundCommands() {
-            Game_local.gameSoundWorld.StopAllSounds()
-            Game_local.gameSoundWorld.ReadFromSaveGame(file)
+            Game_local.gameSoundWorld!!.StopAllSounds()
+            Game_local.gameSoundWorld!!.ReadFromSaveGame(file)
         }
 
         fun ReadBuildNumber() {

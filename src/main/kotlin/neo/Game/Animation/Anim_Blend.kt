@@ -2299,7 +2299,7 @@ object Anim_Blend {
             i = 0
             while (i < num) {
                 anim.GetOrigin(animpos, i, time, cycle)
-                pos.plusAssign(animpos.times(animWeights[i]))
+                pos.plusAssign(animpos * animWeights[i])
                 i++
             }
             if (0f == blendWeight._val) {
@@ -2307,8 +2307,8 @@ object Anim_Blend {
                 blendWeight._val = (weight)
             } else {
                 lerp = weight / (blendWeight._val + weight)
-                blendPos.plusAssign(pos.minus(blendPos).times(lerp))
-                blendWeight._val = (blendWeight._val + weight)
+                blendPos.plusAssign((pos - blendPos) * lerp)
+                blendWeight._val += weight
             }
         }
 
@@ -2341,19 +2341,19 @@ object Anim_Blend {
             i = 0
             while (i < num) {
                 anim.GetOrigin(animpos, i, time1, cycle)
-                pos1.plusAssign(animpos.times(animWeights[i]))
+                pos1.plusAssign(animpos * animWeights[i])
                 anim.GetOrigin(animpos, i, time2, cycle)
-                pos2.plusAssign(animpos.times(animWeights[i]))
+                pos2.plusAssign(animpos * animWeights[i])
                 i++
             }
-            delta.set(pos2.minus(pos1))
+            delta.set(pos2 - pos1)
             if (0f == blendWeight._val) {
                 blendDelta.set(delta)
                 blendWeight._val = (weight)
             } else {
                 lerp = weight / (blendWeight._val + weight)
-                blendDelta.plusAssign(delta.minus(blendDelta).times(lerp))
-                blendWeight._val = (blendWeight._val + weight)
+                blendDelta.plusAssign((delta - blendDelta) * lerp)
+                blendWeight._val += weight
             }
         }
 
@@ -3149,7 +3149,7 @@ object Anim_Blend {
             if (modelname.isEmpty()) {
                 return null
             }
-            modelDef = DeclManager.declManager.FindType(declType_t.DECL_MODELDEF, modelname, false) as idDeclModelDef
+            modelDef = DeclManager.declManager.FindType(declType_t.DECL_MODELDEF, modelname, false) as idDeclModelDef?
             if (null == modelDef) {
                 return null
             }

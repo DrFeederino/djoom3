@@ -371,13 +371,13 @@ object Physics_AF {
             val master: idAFBody?
             master = if (body2 != null) body2 else physics!!.GetMasterBody()
             if (master != null) {
-                Game_local.gameRenderWorld.DebugLine(
+                Game_local.gameRenderWorld!!.DebugLine(
                     Lib.colorRed,
                     body1!!.GetWorldOrigin(),
                     master.GetWorldOrigin()
                 )
             } else {
-                Game_local.gameRenderWorld.DebugLine(
+                Game_local.gameRenderWorld!!.DebugLine(
                     Lib.colorRed,
                     body1!!.GetWorldOrigin(),
                     Vector.getVec3Origin()
@@ -626,17 +626,17 @@ object Physics_AF {
 
         override fun DebugDraw() {
             val a1 = idVec3(body1!!.GetWorldOrigin().plus(anchor1.times(body1!!.GetWorldAxis())))
-            Game_local.gameRenderWorld.DebugLine(
+            Game_local.gameRenderWorld!!.DebugLine(
                 Lib.colorBlue,
                 a1.minus(idVec3(5, 0, 0)),
                 a1.plus(idVec3(5, 0, 0))
             )
-            Game_local.gameRenderWorld.DebugLine(
+            Game_local.gameRenderWorld!!.DebugLine(
                 Lib.colorBlue,
                 a1.minus(idVec3(0, 5, 0)),
                 a1.plus(idVec3(0, 5, 0))
             )
-            Game_local.gameRenderWorld.DebugLine(
+            Game_local.gameRenderWorld!!.DebugLine(
                 Lib.colorBlue,
                 a1.minus(idVec3(0, 0, 5)),
                 a1.plus(idVec3(0, 0, 5))
@@ -1044,10 +1044,10 @@ object Physics_AF {
                 m2 = idMat3(s2.unaryMinus(), v, v.Cross(s2.unaryMinus()))
                 d2.timesAssign(m2.Transpose().times(m1))
             }
-            Game_local.gameRenderWorld.DebugArrow(Lib.colorCyan, a1, a1.plus(s1.times(5.0f)), 1)
-            Game_local.gameRenderWorld.DebugArrow(Lib.colorBlue, a2, a2.plus(s2.times(5.0f)), 1)
-            Game_local.gameRenderWorld.DebugLine(Lib.colorGreen, a1, a1.plus(d1.times(5.0f)))
-            Game_local.gameRenderWorld.DebugLine(Lib.colorGreen, a2, a2.plus(d2.times(5.0f)))
+            Game_local.gameRenderWorld!!.DebugArrow(Lib.colorCyan, a1, a1.plus(s1.times(5.0f)), 1)
+            Game_local.gameRenderWorld!!.DebugArrow(Lib.colorBlue, a2, a2.plus(s2.times(5.0f)), 1)
+            Game_local.gameRenderWorld!!.DebugLine(Lib.colorGreen, a1, a1.plus(d1.times(5.0f)))
+            Game_local.gameRenderWorld!!.DebugLine(Lib.colorGreen, a2, a2.plus(d2.times(5.0f)))
             if (SysCvar.af_showLimits.GetBool()) {
                 if (coneLimit != null) {
                     coneLimit!!.DebugDraw()
@@ -1533,18 +1533,18 @@ object Physics_AF {
             val a1 = idVec3(body1!!.GetWorldOrigin().plus(anchor1.times(body1!!.GetWorldAxis())))
             val x1 = idVec3(axis1.times(body1!!.GetWorldAxis()))
             x1.OrthogonalBasis(vecX, vecY)
-            Game_local.gameRenderWorld.DebugArrow(
+            Game_local.gameRenderWorld!!.DebugArrow(
                 Lib.colorBlue,
                 a1.minus(x1.times(4.0f)),
                 a1.plus(x1.times(4.0f)),
                 1
             )
-            Game_local.gameRenderWorld.DebugLine(
+            Game_local.gameRenderWorld!!.DebugLine(
                 Lib.colorBlue,
                 a1.minus(vecX.times(2.0f)),
                 a1.plus(vecX.times(2.0f))
             )
-            Game_local.gameRenderWorld.DebugLine(
+            Game_local.gameRenderWorld!!.DebugLine(
                 Lib.colorBlue,
                 a1.minus(vecY.times(2.0f)),
                 a1.plus(vecY.times(2.0f))
@@ -1981,7 +1981,7 @@ object Physics_AF {
             } else {
                 ofs.set(offset.minus(body1!!.GetWorldOrigin()))
             }
-            Game_local.gameRenderWorld.DebugLine(
+            Game_local.gameRenderWorld!!.DebugLine(
                 Lib.colorGreen,
                 ofs,
                 ofs.plus(axis.times(body1!!.GetWorldAxis()))
@@ -2191,9 +2191,9 @@ object Physics_AF {
             normal.timesAssign(4.0f)
             right.timesAssign(4.0f)
             up.timesAssign(4.0f)
-            Game_local.gameRenderWorld.DebugLine(Lib.colorCyan, a1.minus(right), a1.plus(right))
-            Game_local.gameRenderWorld.DebugLine(Lib.colorCyan, a1.minus(up), a1.plus(up))
-            Game_local.gameRenderWorld.DebugArrow(Lib.colorCyan, a1, a1.plus(normal), 1)
+            Game_local.gameRenderWorld!!.DebugLine(Lib.colorCyan, a1.minus(right), a1.plus(right))
+            Game_local.gameRenderWorld!!.DebugLine(Lib.colorCyan, a1.minus(up), a1.plus(up))
+            Game_local.gameRenderWorld!!.DebugArrow(Lib.colorCyan, a1, a1.plus(normal), 1)
         }
 
         override fun Translate(translation: idVec3) {
@@ -2344,26 +2344,26 @@ object Physics_AF {
             length = dir.Normalize()
 
             // draw spring
-            Game_local.gameRenderWorld.DebugLine(Lib.colorGreen, a1, a2)
+            Game_local.gameRenderWorld!!.DebugLine(Lib.colorGreen, a1, a2)
 
             // draw rest length
             p.set(dir.times(restLength * 0.5f))
-            Game_local.gameRenderWorld.DebugCircle(Lib.colorWhite, mid.plus(p), dir, 1.0f, 10)
-            Game_local.gameRenderWorld.DebugCircle(Lib.colorWhite, mid.minus(p), dir, 1.0f, 10)
+            Game_local.gameRenderWorld!!.DebugCircle(Lib.colorWhite, mid.plus(p), dir, 1.0f, 10)
+            Game_local.gameRenderWorld!!.DebugCircle(Lib.colorWhite, mid.minus(p), dir, 1.0f, 10)
             if (restLength > length) {
-                Game_local.gameRenderWorld.DebugLine(Lib.colorWhite, a2, mid.plus(p))
-                Game_local.gameRenderWorld.DebugLine(Lib.colorWhite, a1, mid.minus(p))
+                Game_local.gameRenderWorld!!.DebugLine(Lib.colorWhite, a2, mid.plus(p))
+                Game_local.gameRenderWorld!!.DebugLine(Lib.colorWhite, a1, mid.minus(p))
             }
             if (minLength > 0.0f) {
                 // draw min length
-                Game_local.gameRenderWorld.DebugCircle(
+                Game_local.gameRenderWorld!!.DebugCircle(
                     Lib.colorBlue,
                     mid.plus(dir.times(minLength * 0.5f)),
                     dir,
                     2.0f,
                     10
                 )
-                Game_local.gameRenderWorld.DebugCircle(
+                Game_local.gameRenderWorld!!.DebugCircle(
                     Lib.colorBlue,
                     mid.minus(dir.times(minLength * 0.5f)),
                     dir,
@@ -2373,14 +2373,14 @@ object Physics_AF {
             }
             if (maxLength > 0.0f) {
                 // draw max length
-                Game_local.gameRenderWorld.DebugCircle(
+                Game_local.gameRenderWorld!!.DebugCircle(
                     Lib.colorRed,
                     mid.plus(dir.times(maxLength * 0.5f)),
                     dir,
                     2.0f,
                     10
                 )
-                Game_local.gameRenderWorld.DebugCircle(
+                Game_local.gameRenderWorld!!.DebugCircle(
                     Lib.colorRed,
                     mid.minus(dir.times(maxLength * 0.5f)),
                     dir,
@@ -2616,17 +2616,17 @@ object Physics_AF {
             val x = idVec3()
             val y = idVec3()
             contact.normal.NormalVectors(x, y)
-            Game_local.gameRenderWorld.DebugLine(
+            Game_local.gameRenderWorld!!.DebugLine(
                 Lib.colorWhite,
                 contact.point,
                 contact.point.plus(contact.normal.times(6.0f))
             )
-            Game_local.gameRenderWorld.DebugLine(
+            Game_local.gameRenderWorld!!.DebugLine(
                 Lib.colorWhite,
                 contact.point.minus(x.times(2.0f)),
                 contact.point.plus(x.times(2.0f))
             )
-            Game_local.gameRenderWorld.DebugLine(
+            Game_local.gameRenderWorld!!.DebugLine(
                 Lib.colorWhite,
                 contact.point.minus(y.times(2.0f)),
                 contact.point.plus(y.times(2.0f))
@@ -2998,7 +2998,7 @@ object Physics_AF {
             }
 
             // draw body1 axis
-            Game_local.gameRenderWorld.DebugLine(
+            Game_local.gameRenderWorld!!.DebugLine(
                 Lib.colorGreen,
                 anchor,
                 anchor.plus(body1Axis.times(body1!!.GetWorldAxis()).times(size))
@@ -3017,8 +3017,8 @@ object Physics_AF {
                     x.times(cos(Math_h.DEG2RAD(a + 45.0f).toDouble()).toFloat())
                         .plus(y.times(sin(Math_h.DEG2RAD(a + 45.0f).toDouble()).toFloat()).plus(z))
                 )
-                Game_local.gameRenderWorld.DebugLine(Lib.colorMagenta, anchor, start)
-                Game_local.gameRenderWorld.DebugLine(Lib.colorMagenta, start, end)
+                Game_local.gameRenderWorld!!.DebugLine(Lib.colorMagenta, anchor, start)
+                Game_local.gameRenderWorld!!.DebugLine(Lib.colorMagenta, start, end)
                 start.set(end)
                 a += 45.0f
             }
@@ -3246,7 +3246,7 @@ object Physics_AF {
             }
 
             // draw body1 axis
-            Game_local.gameRenderWorld.DebugLine(
+            Game_local.gameRenderWorld!!.DebugLine(
                 Lib.colorGreen,
                 anchor,
                 anchor.plus(body1Axis.times(body1!!.GetWorldAxis()).times(size))
@@ -3270,8 +3270,8 @@ object Physics_AF {
             p[3].set(anchor.plus(m[0].Transpose().times(m[1].times(dir))))
             i = 0
             while (i < 4) {
-                Game_local.gameRenderWorld.DebugLine(Lib.colorMagenta, anchor, p[i])
-                Game_local.gameRenderWorld.DebugLine(Lib.colorMagenta, p[i], p[i + 1 and 3])
+                Game_local.gameRenderWorld!!.DebugLine(Lib.colorMagenta, anchor, p[i])
+                Game_local.gameRenderWorld!!.DebugLine(Lib.colorMagenta, p[i], p[i + 1 and 3])
                 i++
             }
         }
@@ -3439,17 +3439,17 @@ object Physics_AF {
             axis.timesAssign(rotation.ToMat3())
             if (trace.fraction < 1.0f) {
                 origin.set(trace.c.point)
-                Game_local.gameRenderWorld.DebugLine(
+                Game_local.gameRenderWorld!!.DebugLine(
                     Lib.colorWhite,
                     origin,
                     origin.plus(axis[2].times(6.0f))
                 )
-                Game_local.gameRenderWorld.DebugLine(
+                Game_local.gameRenderWorld!!.DebugLine(
                     Lib.colorWhite,
                     origin.minus(axis[0].times(4.0f)),
                     origin.plus(axis[0].times(4.0f))
                 )
-                Game_local.gameRenderWorld.DebugLine(
+                Game_local.gameRenderWorld!!.DebugLine(
                     Lib.colorWhite,
                     origin.minus(axis[1].times(2.0f)),
                     origin.plus(axis[1].times(2.0f))
@@ -4532,7 +4532,7 @@ object Physics_AF {
             i = 1
             while (i < sortedBodies.Num()) {
                 body = sortedBodies[i]
-                Game_local.gameRenderWorld.DebugArrow(
+                Game_local.gameRenderWorld!!.DebugArrow(
                     color,
                     body.parent!!.current.worldOrigin,
                     body.current.worldOrigin,
@@ -7410,7 +7410,7 @@ object Physics_AF {
                 if (constraint != null) {
                     constraint.GetCenter(center)
                     axis = Game_local.gameLocal.GetLocalPlayer()!!.viewAngles.ToMat3()
-                    Game_local.gameRenderWorld.DebugCone(
+                    Game_local.gameRenderWorld!!.DebugCone(
                         Lib.colorYellow,
                         center,
                         axis[2].minus(axis[1]).times(4.0f),
@@ -7477,7 +7477,7 @@ object Physics_AF {
                 i = 0
                 while (i < bodies.Num()) {
                     body = bodies[i]
-                    Game_local.gameRenderWorld.DrawText(
+                    Game_local.gameRenderWorld!!.DrawText(
                         body.GetName().toString(),
                         body.GetWorldOrigin(),
                         0.08f,
@@ -7492,7 +7492,7 @@ object Physics_AF {
                 i = 0
                 while (i < bodies.Num()) {
                     body = bodies[i]
-                    Game_local.gameRenderWorld.DrawText(
+                    Game_local.gameRenderWorld!!.DrawText(
                         Str.va("\n%1.2f", 1.0f / body.GetInverseMass()),
                         body.GetWorldOrigin(),
                         0.08f,
@@ -7505,7 +7505,7 @@ object Physics_AF {
             }
             if (SysCvar.af_showTotalMass.GetBool()) {
                 axis = Game_local.gameLocal.GetLocalPlayer()!!.viewAngles.ToMat3()
-                Game_local.gameRenderWorld.DrawText(
+                Game_local.gameRenderWorld!!.DrawText(
                     Str.va("\n%1.2f", totalMass),
                     bodies[0].GetWorldOrigin().plus(axis[2].times(8.0f)),
                     0.15f,
@@ -7519,7 +7519,7 @@ object Physics_AF {
                 while (i < bodies.Num()) {
                     body = bodies[i]
                     val I = body.inertiaTensor
-                    Game_local.gameRenderWorld.DrawText(
+                    Game_local.gameRenderWorld!!.DrawText(
                         Str.va(
                             "\n\n\n( %.1f %.1f %.1f )\n( %.1f %.1f %.1f )\n( %.1f %.1f %.1f )",
                             I[0].x, I[0].y, I[0].z,
@@ -7563,7 +7563,7 @@ object Physics_AF {
                 while (i < primaryConstraints.Num()) {
                     constraint = primaryConstraints[i]
                     constraint.GetCenter(center)
-                    Game_local.gameRenderWorld.DrawText(
+                    Game_local.gameRenderWorld!!.DrawText(
                         constraint.GetName().toString(),
                         center,
                         0.08f,
@@ -7578,7 +7578,7 @@ object Physics_AF {
                     while (i < auxiliaryConstraints.Num()) {
                         constraint = auxiliaryConstraints[i]
                         constraint.GetCenter(center)
-                        Game_local.gameRenderWorld.DrawText(
+                        Game_local.gameRenderWorld!!.DrawText(
                             constraint.GetName().toString(),
                             center,
                             0.08f,
@@ -7614,7 +7614,7 @@ object Physics_AF {
             while (i < numSilEdges) {
                 v1.set(trm.verts[trm.edges[abs(silEdges[i])].v[Math_h.INTSIGNBITSET(silEdges[i])]])
                 v2.set(trm.verts[trm.edges[abs(silEdges[i])].v[Math_h.INTSIGNBITNOTSET(silEdges[i])]])
-                Game_local.gameRenderWorld.DebugArrow(
+                Game_local.gameRenderWorld!!.DebugArrow(
                     Lib.colorRed,
                     origin.plus(v1.times(axis)),
                     origin.plus(v2.times(axis)),

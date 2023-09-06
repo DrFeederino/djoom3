@@ -464,7 +464,7 @@ object Vector {
             val SIZE = 2 * java.lang.Float.SIZE
 
             @Transient
-            val BYTES = SIZE / java.lang.Byte.SIZE
+            val BYTES = SIZE / 8
 
 
             fun generateArray(length: Int): Array<idVec2> {
@@ -1227,7 +1227,7 @@ object Vector {
 
             @Transient
 
-            val BYTES = SIZE / java.lang.Byte.SIZE
+            val BYTES = SIZE / 8
 
             /*
          =============
@@ -1571,7 +1571,7 @@ object Vector {
 
             @Transient
 
-            val BYTES = SIZE / java.lang.Byte.SIZE
+            val BYTES = SIZE / 8
             private var DBG_counter = 0
 
 
@@ -1767,7 +1767,7 @@ object Vector {
             val SIZE = 5 * java.lang.Float.SIZE
 
             @Transient
-            val BYTES = SIZE / java.lang.Byte.SIZE
+            val BYTES = SIZE / 8
             fun generateArray(length: Int): Array<idVec5> {
                 return Array(length) { idVec5() }
             }
@@ -2063,7 +2063,7 @@ object Vector {
             val SIZE = 6 * java.lang.Float.SIZE
 
             @Transient
-            val BYTES = SIZE / java.lang.Byte.SIZE
+            val BYTES = SIZE / 8
             private var DBG_counter = 0
             private var DBG_idVec6 = 0
         }

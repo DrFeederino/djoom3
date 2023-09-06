@@ -385,7 +385,7 @@ object Mover {
             SetPhysics(physicsObj)
 
             // see if we are on an areaportal
-            areaPortal = Game_local.gameRenderWorld.FindPortal(GetPhysics().GetAbsBounds())
+            areaPortal = Game_local.gameRenderWorld!!.FindPortal(GetPhysics().GetAbsBounds())
             if (spawnArgs.MatchPrefix("guiTarget") != null) {
                 if (Game_local.gameLocal.GameState() == gameState_t.GAMESTATE_STARTUP) {
                     PostEventMS(EV_FindGuiTargets, 0)
@@ -431,7 +431,7 @@ object Mover {
             savefile.WriteFloat(damage)
             savefile.WriteInt(areaPortal)
             if (areaPortal > 0) {
-                savefile.WriteInt(Game_local.gameRenderWorld.GetPortalState(areaPortal))
+                savefile.WriteInt(Game_local.gameRenderWorld!!.GetPortalState(areaPortal))
             }
             savefile.WriteInt(guiTargets.Num())
             i = 0
@@ -2067,7 +2067,7 @@ object Mover {
         override fun Spawn() {
             super.Spawn()
             var ent: idEntity?
-            val temp = arrayOf("")
+            val temp = arrayOfNulls<String>(1)
             move_thread = 0
             enabled = true
             areaPortal = 0
@@ -2080,7 +2080,7 @@ object Mover {
                 kv = spawnArgs.MatchPrefix("buddy", kv)
             }
             spawnArgs.GetString("team", "", temp)
-            team = idStr(temp[0])
+            team = idStr(temp[0]!!)
             if (0 == team.Length()) {
                 ent = this
             } else {
@@ -2090,7 +2090,7 @@ object Mover {
                     if (ent is idMover_Binary && TempDump.NOT(
                             idStr.Icmp(
                                 ent.team.toString(),
-                                temp[0]
+                                temp[0]!!
                             ).toDouble()
                         )
                     ) {
@@ -2190,7 +2190,7 @@ object Mover {
             savefile.WriteStaticObject(physicsObj)
             savefile.WriteInt(areaPortal)
             if (areaPortal != 0) {
-                savefile.WriteInt(Game_local.gameRenderWorld.GetPortalState(areaPortal))
+                savefile.WriteInt(Game_local.gameRenderWorld!!.GetPortalState(areaPortal))
             }
             savefile.WriteBool(blocked)
             savefile.WriteInt(guiTargets.Num())
@@ -3070,7 +3070,7 @@ object Mover {
             }
 
             // see if we are on an areaportal
-            areaPortal = Game_local.gameRenderWorld.FindPortal(GetPhysics().GetAbsBounds())
+            areaPortal = Game_local.gameRenderWorld!!.FindPortal(GetPhysics().GetAbsBounds())
             if (!start_open._val) {
                 // start closed
                 ProcessEvent(EV_Mover_ClosePortal)

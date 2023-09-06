@@ -464,9 +464,9 @@ object map {
         tr_lightrun.R_DeriveLightData(light.def)
 
         // get the name for naming the shadow surfaces
-        val name = arrayOf("")
+        val name = arrayOfNulls<String>(1)
         mapEnt.epairs.GetString("name", "", name)
-        idStr.Copynz(light.name, name[0], light.name.size)
+        idStr.Copynz(light.name, name[0]!!, light.name.size)
         if (TempDump.NOT(light.name[0])) {
             Common.common.Error(
                 "Light at (%f,%f,%f) didn't have a name",
@@ -485,12 +485,12 @@ object map {
     fun CreateMapLights(dmapFile: idMapFile) {
         var i: Int
         var mapEnt: idMapEntity?
-        val value = arrayOf("")
+        val value = arrayOfNulls<String>(1)
         i = 0
         while (i < dmapFile.GetNumEntities()) {
             mapEnt = dmapFile.GetEntity(i)
             mapEnt.epairs.GetString("classname", "", value)
-            if (0 == idStr.Icmp(value[0], "light")) {
+            if (0 == idStr.Icmp(value[0]!!, "light")) {
                 CreateMapLight(mapEnt)
             }
             i++

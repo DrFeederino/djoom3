@@ -134,7 +134,6 @@ import neo.Renderer.RenderWorld.renderView_s
 import neo.Sound.snd_shader
 import neo.Sound.snd_shader.idSoundShader
 import neo.Sound.snd_system
-import neo.Sound.snd_world
 import neo.Sound.sound.idSoundWorld
 import neo.TempDump
 import neo.TempDump.etoi
@@ -185,6 +184,7 @@ import neo.sys.sys_public
 import neo.ui.UserInterface
 import neo.ui.UserInterface.idUserInterface
 import java.nio.ByteBuffer
+
 
 /**
  *
@@ -266,6 +266,7 @@ class Game_local {
         //
         constructor() {
             spawnId = 0
+            oSet(null)
         }
 
         constructor(ent: entity?) {
@@ -822,6 +823,38 @@ class Game_local {
             val savegame = idRestoreGame(saveGameFile)
             savegame.ReadBuildNumber()
 
+            // DG: I enhanced the information in savegames a bit for dhewm3 1.5.1
+            //     for which I bumped th BUILD_NUMBER to 1305
+            if (savegame.GetBuildNumber() >= 1305) {
+                savegame.ReadInternalSavegameVersion()
+                if (savegame.GetInternalSavegameVersion() > INTERNAL_SAVEGAME_VERSION) {
+                    Warning(
+                        "Savegame from newer dhewm3 version, don't know how to load! (its version is %d, only up to %d supported)",
+                        savegame.GetInternalSavegameVersion(), INTERNAL_SAVEGAME_VERSION
+                    )
+                    return false
+                }
+                var osType: idStr = idStr()
+                var cpuArch: idStr = idStr()
+                var engineVersion: idStr = idStr()
+                val ptrSize: ShortArray = ShortArray(1)
+                val byteorder: ShortArray = ShortArray(1)
+                savegame.ReadString(osType) // operating system the savegame was crated on (written from D3_OSTYPE)
+                savegame.ReadString(cpuArch) // written from D3_ARCH (which is set in CMake), like "x86" or "x86_64"
+                savegame.ReadString(engineVersion) // written from ENGINE_VERSION
+                savegame.ReadShort(ptrSize) // sizeof(void*) of system that created the savegame, 4 on 32bit systems, 8 on 64bit systems
+                savegame.ReadShort(byteorder) // SDL_LIL_ENDIAN or SDL_BIG_ENDIAN
+                Printf(
+                    "Savegame was created by %s on %s %s. BuildNumber was %d, savegameversion %d\n",
+                    engineVersion.toString(), osType.toString(), cpuArch.toString(), savegame.GetBuildNumber(),
+                    savegame.GetInternalSavegameVersion()
+                )
+
+                // right now I have no further use for this information, but in the future
+                // it can be used for quirks for (then-) old savegames
+            }
+            // DG end
+
             // Create the list of all objects in the game
             savegame.CreateObjects()
 
@@ -947,7 +980,7 @@ class Game_local {
             spawnCount = savegame.ReadInt()
             num = savegame.ReadInt()
             if (num != 0) {
-                if (num != gameRenderWorld.NumAreas()) {
+                if (num != gameRenderWorld!!.NumAreas()) {
                     savegame.Error("idGameLocal.InitFromSaveGame: number of areas in map differs from save game.")
                 }
                 locationEntities = arrayOfNulls(num)
@@ -1115,9 +1148,9 @@ class Game_local {
             if (TempDump.NOT(locationEntities)) {
                 savegame.WriteInt(0)
             } else {
-                savegame.WriteInt(gameRenderWorld.NumAreas())
+                savegame.WriteInt(gameRenderWorld!!.NumAreas())
                 i = 0
-                while (i < gameRenderWorld.NumAreas()) {
+                while (i < gameRenderWorld!!.NumAreas()) {
                     savegame.WriteObject(locationEntities!![i]!!)
                     i++
                 }
@@ -1153,8 +1186,8 @@ class Game_local {
             gamestate = gameState_t.GAMESTATE_SHUTDOWN
             if (gameRenderWorld != null) {
                 // clear any debug lines, text, and polygons
-                gameRenderWorld.DebugClearLines(0)
-                gameRenderWorld.DebugClearPolygons(0)
+                gameRenderWorld!!.DebugClearLines(0)
+                gameRenderWorld!!.DebugClearPolygons(0)
             }
 
             // clear out camera if we're in a cinematic
@@ -1377,7 +1410,7 @@ class Game_local {
             player = GetLocalPlayer()
             if (!isMultiplayer && SysCvar.g_stopTime.GetBool()) {
                 // clear any debug lines from a previous frame
-                gameRenderWorld.DebugClearLines(time + 1)
+                gameRenderWorld!!.DebugClearLines(time + 1)
 
                 // set the user commands for this frame
                 System.arraycopy(clientCmds, 0, usercmds, 0, numClients)
@@ -1403,15 +1436,15 @@ class Game_local {
                         // update the renderview so that any gui videos play from the right frame
                         view = player.GetRenderView()
                         if (view != null) {
-                            gameRenderWorld.SetRenderView(view)
+                            gameRenderWorld!!.SetRenderView(view)
                         }
                     }
 
                     // clear any debug lines from a previous frame
-                    gameRenderWorld.DebugClearLines(time)
+                    gameRenderWorld!!.DebugClearLines(time)
 
                     // clear any debug polygons from a previous frame
-                    gameRenderWorld.DebugClearPolygons(time)
+                    gameRenderWorld!!.DebugClearPolygons(time)
 
                     // set the user commands for this frame
 //                    memcpy(usercmds, clientCmds, numClients * sizeof(usercmds[ 0]));
@@ -1781,7 +1814,7 @@ class Game_local {
             }
 
             // update portals for opened doors
-            val numPortals = gameRenderWorld.NumPortals()
+            val numPortals = gameRenderWorld!!.NumPortals()
             outMsg.Init(msgBuf, MAX_GAME_MESSAGE_SIZE)
             outMsg.BeginWriting()
             outMsg.WriteByte(GAME_RELIABLE_MESSAGE_PORTALSTATES.toByte())
@@ -1789,7 +1822,7 @@ class Game_local {
             i = 0
             while (i < numPortals) {
                 outMsg.WriteBits(
-                    gameRenderWorld.GetPortalState( /*(qhandle_t)*/i + 1),
+                    gameRenderWorld!!.GetPortalState( /*(qhandle_t)*/i + 1),
                     NUM_RENDER_PORTAL_BITS
                 )
                 i++
@@ -1851,7 +1884,7 @@ class Game_local {
 
             // get PVS for this player
             // don't use PVSAreas for networking - PVSAreas depends on animations (and md5 bounds), which are not synchronized
-            numSourceAreas = gameRenderWorld.BoundsInAreas(
+            numSourceAreas = gameRenderWorld!!.BoundsInAreas(
                 spectated.GetPlayerPhysics().GetAbsBounds(),
                 sourceAreas,
                 idEntity.MAX_PVS_AREAS
@@ -2066,8 +2099,8 @@ class Game_local {
                     ent = ent.snapshotNode.Next()
                     continue
                 }
-                gameRenderWorld.DebugBounds(Lib.colorGreen, entBounds)
-                gameRenderWorld.DrawText(
+                gameRenderWorld!!.DebugBounds(Lib.colorGreen, entBounds)
+                gameRenderWorld!!.DrawText(
                     Str.va(
                         "%d: %s (%d,%d bytes of %d,%d)\n", ent.entityNumber,
                         ent.name, ent.snapshotBits shr 3, ent.snapshotBits and 7, baseBits shr 3, baseBits and 7
@@ -2208,10 +2241,10 @@ class Game_local {
                 }
                 GAME_RELIABLE_MESSAGE_PORTALSTATES -> {
                     val numPortals = msg.ReadLong()
-                    assert(numPortals == gameRenderWorld.NumPortals())
+                    assert(numPortals == gameRenderWorld!!.NumPortals())
                     var i = 0
                     while (i < numPortals) {
-                        gameRenderWorld.SetPortalState( /*(qhandle_t)*/i + 1,
+                        gameRenderWorld!!.SetPortalState( /*(qhandle_t)*/i + 1,
                             msg.ReadBits(NUM_RENDER_PORTAL_BITS)
                         )
                         i++
@@ -2220,8 +2253,8 @@ class Game_local {
                 GAME_RELIABLE_MESSAGE_PORTAL -> {
                     val   /*qhandle_t*/portal = msg.ReadLong()
                     val blockingBits = msg.ReadBits(NUM_RENDER_PORTAL_BITS)
-                    assert(portal > 0 && portal <= gameRenderWorld.NumPortals())
-                    gameRenderWorld.SetPortalState(portal, blockingBits)
+                    assert(portal > 0 && portal <= gameRenderWorld!!.NumPortals())
+                    gameRenderWorld!!.SetPortalState(portal, blockingBits)
                 }
                 GAME_RELIABLE_MESSAGE_STARTSTATE -> {
                     mpGame.ClientReadStartState(msg)
@@ -2398,7 +2431,7 @@ class Game_local {
             val sameMap = mapFile != null && idStr.Icmp(mapFileName, mapName) == 0
 
             // clear the sound system
-            gameSoundWorld.ClearAllSoundEmitters()
+            gameSoundWorld!!.ClearAllSoundEmitters()
             InitAsyncNetwork()
             if (!sameMap || mapFile != null && mapFile!!.NeedsReload()) {
                 // load the .map file
@@ -2506,7 +2539,7 @@ class Game_local {
 
             // clear the sound system
             if (gameSoundWorld != null) {
-                gameSoundWorld.ClearAllSoundEmitters()
+                gameSoundWorld!!.ClearAllSoundEmitters()
             }
 
             // the spawnCount is reset to zero temporarily to spawn the map entities with the same spawnId
@@ -2537,14 +2570,14 @@ class Game_local {
         fun MapRestart() {
             val outMsg = idBitMsg()
             val msgBuf = ByteBuffer.allocate(MAX_GAME_MESSAGE_SIZE)
-            val newInfo: idDict?
+            val newInfo: idDict = idDict()
             var i: Int
             var keyval: idKeyValue?
             var keyval2: idKeyValue?
             if (isClient) {
                 LocalMapRestart()
             } else {
-                newInfo = CVarSystem.cvarSystem.MoveCVarsToDict(CVarSystem.CVAR_SERVERINFO)
+                newInfo.set(CVarSystem.cvarSystem.MoveCVarsToDict(CVarSystem.CVAR_SERVERINFO))
                 i = 0
                 while (i < newInfo.GetNumKeyVals()) {
                     keyval = newInfo.GetKeyVal(i)!!
@@ -2640,7 +2673,7 @@ class Game_local {
         fun NextMap(): Boolean {    // returns wether serverinfo settings have been modified
             var func: function_t?
             val thread: idThread
-            val newInfo: idDict?
+            val newInfo: idDict = idDict()
             var keyval: idKeyValue?
             var keyval2: idKeyValue?
             var i: Int
@@ -2674,7 +2707,7 @@ class Game_local {
             thread = idThread(func)
             thread.Start()
             //	delete thread;
-            newInfo = CVarSystem.cvarSystem.MoveCVarsToDict(CVarSystem.CVAR_SERVERINFO)
+            newInfo.set(CVarSystem.cvarSystem.MoveCVarsToDict(CVarSystem.CVAR_SERVERINFO))
             i = 0
             while (i < newInfo.GetNumKeyVals()) {
                 keyval = newInfo.GetKeyVal(i)!!
@@ -2894,11 +2927,11 @@ class Game_local {
             ent: Array<idEntity?>? = null /*= NULL*/,
             setDefaults: Boolean = true /*= true*/
         ): Boolean {
-            val classname = arrayOf("")
+            val classname = arrayOfNulls<String>(1)
             DBG_SpawnEntityDef++
-            val spawn = arrayOf("")
+            val spawn = arrayOfNulls<String>(1)
             var error = ""
-            val name = arrayOf("")
+            val name = arrayOfNulls<String>(1)
 
             if (ent != null) {
                 ent[0] = null;
@@ -2908,7 +2941,7 @@ class Game_local {
                 error = String.format(" on '%s'", name[0])
             }
             spawnArgs.GetString("classname", "", classname)
-            val def = FindEntityDef(classname[0], false)
+            val def = FindEntityDef(classname[0]!!, false)
             if (null == def) {
                 Warning("Unknown classname '%s'%s.", classname[0], error)
                 return false
@@ -2917,7 +2950,7 @@ class Game_local {
 
             // check if we should spawn a class object
             spawnArgs.GetString("spawnclass", "", spawn)
-            if (spawn.isNotEmpty() && spawn[0].isNotEmpty()) {
+            if (spawn.isNotEmpty() && !spawn[0].isNullOrEmpty()) {
                 val obj: idEntity? = idClass.GetEntity(spawn[0])
                 if (obj == null) {
                     Error("Could not spawn '%s'. Instance could not be created%s.", spawn[0], classname[0])
@@ -2935,7 +2968,7 @@ class Game_local {
 
             // check if we should call a script function to spawn
             spawnArgs.GetString("spawnfunc", "", spawn)
-            if (spawn.isNotEmpty() && spawn[0].isNotEmpty()) {
+            if (spawn.isNotEmpty() && spawn[0]!!.isNotEmpty()) {
                 val func = program.FindFunction(spawn[0])
                 if (null == func) {
                     Warning("Could not spawn '%s'.  Script function '%s' not found%s.", classname[0], spawn[0], error)
@@ -3658,7 +3691,7 @@ class Game_local {
                     i++
                     continue
                 }
-                if (gameRenderWorld.FastWorldTrace(result, origin, clipModel.GetOrigin())) {
+                if (gameRenderWorld!!.FastWorldTrace(result, origin, clipModel.GetOrigin())) {
                     i++
                     continue
                 }
@@ -3803,7 +3836,7 @@ class Game_local {
                     idVec2(1f, 0f)
                 )
             )
-            gameRenderWorld.ProjectDecalOntoWorld(
+            gameRenderWorld!!.ProjectDecalOntoWorld(
                 winding,
                 projectionOrigin,
                 parallel,
@@ -3964,7 +3997,7 @@ class Game_local {
             var ent: idEntity?
 
             // allocate the area table
-            val numAreas = gameRenderWorld.NumAreas()
+            val numAreas = gameRenderWorld!!.NumAreas()
             locationEntities = arrayOfNulls(numAreas)
             //	memset( locationEntities, 0, numAreas * sizeof( *locationEntities ) );
 
@@ -3976,14 +4009,14 @@ class Game_local {
                     continue
                 }
                 val point = idVec3(ent.spawnArgs.GetVector("origin"))
-                val areaNum = gameRenderWorld.PointInArea(point)
+                val areaNum = gameRenderWorld!!.PointInArea(point)
                 if (areaNum < 0) {
                     Printf("SpreadLocations: location '%s' is not in a valid area\n", ent.spawnArgs.GetString("name"))
                     ent = ent.spawnNode.Next()
                     continue
                 }
                 if (areaNum >= numAreas) {
-                    Error("idGameLocal::SpreadLocations: areaNum >= gameRenderWorld.NumAreas()")
+                    Error("idGameLocal::SpreadLocations: areaNum >= gameRenderWorld!!.NumAreas()")
                 }
                 if (locationEntities!![areaNum] != null) {
                     Warning(
@@ -4000,7 +4033,7 @@ class Game_local {
                     if (i == areaNum) {
                         continue
                     }
-                    if (gameRenderWorld.AreasAreConnected(
+                    if (gameRenderWorld!!.AreasAreConnected(
                             areaNum,
                             i,
                             portalConnection_t.PS_BLOCK_LOCATION
@@ -4026,12 +4059,12 @@ class Game_local {
                 // before SpreadLocations() has been called
                 return null
             }
-            val areaNum = gameRenderWorld.PointInArea(point)
+            val areaNum = gameRenderWorld!!.PointInArea(point)
             if (areaNum < 0) {
                 return null
             }
-            if (areaNum >= gameRenderWorld.NumAreas()) {
-                Error("idGameLocal::LocationForPoint: areaNum >= gameRenderWorld.NumAreas()")
+            if (areaNum >= gameRenderWorld!!.NumAreas()) {
+                Error("idGameLocal::LocationForPoint: areaNum >= gameRenderWorld!!.NumAreas()")
             }
             return locationEntities!![areaNum]
         }
@@ -4126,7 +4159,7 @@ class Game_local {
                 outMsg.WriteBits(blockingBits, NUM_RENDER_PORTAL_BITS)
                 NetworkSystem.networkSystem.ServerSendReliableMessage(-1, outMsg)
             }
-            gameRenderWorld.SetPortalState(portal, blockingBits)
+            gameRenderWorld!!.SetPortalState(portal, blockingBits)
         }
 
         fun SaveEntityNetworkEvent(ent: idEntity, eventId: Int, msg: idBitMsg?) {
@@ -4232,10 +4265,10 @@ class Game_local {
         }
 
         fun NeedRestart(): Boolean {
-            val newInfo: idDict?
+            val newInfo: idDict = idDict()
             var keyval: idKeyValue?
             var keyval2: idKeyValue?
-            newInfo = CVarSystem.cvarSystem.MoveCVarsToDict(CVarSystem.CVAR_SERVERINFO)
+            newInfo.set(CVarSystem.cvarSystem.MoveCVarsToDict(CVarSystem.CVAR_SERVERINFO))
             for (i in 0 until newInfo.GetNumKeyVals()) {
                 keyval = newInfo.GetKeyVal(i)!!
                 keyval2 = serverInfo.FindKey(keyval.GetKey())
@@ -4703,14 +4736,14 @@ class Game_local {
                     ent = ent.spawnNode.Next()
                     continue
                 }
-                gameRenderWorld.DebugBounds(
+                gameRenderWorld!!.DebugBounds(
                     (if (ent.IsHidden()) Lib.colorLtGrey else Lib.colorOrange).times(
                         frac
                     ), ent.GetPhysics().GetAbsBounds()
                 )
                 if (viewTextBounds.IntersectsBounds(ent.GetPhysics().GetAbsBounds())) {
                     val center = idVec3(ent.GetPhysics().GetAbsBounds().GetCenter())
-                    gameRenderWorld.DrawText(
+                    gameRenderWorld!!.DrawText(
                         ent.name.toString(),
                         center.minus(up),
                         0.1f,
@@ -4718,7 +4751,7 @@ class Game_local {
                         axis,
                         1
                     )
-                    gameRenderWorld.DrawText(
+                    gameRenderWorld!!.DrawText(
                         ent.GetEntityDefName(),
                         center,
                         0.1f,
@@ -4726,7 +4759,7 @@ class Game_local {
                         axis,
                         1
                     )
-                    gameRenderWorld.DrawText(
+                    gameRenderWorld!!.DrawText(
                         Str.va("#%d", ent.entityNumber),
                         center.plus(up),
                         0.1f,
@@ -4739,14 +4772,14 @@ class Game_local {
                 while (i < ent.targets.Num()) {
                     target = ent.targets[i].GetEntity()
                     if (target != null) {
-                        gameRenderWorld.DebugArrow(
+                        gameRenderWorld!!.DebugArrow(
                             Lib.colorYellow.times(frac),
                             ent.GetPhysics().GetAbsBounds().GetCenter(),
                             target.GetPhysics().GetOrigin(),
                             10,
                             0
                         )
-                        gameRenderWorld.DebugBounds(
+                        gameRenderWorld!!.DebugBounds(
                             Lib.colorGreen.times(frac),
                             box,
                             target.GetPhysics().GetOrigin()
@@ -4790,20 +4823,20 @@ class Game_local {
                     val entBounds = ent.GetPhysics().GetAbsBounds()
                     val contents = ent.GetPhysics().GetContents()
                     if (contents and Material.CONTENTS_BODY != 0) {
-                        gameRenderWorld.DebugBounds(Lib.colorCyan, entBounds)
+                        gameRenderWorld!!.DebugBounds(Lib.colorCyan, entBounds)
                     } else if (contents and Material.CONTENTS_TRIGGER != 0) {
-                        gameRenderWorld.DebugBounds(Lib.colorOrange, entBounds)
+                        gameRenderWorld!!.DebugBounds(Lib.colorOrange, entBounds)
                     } else if (contents and Material.CONTENTS_SOLID != 0) {
-                        gameRenderWorld.DebugBounds(Lib.colorGreen, entBounds)
+                        gameRenderWorld!!.DebugBounds(Lib.colorGreen, entBounds)
                     } else {
                         if (0f == entBounds.GetVolume()) {
-                            gameRenderWorld.DebugBounds(Lib.colorMdGrey, entBounds.Expand(8.0f))
+                            gameRenderWorld!!.DebugBounds(Lib.colorMdGrey, entBounds.Expand(8.0f))
                         } else {
-                            gameRenderWorld.DebugBounds(Lib.colorMdGrey, entBounds)
+                            gameRenderWorld!!.DebugBounds(Lib.colorMdGrey, entBounds)
                         }
                     }
                     if (viewTextBounds.IntersectsBounds(entBounds)) {
-                        gameRenderWorld.DrawText(
+                        gameRenderWorld!!.DrawText(
                             ent.name.toString(),
                             entBounds.GetCenter(),
                             0.1f,
@@ -4811,7 +4844,7 @@ class Game_local {
                             axis,
                             1
                         )
-                        gameRenderWorld.DrawText(
+                        gameRenderWorld!!.DrawText(
                             Str.va("#%d", ent.entityNumber),
                             entBounds.GetCenter().plus(up),
                             0.1f,
@@ -4834,13 +4867,13 @@ class Game_local {
                         b[1, 0] = b.set(1, 1, b.set(1, 2, 8f))
                     }
                     if (ent.fl.isDormant) {
-                        gameRenderWorld.DebugBounds(
+                        gameRenderWorld!!.DebugBounds(
                             Lib.colorYellow,
                             b,
                             ent.GetPhysics().GetOrigin()
                         )
                     } else {
-                        gameRenderWorld.DebugBounds(
+                        gameRenderWorld!!.DebugBounds(
                             Lib.colorGreen,
                             b,
                             ent.GetPhysics().GetOrigin()
@@ -5840,8 +5873,8 @@ class Game_local {
                     ent = ent.snapshotNode.Next()
                     continue
                 }
-                gameRenderWorld.DebugBounds(Lib.colorGreen, entBounds)
-                gameRenderWorld.DrawText(
+                gameRenderWorld!!.DebugBounds(Lib.colorGreen, entBounds)
+                gameRenderWorld!!.DrawText(
                     Str.va(
                         "%d: %s (%d,%d bytes of %d,%d)\n", ent.entityNumber,
                         ent.name, ent.snapshotBits shr 3, ent.snapshotBits and 7, baseBits shr 3, baseBits and 7
@@ -6238,6 +6271,7 @@ class Game_local {
             //
             //
             private const val INITIAL_SPAWN_COUNT = 1
+            private const val INTERNAL_SAVEGAME_VERSION = 1; // DG: added this for >= 1305 savegames
             private val decalWinding: Array<idVec3> = arrayOf(
                 idVec3(1.0f, 1.0f, 0.0f),
                 idVec3(-1.0f, 1.0f, 0.0f),
@@ -6298,8 +6332,8 @@ class Game_local {
         }
 
         init {
-            lastGUIEnt = idEntityPtr()
-            lastAIAlertEntity = idEntityPtr()
+            lastGUIEnt = idEntityPtr(null)
+            lastAIAlertEntity = idEntityPtr(null)
             Clear()
         }
     }
@@ -6310,8 +6344,8 @@ class Game_local {
         //
         const val DEFAULT_GRAVITY = 1066.0f
 
-        var gameRenderWorld: idRenderWorld = RenderWorld_local.idRenderWorldLocal()
-        var gameSoundWorld: idSoundWorld = snd_world.idSoundWorldLocal()
+        var gameRenderWorld: idRenderWorld? = null
+        var gameSoundWorld: idSoundWorld? = null
 
         //============================================================================
         // the rest of the engine will only reference the "game" variable, while all local aspects stay hidden

@@ -214,13 +214,13 @@ object Misc {
                         player.playerView.Flash(Lib.Companion.colorWhite, 125)
                         player.SetInfluenceLevel(Player.INFLUENCE_LEVEL3)
                         player.SetInfluenceView(p.spawnArgs.GetString("mtr_teleportFx"), null, 0.0f, null)
-                        Game_local.gameSoundWorld.FadeSoundClasses(0, -20.0f, teleportDelay)
+                        Game_local.gameSoundWorld!!.FadeSoundClasses(0, -20.0f, teleportDelay)
                         player.StartSound("snd_teleport_start", gameSoundChannel_t.SND_CHANNEL_BODY2, 0, false)
                         p.teleportStage++
                         p.PostEventSec(Misc.EV_TeleportStage, teleportDelay, player)
                     }
                     1 -> {
-                        Game_local.gameSoundWorld.FadeSoundClasses(0, 0.0f, 0.25f)
+                        Game_local.gameSoundWorld!!.FadeSoundClasses(0, 0.0f, 0.25f)
                         p.teleportStage++
                         p.PostEventSec(Misc.EV_TeleportStage, 0.25f, player)
                     }
@@ -442,7 +442,7 @@ object Misc {
                         continue
                     }
                     val org = idVec3(ent.GetPhysics().GetOrigin())
-                    Game_local.gameRenderWorld.DebugBounds(Lib.Companion.colorRed, bnds, org, 0)
+                    Game_local.gameRenderWorld!!.DebugBounds(Lib.Companion.colorRed, bnds, org, 0)
                     ent = ent.spawnNode.Next()
                 }
             }
@@ -655,7 +655,7 @@ object Misc {
             //	CLASS_PROTOTYPE( idExplodable );
             private val eventCallbacks: MutableMap<idEventDef, eventCallback_t<*>> = HashMap()
             private fun Event_Explode(e: idExplodable, activator: idEventArg<idEntity>) {
-                val temp = arrayOf("")
+                val temp = arrayOfNulls<String>(1)
                 if (e.spawnArgs.GetString("def_damage", "damage_explosion", temp)) {
                     Game_local.gameLocal.RadiusDamage(
                         e.GetPhysics().GetOrigin(),
@@ -663,7 +663,7 @@ object Misc {
                         activator.value,
                         e,
                         e,
-                        temp[0]
+                        temp[0]!!
                     )
                 }
                 e.StartSound("snd_explode", gameSoundChannel_t.SND_CHANNEL_ANY, 0, false)
@@ -781,7 +781,7 @@ object Misc {
                     origin.set(ent2!!.GetPhysics().GetOrigin())
                     end.set(origin.plus(p2.times(axis)))
                 }
-                Game_local.gameRenderWorld.DebugLine(idVec4(1f, 1f, 0f, 1f), start, end, 0, true)
+                Game_local.gameRenderWorld!!.DebugLine(idVec4(1f, 1f, 0f, 1f), start, end, 0, true)
             }
             Present()
         }
@@ -1044,7 +1044,7 @@ object Misc {
 
         override fun Spawn() {
             super.Spawn()
-            val animname = arrayOf("")
+            val animname = arrayOfNulls<String>(1)
             val anim2: Int
             val wait = CFloat()
             val joint: String?
@@ -1076,10 +1076,10 @@ object Misc {
             num_anims = num_anims2._val
             blendFrames = spawnArgs.GetInt("blend_in")
             animname[0] = spawnArgs.GetString(if (num_anims != 0) "anim1" else "anim")
-            if (0 == animname[0].length) {
+            if (0 == animname[0]!!.length) {
                 anim = 0
             } else {
-                anim = animator.GetAnim(animname[0])
+                anim = animator.GetAnim(animname[0]!!)
                 if (0 == anim) {
                     idGameLocal.Companion.Error(
                         "idAnimated '%s' at (%s): cannot find anim '%s'",
@@ -1095,7 +1095,7 @@ object Misc {
                     blendFrames = 0
                 }
             } else if (spawnArgs.GetString("start_anim", "", animname)) {
-                anim2 = animator.GetAnim(animname[0])
+                anim2 = animator.GetAnim(animname[0]!!)
                 if (0 == anim2) {
                     idGameLocal.Companion.Error(
                         "idAnimated '%s' at (%s): cannot find anim '%s'",
@@ -1119,12 +1119,12 @@ object Misc {
         }
 
         override fun LoadAF(): Boolean {
-            val fileName = arrayOf("")
+            val fileName = arrayOfNulls<String>(1)
             if (!spawnArgs.GetString("ragdoll", "*unknown*", fileName)) {
                 return false
             }
             af.SetAnimator(GetAnimator())
-            return af.Load(this, fileName[0])
+            return af.Load(this, fileName[0]!!)
         }
 
         fun StartRagdoll(): Boolean {
@@ -1153,7 +1153,7 @@ object Misc {
         }
 
         private fun PlayNextAnim() {
-            val animName = arrayOf("")
+            val animName = arrayOfNulls<String>(1)
             val len: Int
             val cycle = CInt()
             if (current_anim_index >= num_anims) {
@@ -1168,12 +1168,12 @@ object Misc {
             Show()
             current_anim_index++
             spawnArgs.GetString(Str.va("anim%d", current_anim_index), "", animName)
-            if (animName[0].isEmpty()) {
+            if (animName[0].isNullOrEmpty()) {
                 anim = 0
                 animator.Clear(Anim.ANIMCHANNEL_ALL, Game_local.gameLocal.time, Anim.FRAME2MS(blendFrames))
                 return
             }
-            anim = animator.GetAnim(animName[0])
+            anim = animator.GetAnim(animName[0]!!)
             if (0 == anim) {
                 Game_local.gameLocal.Warning("missing anim '%s' on %s", animName[0], name)
                 return
@@ -1912,7 +1912,7 @@ object Misc {
 
         override fun Think() {
             if (thinkFlags and Entity.TH_THINK != 0) {
-                Game_local.gameRenderWorld.DrawText(
+                Game_local.gameRenderWorld!!.DrawText(
                     text.toString(),
                     GetPhysics().GetOrigin(),
                     0.25f,
@@ -1923,7 +1923,7 @@ object Misc {
                 )
                 for (i in 0 until targets.Num()) {
                     if (targets[i].GetEntity() != null) {
-                        Game_local.gameRenderWorld.DebugArrow(
+                        Game_local.gameRenderWorld!!.DebugArrow(
                             Lib.Companion.colorBlue,
                             GetPhysics().GetOrigin(),
                             targets[i].GetEntity()!!.GetPhysics().GetOrigin(),
@@ -1952,7 +1952,7 @@ object Misc {
         // CLASS_PROTOTYPE( idLocationEntity );
         override fun Spawn() {
             super.Spawn()
-            val realName = arrayOf("")
+            val realName = arrayOfNulls<String>(1)
 
             // this just holds dict information
             // if "location" not already set, use the entity name.
@@ -1983,7 +1983,7 @@ object Misc {
             super.Spawn()
             val b: idBounds
             b = idBounds(spawnArgs.GetVector("origin")).Expand(16f)
-            val   /*qhandle_t*/portal = Game_local.gameRenderWorld.FindPortal(b)
+            val   /*qhandle_t*/portal = Game_local.gameRenderWorld!!.FindPortal(b)
             if (0 == portal) {
                 Game_local.gameLocal.Warning(
                     "LocationSeparator '%s' didn't contact a portal",
@@ -2031,7 +2031,7 @@ object Misc {
             super.Spawn()
             val b: idBounds
             b = idBounds(spawnArgs.GetVector("origin")).Expand(16f)
-            portal = Game_local.gameRenderWorld.FindPortal(b)
+            portal = Game_local.gameRenderWorld!!.FindPortal(b)
             if (0 == portal) {
                 Game_local.gameLocal.Warning(
                     "VacuumSeparator '%s' didn't contact a portal",
@@ -2047,7 +2047,7 @@ object Misc {
 
         override fun Save(savefile: idSaveGame) {
             savefile.WriteInt(portal)
-            savefile.WriteInt(Game_local.gameRenderWorld.GetPortalState(portal))
+            savefile.WriteInt(Game_local.gameRenderWorld!!.GetPortalState(portal))
         }
 
         override fun Restore(savefile: idRestoreGame) {
@@ -2094,7 +2094,7 @@ object Misc {
                 return
             }
             val org = idVec3(spawnArgs.GetVector("origin"))
-            Game_local.gameLocal.vacuumAreaNum = Game_local.gameRenderWorld.PointInArea(org)
+            Game_local.gameLocal.vacuumAreaNum = Game_local.gameRenderWorld!!.PointInArea(org)
         }
 
         override fun CreateInstance(): idClass {
@@ -2590,7 +2590,7 @@ object Misc {
         private val state: CBool = CBool()
         override fun Spawn() {
             super.Spawn()
-            portal._val = (Game_local.gameRenderWorld.FindPortal(GetPhysics().GetAbsBounds().Expand(32.0f)))
+            portal._val = (Game_local.gameRenderWorld!!.FindPortal(GetPhysics().GetAbsBounds().Expand(32.0f)))
             if (portal._val > 0) {
                 state._val = (spawnArgs.GetBool("start_on"))
                 Game_local.gameLocal.SetPortalState(
@@ -2874,7 +2874,7 @@ object Misc {
         }
 
         private val lastTargetPos: List.idList<idVec3>
-        private val target: idEntityPtr<idActor?>? = null
+        private val target: idEntityPtr<idActor?> = idEntityPtr(null)
         private val targetTime: List.idList<Int>
         private var end_time = 0
         private var max_wait: Int

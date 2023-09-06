@@ -552,7 +552,7 @@ object portals {
     fun FloodEntities(tree: tree_s): Boolean {
         var i: Int
         val origin = idVec3()
-        val cl = arrayOf("")
+        val cl = arrayOfNulls<String>(1)
         var inside: Boolean
         val headnode: node_s?
         headnode = tree.headnode
@@ -577,12 +577,12 @@ object portals {
             }
             mapEnt.epairs.GetString("classname", "", cl)
             if (cl[0] == "light") {
-                val v = arrayOf("")
+                val v = arrayOfNulls<String>(1)
 
                 // don't place lights that have a light_start field, because they can still
                 // be valid if their origin is outside the world
                 mapEnt.epairs.GetString("light_start", "", v)
-                if (v[0].isNotEmpty()) {
+                if (!v[0].isNullOrEmpty()) {
                     i++
                     continue
                 }
@@ -590,8 +590,8 @@ object portals {
                 // don't place fog lights, because they often
                 // have origins outside the light
                 mapEnt.epairs.GetString("texture", "", v)
-                if (v[0].isNotEmpty()) {
-                    val mat: Material.idMaterial = DeclManager.declManager.FindMaterial(v[0])!!
+                if (!v[0].isNullOrEmpty()) {
+                    val mat: Material.idMaterial = DeclManager.declManager.FindMaterial(v[0]!!)!!
                     if (mat.IsFogLight()) {
                         i++
                         continue
@@ -604,11 +604,11 @@ object portals {
             if (tree.outside_node.occupied != 0 && !errorShown) {
                 errorShown = true
                 Common.common.Printf("Leak on entity # %d\n", i)
-                val p = arrayOf("")
+                val p = arrayOfNulls<String>(1)
                 mapEnt.epairs.GetString("classname", "", p)
-                Common.common.Printf("Entity classname was: %s\n", p[0])
+                Common.common.Printf("Entity classname was: %s\n", p[0]!!)
                 mapEnt.epairs.GetString("name", "", p)
-                Common.common.Printf("Entity name was: %s\n", p[0])
+                Common.common.Printf("Entity name was: %s\n", p[0]!!)
                 val origin2 = idVec3()
                 if (mapEnt.epairs.GetVector("origin", "", origin2)) {
                     Common.common.Printf("Entity origin is: %f %f %f\n\n\n", origin2.x, origin2.y, origin2.z)

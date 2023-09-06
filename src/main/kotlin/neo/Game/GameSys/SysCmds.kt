@@ -213,7 +213,7 @@ object SysCmds {
                         (debugLines[i].color shr 2 and 1).toFloat(),
                         1f
                     )
-                    Game_local.gameRenderWorld.DebugLine(color, debugLines[i].start, debugLines[i].end)
+                    Game_local.gameRenderWorld!!.DebugLine(color, debugLines[i].start, debugLines[i].end)
                     //
                     if (debugLines[i].arrow) {
                         // draw a nice arrow
@@ -229,9 +229,9 @@ object SysCmds {
                                 forward.times(l).minus(right.times(l * 0.4f))
                             )
                         )
-                        Game_local.gameRenderWorld.DebugLine(color, debugLines[i].end, p1)
-                        Game_local.gameRenderWorld.DebugLine(color, debugLines[i].end, p2)
-                        Game_local.gameRenderWorld.DebugLine(color, p1, p2)
+                        Game_local.gameRenderWorld!!.DebugLine(color, debugLines[i].end, p1)
+                        Game_local.gameRenderWorld!!.DebugLine(color, debugLines[i].end, p2)
+                        Game_local.gameRenderWorld!!.DebugLine(color, p1, p2)
                     }
                 }
             }

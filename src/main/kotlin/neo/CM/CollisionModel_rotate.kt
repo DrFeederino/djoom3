@@ -44,12 +44,12 @@ object CollisionModel_rotate {
         v1.set(point - proj)
         v2.set(axis.Cross(v1))
 
-        val t: Double = (tanHalfAngle * tanHalfAngle).toDouble()
-        val d: Double = 1.0f / (1.0f + t)
-        val s: Double = 2.0f * tanHalfAngle * d
-        val c: Double = (1.0f - t) * d
+        val t: Float = tanHalfAngle * tanHalfAngle
+        val d: Float = 1.0f / (1.0f + t)
+        val s: Float = 2.0f * tanHalfAngle * d
+        val c: Float = (1.0f - t) * d
 
-        point.set(v1.times(c.toFloat()).minus(v2.times(s.toFloat())).plus(proj.plus(origin)))
+        point.set(v1 * c - v2 * s + proj + origin)
     }
 
     /*
@@ -60,26 +60,29 @@ object CollisionModel_rotate {
      ================
      */
     fun CM_RotateEdge(start: idVec3, end: idVec3, origin: idVec3, axis: idVec3, tanHalfAngle: CFloat) {
-        val d: Double
-        val t: Double
-        val s: Double
-        val c: Double
+        val d: Float
+        val t: Float
+        val s: Float
+        val c: Float
         val proj = idVec3()
         val v1 = idVec3()
         val v2 = idVec3()
-        t = (tanHalfAngle._val * tanHalfAngle._val).toDouble()
+
+        t = (tanHalfAngle._val * tanHalfAngle._val)
         d = 1.0f / (1.0f + t)
         s = 2.0f * tanHalfAngle._val * d
         c = (1.0f - t) * d
+
         start.minusAssign(origin)
-        proj.set(axis.times(start.times(axis)))
-        v1.set(start.minus(proj))
+        proj.set(axis * (start * axis))
+        v1.set(start - proj)
         v2.set(axis.Cross(v1))
-        start.set(v1.times(c.toFloat()).minus(v2.times(s.toFloat())).plus(proj.plus(origin)))
+        start.set(v1 * c - v2 * s + proj + origin)
+
         end.minusAssign(origin)
-        proj.set(axis.times(end.times(axis)))
-        v1.set(end.minus(proj))
+        proj.set(axis * (end * axis))
+        v1.set(end - proj)
         v2.set(axis.Cross(v1))
-        end.set(v1.times(c.toFloat()).minus(v2.times(s.toFloat())).plus(proj.plus(origin)))
+        end.set(v1 * c - v2 * s + proj + origin)
     }
 }

@@ -781,6 +781,9 @@ object Math_h {
 
 
         fun Ftoi(f: Float): Int { // float to int conversion
+            if (f.isNaN()) {
+                return 0
+            }
             return f.toInt()
         }
 
@@ -800,6 +803,9 @@ object Math_h {
 //            m = (i & ((1 << IEEE_FLT_MANTISSA_BITS) - 1)) | (1 << IEEE_FLT_MANTISSA_BITS);
 //            shift = e - IEEE_FLT_MANTISSA_BITS;
 //            return ((((m >> -shift) | (m << shift)) & ~(e >> 31)) ^ s) - s;
+            if (f.isNaN()) {
+                return 0
+            }
             return f.roundToInt() //TODO:fix the C++ function.
             //#elif defined( __i386__ )
 //#elif 0
@@ -816,6 +822,9 @@ object Math_h {
         }
 
         fun Ftol(f: Float): Long { // float to long conversion
+            if (f.isNaN()) {
+                return 0L
+            }
             return f.toLong()
         }
 

@@ -33,6 +33,7 @@ import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.nio.file.Paths
+import java.time.Instant
 import java.util.*
 import java.util.concurrent.ScheduledExecutorService
 import java.util.logging.Level
@@ -407,9 +408,9 @@ object win_main {
      ==============
      */
     fun Sys_Sleep(msec: Int) {
-        val start = System.currentTimeMillis()
+        val start = Instant.now().toEpochMilli()
         while (true) {
-            if (System.currentTimeMillis() - start >= msec) {
+            if (Instant.now().toEpochMilli() - start >= msec) {
                 return
             }
         }
@@ -1564,10 +1565,10 @@ object win_main {
 //	::SetFocus( win32.hWnd );
 //
         // main game loop
-        var timer = System.currentTimeMillis()
+        var timer = Instant.now().toEpochMilli()
         while (true) {
-            if (System.currentTimeMillis() - timer >= USERCMD_MSEC) {
-                timer = System.currentTimeMillis()
+            if (Instant.now().toEpochMilli() - timer >= USERCMD_MSEC) {
+                timer = Instant.now().toEpochMilli()
             }
 
             Win_Frame()

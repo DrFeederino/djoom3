@@ -230,7 +230,7 @@ object Item {
 
             // add the highlight shell
             if (itemShellHandle != -1) {
-                Game_local.gameRenderWorld.FreeEntityDef(itemShellHandle)
+                Game_local.gameRenderWorld!!.FreeEntityDef(itemShellHandle)
                 itemShellHandle = -1
             }
             var respawn = spawnArgs.GetFloat("respawn")
@@ -287,9 +287,9 @@ object Item {
                 shell.entityNum = entityNumber
                 shell.customShader = shellMaterial
                 if (itemShellHandle == -1) {
-                    itemShellHandle = Game_local.gameRenderWorld.AddEntityDef(shell)
+                    itemShellHandle = Game_local.gameRenderWorld!!.AddEntityDef(shell)
                 } else {
-                    Game_local.gameRenderWorld.UpdateEntityDef(itemShellHandle, shell)
+                    Game_local.gameRenderWorld!!.UpdateEntityDef(itemShellHandle, shell)
                 }
             }
         }
@@ -313,7 +313,7 @@ object Item {
 
                     // remove the highlight shell
                     if (itemShellHandle != -1) {
-                        Game_local.gameRenderWorld.FreeEntityDef(itemShellHandle)
+                        Game_local.gameRenderWorld!!.FreeEntityDef(itemShellHandle)
                         itemShellHandle = -1
                     }
                     true
@@ -665,21 +665,21 @@ object Item {
         }
 
         private fun Event_CamShot() {
-            val camName = arrayOf("")
+            val camName = arrayOfNulls<String>(1)
             val shotName = idStr(Game_local.gameLocal.GetMapName())
             shotName.StripFileExtension()
             shotName.plusAssign("/")
             shotName.plusAssign(spawnArgs.GetString("screenshot"))
             shotName.SetFileExtension(".tga")
             if (spawnArgs.GetString("camShot", "", camName)) {
-                val ent = Game_local.gameLocal.FindEntity(camName[0])
+                val ent = Game_local.gameLocal.FindEntity(camName[0]!!)
                 if (ent != null && ent.cameraTarget != null) {
                     val view = ent.cameraTarget!!.GetRenderView()
                     view!!.width = RenderSystem.SCREEN_WIDTH
                     view!!.height = RenderSystem.SCREEN_HEIGHT
                     // draw a view to a texture
                     RenderSystem.renderSystem.CropRenderSize(256, 256, true)
-                    Game_local.gameRenderWorld.RenderScene(view)
+                    Game_local.gameRenderWorld!!.RenderScene(view)
                     RenderSystem.renderSystem.CaptureRenderToFile(shotName.toString())
                     RenderSystem.renderSystem.UnCrop()
                 }

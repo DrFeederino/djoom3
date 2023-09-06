@@ -288,7 +288,7 @@ object Actor {
 
     class idAttachInfo {
         var channel = 0
-        val ent: idEntityPtr<idEntity> = idEntityPtr()
+        val ent: idEntityPtr<idEntity?> = idEntityPtr(null)
     }
 
     class copyJoints_t {
@@ -598,9 +598,11 @@ object Actor {
             val rank = CInt()
             val team = CInt()
             val use_combat_bbox = CBool(false)
+
             animPrefix.set("")
             state = null
             idealState = null
+
             spawnArgs.GetInt("rank", "0", rank)
             spawnArgs.GetInt("team", "0", team)
             this.rank = rank._val
@@ -646,7 +648,7 @@ object Actor {
 
             // clear the bind anim
             animator.ClearAllAnims(Game_local.gameLocal.time, 0)
-            val headEnt: idEntity? = head.GetEntity()
+            val headEnt: idEntity? = head!!.GetEntity()
             val headAnimator: idAnimator?
             headAnimator = if (headEnt != null) {
                 headEnt.GetAnimator()
@@ -719,7 +721,7 @@ object Actor {
         }
 
         open fun Restart() {
-            assert(TempDump.NOT(head.GetEntity()))
+            assert(TempDump.NOT(head!!.GetEntity()))
             SetupHead()
             FinishSetup()
         }
@@ -763,7 +765,7 @@ object Actor {
                 i++
             }
             savefile.WriteBool(use_combat_bbox)
-            head.Save(savefile)
+            head!!.Save(savefile)
             savefile.WriteInt(copyJoints.Num())
             i = 0
             while (i < copyJoints.Num()) {
@@ -870,7 +872,7 @@ object Actor {
                 i++
             }
             use_combat_bbox = savefile.ReadBool()
-            head.Restore(savefile)
+            head!!.Restore(savefile)
             savefile.ReadInt(num)
             copyJoints.SetNum(num._val)
             i = 0
@@ -924,7 +926,7 @@ object Actor {
             var ent: idEntity?
             var next: idEntity?
             idAFEntity_Base_Hide() //TODO:super size me
-            if (head.GetEntity() != null) {
+            if (head!!.GetEntity() != null) {
                 head.GetEntity()!!.Hide()
             }
             ent = GetNextTeamEntity()
@@ -945,7 +947,7 @@ object Actor {
             var ent: idEntity?
             var next: idEntity?
             idAFEntity_Base_Show() //TODO:super size me
-            if (head.GetEntity() != null) {
+            if (head!!.GetEntity() != null) {
                 head.GetEntity()!!.Show()
             }
             ent = GetNextTeamEntity()
@@ -995,7 +997,7 @@ object Actor {
             var jointname: String?
             animator.ClearAllAnims(Game_local.gameLocal.time, 0)
             animator.ClearAllJoints()
-            val headEnt: idEntity? = head.GetEntity()
+            val headEnt: idEntity? = head!!.GetEntity()
             if (headEnt != null) {
                 jointname = spawnArgs.GetString("bone_leftEye")
                 leftEyeJoint = headEnt.GetAnimator()!!.GetJointHandle(jointname)
@@ -1056,7 +1058,7 @@ object Actor {
             if (0 == blink_anim || health <= 0 || !allowEyeFocus || blink_time > Game_local.gameLocal.time) {
                 return
             }
-            val headEnt: idEntity? = head.GetEntity()
+            val headEnt: idEntity? = head!!.GetEntity()
             if (headEnt != null) {
                 headEnt.GetAnimator()!!.PlayAnim(Anim.ANIMCHANNEL_EYELIDS, blink_anim, Game_local.gameLocal.time, 1)
             } else {
@@ -1499,13 +1501,13 @@ object Actor {
             // don't play pain sounds more than necessary
             pain_debounce_time = Game_local.gameLocal.time + pain_delay
             if (health > 75) {
-                StartSound("snd_pain_small", gameSoundChannel_t.SND_CHANNEL_VOICE, 0, false)
+                StartSound("snd_pain_small", gameSoundChannel_t.SND_CHANNEL_VOICE, 0, false, null)
             } else if (health > 50) {
-                StartSound("snd_pain_medium", gameSoundChannel_t.SND_CHANNEL_VOICE, 0, false)
+                StartSound("snd_pain_medium", gameSoundChannel_t.SND_CHANNEL_VOICE, 0, false, null)
             } else if (health > 25) {
-                StartSound("snd_pain_large", gameSoundChannel_t.SND_CHANNEL_VOICE, 0, false)
+                StartSound("snd_pain_large", gameSoundChannel_t.SND_CHANNEL_VOICE, 0, false, null)
             } else {
-                StartSound("snd_pain_huge", gameSoundChannel_t.SND_CHANNEL_VOICE, 0, false)
+                StartSound("snd_pain_huge", gameSoundChannel_t.SND_CHANNEL_VOICE, 0, false, null)
             }
             if (!allowPain || Game_local.gameLocal.time < painTime) {
                 // don't play a pain anim
@@ -1571,7 +1573,7 @@ object Actor {
                 } else {
                     combatModel = idClipModel(modelDefHandle)
                 }
-                headEnt = head.GetEntity()
+                headEnt = head!!.GetEntity()
                 headEnt?.SetCombatModel()
             }
         }
@@ -1595,7 +1597,7 @@ object Actor {
                     modelDefHandle
                 )
             }
-            headEnt = head.GetEntity()
+            headEnt = head!!.GetEntity()
             headEnt?.LinkCombat()
         }
 
@@ -1604,7 +1606,7 @@ object Actor {
             if (combatModel != null) {
                 combatModel!!.Unlink()
             }
-            headEnt = head.GetEntity()
+            headEnt = head!!.GetEntity()
             headEnt?.UnlinkCombat()
         }
 
@@ -1838,7 +1840,7 @@ object Actor {
             val temp: String?
             val animatorPtr: idAnimator?
             animatorPtr = if (channel == Anim.ANIMCHANNEL_HEAD) {
-                if (TempDump.NOT(head.GetEntity())) {
+                if (TempDump.NOT(head!!.GetEntity())) {
                     return 0
                 }
                 head.GetEntity()!!.GetAnimator()
@@ -1896,14 +1898,14 @@ object Actor {
             }
         }
 
-        fun GetAnimState(channel: Int): idStr {
+        fun GetAnimState(channel: Int): idStr? {
             return when (channel) {
                 Anim.ANIMCHANNEL_HEAD -> headAnim.state
                 Anim.ANIMCHANNEL_TORSO -> torsoAnim.state
                 Anim.ANIMCHANNEL_LEGS -> legsAnim.state
                 else -> {
                     idGameLocal.Error("obj.GetAnimState: Unknown anim group")
-                    throw RuntimeException("obj.GetAnimState: Unknown anim group")
+                    return null
                 }
             }
         }
@@ -1963,7 +1965,7 @@ object Actor {
                 return
             }
             super.Gib(dir, damageDefName)
-            if (head.GetEntity() != null) {
+            if (head!!.GetEntity() != null) {
                 head.GetEntity()!!.Hide()
             }
             StopSound(TempDump.etoi(gameSoundChannel_t.SND_CHANNEL_VOICE), false)
@@ -1987,7 +1989,7 @@ object Actor {
 
         // copies animation from body to head joints
         protected fun CopyJointsFromBodyToHead() {
-            val headEnt: idEntity? = head.GetEntity()
+            val headEnt: idEntity? = head!!.GetEntity()
             val headAnimator: idAnimator?
             var i: Int
             var mat: idMat3
@@ -2035,7 +2037,7 @@ object Actor {
             val cycle: Int
             blendTime = Anim.FRAME2MS(blendFrames)
             if (channel == Anim.ANIMCHANNEL_HEAD) {
-                headEnt = head.GetEntity()
+                headEnt = head!!.GetEntity()
                 if (headEnt != null) {
                     headAnimator = headEnt.GetAnimator()
                     syncAnim = animator.CurrentAnim(syncToChannel)
@@ -2056,7 +2058,7 @@ object Actor {
                     }
                 }
             } else if (syncToChannel == Anim.ANIMCHANNEL_HEAD) {
-                headEnt = head.GetEntity()
+                headEnt = head!!.GetEntity()
                 if (headEnt != null) {
                     headAnimator = headEnt.GetAnimator()
                     syncAnim = headAnimator.CurrentAnim(Anim.ANIMCHANNEL_ALL)
@@ -2080,10 +2082,10 @@ object Actor {
         }
 
         private fun FinishSetup() {
-            val scriptObjectName = arrayOf("")
+            val scriptObjectName = arrayOfNulls<String>(1)
 
             // setup script object
-            if (spawnArgs.GetString("scriptobject", "", scriptObjectName)) {
+            if (spawnArgs.GetString("scriptobject", null, scriptObjectName)) {
                 if (!scriptObject.SetType(scriptObjectName[0])) {
                     idGameLocal.Error("Script object '%s' not found on entity '%s'.", scriptObjectName, name)
                 }
@@ -2133,7 +2135,7 @@ object Actor {
                 headEnt = Game_local.gameLocal.SpawnEntityType(idAFAttachment::class.java, args) as idAFAttachment
                 headEnt.SetName(Str.va("%s_head", name))
                 headEnt.SetBody(this, headModel, damageJoint)
-                head.oSet(headEnt)
+                head!!.oSet(headEnt)
                 val origin = idVec3()
                 val axis = idMat3()
                 val attach = attachments.Alloc()!!
@@ -2173,7 +2175,8 @@ object Actor {
                     DeclManager.declManager.FindSound(sound),
                     TempDump.etoi(gameSoundChannel_t.SND_CHANNEL_BODY),
                     0,
-                    false
+                    false,
+                    null
                 )
             }
         }
@@ -2210,7 +2213,7 @@ object Actor {
 
         private fun Event_DisableEyeFocus() {
             allowEyeFocus = false
-            val headEnt: idEntity? = head.GetEntity()
+            val headEnt: idEntity? = head!!.GetEntity()
             if (headEnt != null) {
                 headEnt.GetAnimator()!!.Clear(Anim.ANIMCHANNEL_EYELIDS, Game_local.gameLocal.time, Anim.FRAME2MS(2))
             } else {
@@ -2287,7 +2290,7 @@ object Actor {
                 GetAnim(channel, animName)
             }
             if (0 == anim) {
-                if (channel == Anim.ANIMCHANNEL_HEAD && head.GetEntity() != null) {
+                if (channel == Anim.ANIMCHANNEL_HEAD && head!!.GetEntity() != null) {
                     Game_local.gameLocal.DPrintf(
                         "missing '%s' animation on '%s' (%s)\n",
                         animName,
@@ -2307,7 +2310,7 @@ object Actor {
             }
             when (channel) {
                 Anim.ANIMCHANNEL_HEAD -> {
-                    headEnt = head.GetEntity()
+                    headEnt = head!!.GetEntity()
                     if (headEnt != null) {
                         headAnim.idleAnim = false
                         headAnim.PlayAnim(anim)
@@ -2390,7 +2393,7 @@ object Actor {
             val anim: Int
             anim = GetAnim(channel, animName)
             if (0 == anim) {
-                if (channel == Anim.ANIMCHANNEL_HEAD && head.GetEntity() != null) {
+                if (channel == Anim.ANIMCHANNEL_HEAD && head!!.GetEntity() != null) {
                     Game_local.gameLocal.DPrintf(
                         "missing '%s' animation on '%s' (%s)\n",
                         animName,
@@ -2483,7 +2486,7 @@ object Actor {
             val anim: Int
             anim = GetAnim(channel, animName)
             if (0 == anim) {
-                if (channel == Anim.ANIMCHANNEL_HEAD && head.GetEntity() != null) {
+                if (channel == Anim.ANIMCHANNEL_HEAD && head!!.GetEntity() != null) {
                     Game_local.gameLocal.DPrintf(
                         "missing '%s' animation on '%s' (%s)\n",
                         animName,
@@ -2580,7 +2583,7 @@ object Actor {
             val anim: Int = _anim.value
             val weight: Float = _weight.value
             val headEnt: idEntity?
-            headEnt = head.GetEntity()
+            headEnt = head!!.GetEntity()
             when (channel) {
                 Anim.ANIMCHANNEL_HEAD -> {
                     if (headEnt != null) {
@@ -2693,7 +2696,7 @@ object Actor {
         private fun Event_GetAnimState(channel: idEventArg<Int>) {
             val state: idStr?
             state = GetAnimState(channel.value)
-            idThread.ReturnString(state)
+            idThread.ReturnString(state!!)
         }
 
         private fun Event_InAnimState(channel: idEventArg<Int>, statename: idEventArg<String?>) {
@@ -2751,8 +2754,8 @@ object Actor {
             anim = GetAnim(channel.value, animname.value)
             if (anim != 0) {
                 if (channel.value == Anim.ANIMCHANNEL_HEAD) {
-                    if (head.GetEntity() != null) {
-                        idThread.ReturnString(head.GetEntity()!!.GetAnimator().AnimFullName(anim))
+                    if (head!!.GetEntity() != null) {
+                        idThread.ReturnString(head!!.GetEntity()!!.GetAnimator().AnimFullName(anim))
                         return
                     }
                 } else {
@@ -2768,10 +2771,10 @@ object Actor {
             anim = GetAnim(channel.value, animname.value)
             if (anim != 0) {
                 if (channel.value == Anim.ANIMCHANNEL_HEAD) {
-                    if (head.GetEntity() != null) {
+                    if (head!!.GetEntity() != null) {
                         idThread.ReturnFloat(
                             Math_h.MS2SEC(
-                                head.GetEntity()!!.GetAnimator().AnimLength(anim).toFloat()
+                                head!!.GetEntity()!!.GetAnimator().AnimLength(anim).toFloat()
                             )
                         )
                         return
@@ -2789,8 +2792,8 @@ object Actor {
             anim = GetAnim(channel.value, animname.value)
             if (anim != 0) {
                 if (channel.value == Anim.ANIMCHANNEL_HEAD) {
-                    if (head.GetEntity() != null) {
-                        idThread.ReturnFloat(head.GetEntity()!!.GetAnimator().TotalMovementDelta(anim).Length())
+                    if (head!!.GetEntity() != null) {
+                        idThread.ReturnFloat(head!!.GetEntity()!!.GetAnimator().TotalMovementDelta(anim).Length())
                         return
                     }
                 } else {
@@ -2838,7 +2841,7 @@ object Actor {
 
         private fun Event_StopSound(channel: idEventArg<Int>, netSync: idEventArg<Int>) {
             if (channel.value == TempDump.etoi(gameSoundChannel_t.SND_CHANNEL_VOICE)) {
-                val headEnt: idEntity? = head.GetEntity()
+                val headEnt: idEntity? = head!!.GetEntity()
                 headEnt?.StopSound(channel.value, netSync.value != 0)
             }
             StopSound(channel.value, netSync.value != 0)
@@ -2868,7 +2871,7 @@ object Actor {
         }
 
         private fun Event_GetHead() {
-            idThread.ReturnEntity(head.GetEntity())
+            idThread.ReturnEntity(head!!.GetEntity())
         }
 
         override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
@@ -2883,9 +2886,9 @@ object Actor {
             StopSound(gameSoundChannel_t.SND_CHANNEL_ANY.ordinal, false)
             idClipModel.delete(combatModel!!)
             combatModel = null
-            if (head.GetEntity() != null) {
-                head.GetEntity()!!.ClearBody()
-                head.GetEntity()!!.PostEventMS(EV_Remove, 0)
+            if (head!!.GetEntity() != null) {
+                head!!.GetEntity()!!.ClearBody()
+                head!!.GetEntity()!!.PostEventMS(EV_Remove, 0)
             }
 
             // remove any attached entities
@@ -2903,9 +2906,10 @@ object Actor {
         //
         init {
             viewAxis = idMat3.getMat3_identity()
+            viewAxis.Identity()
             scriptThread = null // initialized by ConstructScriptObject, which is called by idEntity::Spawn
             use_combat_bbox = false
-            head = idEntityPtr()
+            head = idEntityPtr(null)
             team = 0
             rank = 0
             fovDot = 0f
@@ -2924,7 +2928,7 @@ object Actor {
             painTime = 0
             allowPain = false
             allowEyeFocus = false
-            waitState = idStr()
+            waitState = idStr("")
             headAnim = idAnimState()
             torsoAnim = idAnimState()
             legsAnim = idAnimState()

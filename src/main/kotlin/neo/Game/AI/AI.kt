@@ -677,7 +677,7 @@ object AI {
                                         path.endPos.set(lastEnd)
                                         path.endEvent = SE_BLOCKED
                                         if (SysCvar.ai_debugMove.GetBool()) {
-                                            Game_local.gameRenderWorld.DebugLine(
+                                            Game_local.gameRenderWorld!!.DebugLine(
                                                 Lib.colorRed,
                                                 lineStart,
                                                 lastEnd
@@ -720,7 +720,7 @@ object AI {
                             step++
                         }
                         if (SysCvar.ai_debugMove.GetBool()) {
-                            Game_local.gameRenderWorld.DebugLine(Lib.colorRed, lineStart, curStart)
+                            Game_local.gameRenderWorld!!.DebugLine(Lib.colorRed, lineStart, curStart)
                         }
                         if (trace.fraction >= 1.0f) {
                             break
@@ -828,7 +828,7 @@ object AI {
                 if (drawtime != 0) {
                     i = 0
                     while (i < numSegments) {
-                        Game_local.gameRenderWorld.DebugLine(Lib.colorRed, points[i], points[i + 1], drawtime)
+                        Game_local.gameRenderWorld!!.DebugLine(Lib.colorRed, points[i], points[i + 1], drawtime)
                         i++
                     }
                 }
@@ -862,7 +862,7 @@ object AI {
                 }
                 if (drawtime != 0) {
                     if (clip != null) {
-                        Game_local.gameRenderWorld.DebugBounds(
+                        Game_local.gameRenderWorld!!.DebugBounds(
                             if (result) Lib.colorGreen else Lib.colorYellow,
                             clip.GetBounds().Expand(1.0f),
                             trace.endpos,
@@ -871,7 +871,7 @@ object AI {
                     } else {
                         val bnds = idBounds(trace.endpos)
                         bnds.ExpandSelf(1.0f)
-                        Game_local.gameRenderWorld.DebugBounds(
+                        Game_local.gameRenderWorld!!.DebugBounds(
                             if (result) Lib.colorGreen else Lib.colorYellow,
                             bnds,
                             Vector.getVec3_zero(),
@@ -943,10 +943,10 @@ object AI {
                         ignore
                     )
                     if (drawtime != 0) {
-                        Game_local.gameRenderWorld.DebugLine(Lib.colorRed, firePos, target, drawtime)
+                        Game_local.gameRenderWorld!!.DebugLine(Lib.colorRed, firePos, target, drawtime)
                         val bnds = idBounds(trace.endpos)
                         bnds.ExpandSelf(1.0f)
-                        Game_local.gameRenderWorld.DebugBounds(
+                        Game_local.gameRenderWorld!!.DebugBounds(
                             if (trace.fraction >= 1.0f || Game_local.gameLocal.GetTraceEntity(
                                     trace
                                 ) === targetEntity
@@ -997,7 +997,7 @@ object AI {
                         while (j < 100) {
                             pos.plusAssign(velocity.times(t))
                             velocity.plusAssign(projGravity.times(t))
-                            Game_local.gameRenderWorld.DebugLine(Lib.colorCyan, lastPos, pos)
+                            Game_local.gameRenderWorld!!.DebugLine(Lib.colorCyan, lastPos, pos)
                             lastPos.set(pos)
                             j++
                         }
@@ -2555,7 +2555,7 @@ object AI {
         }
 
         protected fun PlayCinematic() {
-            val animName = arrayOf<String>("")
+            val animName = arrayOfNulls<String>(1)
             if (current_cinematic >= num_cinematics) {
                 if (SysCvar.g_debugCinematic.GetBool()) {
                     Game_local.gameLocal.Printf("%d: '%s' stop\n", Game_local.gameLocal.framenum, GetName())
@@ -2659,13 +2659,13 @@ object AI {
             AI_OBSTACLE_IN_PATH.underscore(false)
             foundPath = FindPathAroundObstacles(physicsObj, aas, enemy.GetEntity(), origin, goalPos, path)
             if (SysCvar.ai_showObstacleAvoidance.GetBool()) {
-                Game_local.gameRenderWorld.DebugLine(
+                Game_local.gameRenderWorld!!.DebugLine(
                     Lib.colorBlue,
                     goalPos.plus(idVec3(1.0f, 1.0f, 0.0f)),
                     goalPos.plus(idVec3(1.0f, 1.0f, 64.0f)),
                     idGameLocal.msec
                 )
-                Game_local.gameRenderWorld.DebugLine(
+                Game_local.gameRenderWorld!!.DebugLine(
                     if (foundPath) Lib.colorYellow else Lib.colorRed,
                     path.seekPos,
                     path.seekPos.plus(idVec3(0.0f, 0.0f, 64.0f)),
@@ -2806,7 +2806,7 @@ object AI {
             physicsObj.ForceDeltaMove(disableGravity)
             RunPhysics()
             if (SysCvar.ai_debugMove.GetBool()) {
-                Game_local.gameRenderWorld.DebugLine(Lib.colorCyan, oldOrigin, physicsObj.GetOrigin(), 5000)
+                Game_local.gameRenderWorld!!.DebugLine(Lib.colorCyan, oldOrigin, physicsObj.GetOrigin(), 5000)
             }
             moveResult = physicsObj.GetMoveResult()
             if (!af_push_moveables && attack.Length() != 0 && TestMelee()) {
@@ -2824,19 +2824,19 @@ object AI {
                 TouchTriggers()
             }
             if (SysCvar.ai_debugMove.GetBool()) {
-                Game_local.gameRenderWorld.DebugBounds(
+                Game_local.gameRenderWorld!!.DebugBounds(
                     Lib.colorMagenta,
                     physicsObj.GetBounds(),
                     org,
                     idGameLocal.msec
                 )
-                Game_local.gameRenderWorld.DebugBounds(
+                Game_local.gameRenderWorld!!.DebugBounds(
                     Lib.colorMagenta,
                     physicsObj.GetBounds(),
                     move.moveDest,
                     idGameLocal.msec
                 )
-                Game_local.gameRenderWorld.DebugLine(
+                Game_local.gameRenderWorld!!.DebugLine(
                     Lib.colorYellow,
                     org.plus(EyeOffset()),
                     org.plus(
@@ -2918,7 +2918,7 @@ object AI {
             }
             Turn()
             if (SysCvar.ai_debugMove.GetBool()) {
-                Game_local.gameRenderWorld.DebugLine(Lib.colorCyan, oldOrigin, physicsObj.GetOrigin(), 5000)
+                Game_local.gameRenderWorld!!.DebugLine(Lib.colorCyan, oldOrigin, physicsObj.GetOrigin(), 5000)
             }
             moveResult = physicsObj.GetMoveResult()
             if (!af_push_moveables && attack.Length() != 0 && TestMelee()) {
@@ -2936,19 +2936,19 @@ object AI {
                 TouchTriggers()
             }
             if (SysCvar.ai_debugMove.GetBool()) {
-                Game_local.gameRenderWorld.DebugBounds(
+                Game_local.gameRenderWorld!!.DebugBounds(
                     Lib.colorMagenta,
                     physicsObj.GetBounds(),
                     org,
                     idGameLocal.msec
                 )
-                Game_local.gameRenderWorld.DebugBounds(
+                Game_local.gameRenderWorld!!.DebugBounds(
                     Lib.colorMagenta,
                     physicsObj.GetBounds(),
                     move.moveDest,
                     idGameLocal.msec
                 )
-                Game_local.gameRenderWorld.DebugLine(
+                Game_local.gameRenderWorld!!.DebugLine(
                     Lib.colorYellow,
                     org.plus(EyeOffset()),
                     org.plus(
@@ -3012,7 +3012,7 @@ object AI {
                 vel.plusAssign(fly_bob_add.times(Math_h.MS2SEC(idGameLocal.msec.toFloat())))
                 if (SysCvar.ai_debugMove.GetBool()) {
                     val origin = physicsObj.GetOrigin()
-                    Game_local.gameRenderWorld.DebugArrow(
+                    Game_local.gameRenderWorld!!.DebugArrow(
                         Lib.colorOrange,
                         origin,
                         origin.plus(fly_bob_add),
@@ -3043,7 +3043,7 @@ object AI {
                     goLower = true
                 }
                 if (SysCvar.ai_debugMove.GetBool()) {
-                    Game_local.gameRenderWorld.DebugBounds(
+                    Game_local.gameRenderWorld!!.DebugBounds(
                         if (goLower) Lib.colorRed else Lib.colorGreen,
                         physicsObj.GetBounds(),
                         path.endPos,
@@ -3179,34 +3179,34 @@ object AI {
                 TouchTriggers()
             }
             if (SysCvar.ai_debugMove.GetBool()) {
-                Game_local.gameRenderWorld.DebugLine(Lib.colorCyan, oldorigin, physicsObj.GetOrigin(), 4000)
-                Game_local.gameRenderWorld.DebugBounds(
+                Game_local.gameRenderWorld!!.DebugLine(Lib.colorCyan, oldorigin, physicsObj.GetOrigin(), 4000)
+                Game_local.gameRenderWorld!!.DebugBounds(
                     Lib.colorOrange,
                     physicsObj.GetBounds(),
                     org,
                     idGameLocal.msec
                 )
-                Game_local.gameRenderWorld.DebugBounds(
+                Game_local.gameRenderWorld!!.DebugBounds(
                     Lib.colorMagenta,
                     physicsObj.GetBounds(),
                     move.moveDest,
                     idGameLocal.msec
                 )
-                Game_local.gameRenderWorld.DebugLine(
+                Game_local.gameRenderWorld!!.DebugLine(
                     Lib.colorRed,
                     org,
                     org.plus(physicsObj.GetLinearVelocity()),
                     idGameLocal.msec,
                     true
                 )
-                Game_local.gameRenderWorld.DebugLine(
+                Game_local.gameRenderWorld!!.DebugLine(
                     Lib.colorBlue,
                     org,
                     goalPos,
                     idGameLocal.msec,
                     true
                 )
-                Game_local.gameRenderWorld.DebugLine(
+                Game_local.gameRenderWorld!!.DebugLine(
                     Lib.colorYellow,
                     org.plus(EyeOffset()),
                     org.plus(
@@ -3242,20 +3242,20 @@ object AI {
             }
             if (SysCvar.ai_debugMove.GetBool()) {
                 val org = physicsObj.GetOrigin()
-                Game_local.gameRenderWorld.DebugBounds(
+                Game_local.gameRenderWorld!!.DebugBounds(
                     Lib.colorMagenta,
                     physicsObj.GetBounds(),
                     org,
                     idGameLocal.msec
                 )
-                Game_local.gameRenderWorld.DebugLine(
+                Game_local.gameRenderWorld!!.DebugLine(
                     Lib.colorBlue,
                     org,
                     move.moveDest,
                     idGameLocal.msec,
                     true
                 )
-                Game_local.gameRenderWorld.DebugLine(
+                Game_local.gameRenderWorld!!.DebugLine(
                     Lib.colorYellow,
                     org.plus(EyeOffset()),
                     org.plus(
@@ -3304,7 +3304,7 @@ object AI {
 
         override fun Killed(inflictor: idEntity?, attacker: idEntity?, damage: Int, dir: idVec3, location: Int) {
             var ang: idAngles
-            val modelDeath = arrayOf<String>("")
+            val modelDeath = arrayOfNulls<String>(1)
 
             // make sure the monster is activated
             EndAttack()
@@ -3363,7 +3363,7 @@ object AI {
                 StartSound("snd_death", gameSoundChannel_t.SND_CHANNEL_VOICE, 0, false, CInt())
                 renderEntity!!.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] =
                     -Math_h.MS2SEC(Game_local.gameLocal.time.toFloat())
-                SetModel(modelDeath[0])
+                SetModel(modelDeath[0]!!)
                 physicsObj.SetLinearVelocity(Vector.getVec3_zero())
                 physicsObj.PutToRest()
                 physicsObj.DisableImpact()
@@ -3486,14 +3486,14 @@ object AI {
                 delta = end.ToVec2().minus(start.ToVec2())
                 dist = delta.LengthFast()
                 if (SysCvar.ai_debugMove.GetBool()) {
-                    Game_local.gameRenderWorld.DebugLine(
+                    Game_local.gameRenderWorld!!.DebugLine(
                         Lib.colorBlue,
                         start,
                         end,
                         idGameLocal.msec,
                         false
                     )
-                    Game_local.gameRenderWorld.DrawText(
+                    Game_local.gameRenderWorld!!.DrawText(
                         Str.va("%d", dist.toInt()),
                         start.plus(end).times(0.5f),
                         0.1f,
@@ -3514,14 +3514,14 @@ object AI {
                 delta = end.ToVec2().minus(start.ToVec2())
                 dist = delta.LengthFast()
                 if (SysCvar.ai_debugMove.GetBool()) {
-                    Game_local.gameRenderWorld.DebugLine(
+                    Game_local.gameRenderWorld!!.DebugLine(
                         Lib.colorBlue,
                         start,
                         end,
                         idGameLocal.msec,
                         false
                     )
-                    Game_local.gameRenderWorld.DrawText(
+                    Game_local.gameRenderWorld!!.DrawText(
                         Str.va("%d", dist.toInt()),
                         start.plus(end).times(0.5f),
                         0.1f,
@@ -3680,7 +3680,7 @@ object AI {
                 }
                 seekPos.set(org.plus(move.moveDir.times(2048.0f)))
                 if (SysCvar.ai_debugMove.GetBool()) {
-                    Game_local.gameRenderWorld.DebugLine(
+                    Game_local.gameRenderWorld!!.DebugLine(
                         Lib.colorYellow,
                         org,
                         seekPos,
@@ -3692,7 +3692,7 @@ object AI {
                 AI_DEST_UNREACHABLE.underscore(false)
             }
             if (result && SysCvar.ai_debugMove.GetBool()) {
-                Game_local.gameRenderWorld.DebugLine(Lib.colorCyan, physicsObj.GetOrigin(), seekPos)
+                Game_local.gameRenderWorld!!.DebugLine(Lib.colorCyan, physicsObj.GetOrigin(), seekPos)
             }
             return result
         }
@@ -4457,19 +4457,19 @@ object AI {
             viewAxis = idAngles(0f, current_yaw, 0f).ToMat3()
             if (SysCvar.ai_debugMove.GetBool()) {
                 val org = physicsObj.GetOrigin()
-                Game_local.gameRenderWorld.DebugLine(
+                Game_local.gameRenderWorld!!.DebugLine(
                     Lib.colorRed,
                     org,
                     org.plus(idAngles(0f, ideal_yaw, 0f).ToForward().times(64f)),
                     idGameLocal.msec
                 )
-                Game_local.gameRenderWorld.DebugLine(
+                Game_local.gameRenderWorld!!.DebugLine(
                     Lib.colorGreen,
                     org,
                     org.plus(idAngles(0f, current_yaw, 0f).ToForward().times(48f)),
                     idGameLocal.msec
                 )
-                Game_local.gameRenderWorld.DebugLine(
+                Game_local.gameRenderWorld!!.DebugLine(
                     Lib.colorYellow,
                     org,
                     org.plus(idAngles(0f, current_yaw + turnVel, 0f).ToForward().times(32f)),
@@ -4670,13 +4670,13 @@ object AI {
                 }
             }
             if (SysCvar.ai_debugMove.GetBool()) {
-                Game_local.gameRenderWorld.DebugBounds(
+                Game_local.gameRenderWorld!!.DebugBounds(
                     Lib.colorLtGrey,
                     enemyEnt.GetPhysics().GetBounds(),
                     lastReachableEnemyPos,
                     idGameLocal.msec
                 )
-                Game_local.gameRenderWorld.DebugBounds(
+                Game_local.gameRenderWorld!!.DebugBounds(
                     Lib.colorWhite,
                     enemyEnt.GetPhysics().GetBounds(),
                     lastVisibleReachableEnemyPos,
@@ -4968,7 +4968,7 @@ object AI {
             val enemyBounds = enemyEnt.GetPhysics().GetBounds()
             enemyBounds.TranslateSelf(enemyOrg)
             if (SysCvar.ai_debugMove.GetBool()) {
-                Game_local.gameRenderWorld.DebugBounds(
+                Game_local.gameRenderWorld!!.DebugBounds(
                     Lib.colorYellow,
                     bounds,
                     Vector.getVec3_zero(),
@@ -5176,9 +5176,9 @@ object AI {
                     worldMuzzleFlash.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] =
                         -Math_h.MS2SEC(Game_local.gameLocal.time.toFloat())
                     if (worldMuzzleFlashHandle != -1) {
-                        Game_local.gameRenderWorld.UpdateLightDef(worldMuzzleFlashHandle, worldMuzzleFlash)
+                        Game_local.gameRenderWorld!!.UpdateLightDef(worldMuzzleFlashHandle, worldMuzzleFlash)
                     } else {
-                        worldMuzzleFlashHandle = Game_local.gameRenderWorld.AddLightDef(worldMuzzleFlash)
+                        worldMuzzleFlashHandle = Game_local.gameRenderWorld!!.AddLightDef(worldMuzzleFlash)
                     }
                     muzzleFlashEnd = Game_local.gameLocal.time + flashTime
                     UpdateVisuals()
@@ -5189,7 +5189,7 @@ object AI {
         protected fun UpdateMuzzleFlash() {
             if (worldMuzzleFlashHandle != -1) {
                 if (Game_local.gameLocal.time >= muzzleFlashEnd) {
-                    Game_local.gameRenderWorld.FreeLightDef(worldMuzzleFlashHandle)
+                    Game_local.gameRenderWorld!!.FreeLightDef(worldMuzzleFlashHandle)
                     worldMuzzleFlashHandle = -1
                 } else {
                     val muzzle = idVec3()
@@ -5210,7 +5210,7 @@ object AI {
                             .plus(muzzle.plus(modelOffset).times(viewAxis.times(physicsObj.GetGravityAxis())))
                     )
                     worldMuzzleFlash.origin.set(muzzle)
-                    Game_local.gameRenderWorld.UpdateLightDef(worldMuzzleFlashHandle, worldMuzzleFlash)
+                    Game_local.gameRenderWorld!!.UpdateLightDef(worldMuzzleFlashHandle, worldMuzzleFlash)
                 }
             }
         }
@@ -5256,7 +5256,7 @@ object AI {
                     ?: GetJointWorldTransform(focusJoint, Game_local.gameLocal.time, eyepos, axis)
                 eyeOffset.z = eyepos.z - physicsObj.GetOrigin().z
                 if (SysCvar.ai_debugMove.GetBool()) {
-                    Game_local.gameRenderWorld.DebugLine(
+                    Game_local.gameRenderWorld!!.DebugLine(
                         Lib.colorRed,
                         eyepos,
                         eyepos.plus(orientationJointAxis[0].times(32.0f)),
@@ -5304,9 +5304,9 @@ object AI {
             newLookAng.roll = 0.0f
             newLookAng.pitch = 0.0f
             // #if 0
-            // gameRenderWorld.DebugLine( colorRed, orientationJointPos, focusPos, gameLocal.msec );
-            // gameRenderWorld.DebugLine( colorYellow, orientationJointPos, orientationJointPos + orientationJointAxis[ 0 ] * 32.0f, gameLocal.msec );
-            // gameRenderWorld.DebugLine( colorGreen, orientationJointPos, orientationJointPos + newLookAng.ToForward() * 48.0f, gameLocal.msec );
+            // gameRenderWorld!!.DebugLine( colorRed, orientationJointPos, focusPos, gameLocal.msec );
+            // gameRenderWorld!!.DebugLine( colorYellow, orientationJointPos, orientationJointPos + orientationJointAxis[ 0 ] * 32.0f, gameLocal.msec );
+            // gameRenderWorld!!.DebugLine( colorGreen, orientationJointPos, orientationJointPos + newLookAng.ToForward() * 48.0f, gameLocal.msec );
 // #endif
             // determine pitch from joint position
             dir.set(focusPos.minus(eyepos))
@@ -5846,7 +5846,7 @@ object AI {
             )
             start.set(GetEyePosition())
             if (SysCvar.ai_debugMove.GetBool()) {
-                Game_local.gameRenderWorld.DebugLine(Lib.colorYellow, start, end, idGameLocal.msec)
+                Game_local.gameRenderWorld!!.DebugLine(Lib.colorYellow, start, end, idGameLocal.msec)
             }
             Game_local.gameLocal.clip.TranslationEntities(
                 trace,
@@ -6533,13 +6533,13 @@ object AI {
                 path
             )
             if (SysCvar.ai_debugMove.GetBool()) {
-                Game_local.gameRenderWorld.DebugLine(
+                Game_local.gameRenderWorld!!.DebugLine(
                     Lib.colorGreen,
                     physicsObj.GetOrigin(),
                     end,
                     idGameLocal.msec
                 )
-                Game_local.gameRenderWorld.DebugBounds(
+                Game_local.gameRenderWorld!!.DebugBounds(
                     if (path.endEvent == 0) Lib.colorYellow else Lib.colorRed,
                     physicsObj.GetBounds(),
                     end,
@@ -6595,13 +6595,13 @@ object AI {
                 path
             )
             if (SysCvar.ai_debugMove.GetBool()) {
-                Game_local.gameRenderWorld.DebugLine(
+                Game_local.gameRenderWorld!!.DebugLine(
                     Lib.colorGreen,
                     physicsObj.GetOrigin(),
                     physicsObj.GetOrigin().plus(moveVec),
                     idGameLocal.msec
                 )
-                Game_local.gameRenderWorld.DebugBounds(
+                Game_local.gameRenderWorld!!.DebugBounds(
                     if (path.endEvent == 0) Lib.colorYellow else Lib.colorRed,
                     physicsObj.GetBounds(),
                     physicsObj.GetOrigin().plus(moveVec),
@@ -6641,13 +6641,13 @@ object AI {
                 path
             )
             if (SysCvar.ai_debugMove.GetBool()) {
-                Game_local.gameRenderWorld.DebugLine(
+                Game_local.gameRenderWorld!!.DebugLine(
                     Lib.colorGreen,
                     physicsObj.GetOrigin(),
                     physicsObj.GetOrigin().plus(moveVec),
                     idGameLocal.msec
                 )
-                Game_local.gameRenderWorld.DebugBounds(
+                Game_local.gameRenderWorld!!.DebugBounds(
                     if (path.endEvent == 0) Lib.colorYellow else Lib.colorRed,
                     physicsObj.GetBounds(),
                     physicsObj.GetOrigin().plus(moveVec),
@@ -6671,20 +6671,20 @@ object AI {
                 path
             )
             if (SysCvar.ai_debugMove.GetBool()) {
-                Game_local.gameRenderWorld.DebugLine(
+                Game_local.gameRenderWorld!!.DebugLine(
                     Lib.colorGreen,
                     physicsObj.GetOrigin(),
                     position,
                     idGameLocal.msec
                 )
-                Game_local.gameRenderWorld.DebugBounds(
+                Game_local.gameRenderWorld!!.DebugBounds(
                     Lib.colorYellow,
                     physicsObj.GetBounds(),
                     position,
                     idGameLocal.msec
                 )
                 if (path.endEvent != 0) {
-                    Game_local.gameRenderWorld.DebugBounds(
+                    Game_local.gameRenderWorld!!.DebugBounds(
                         Lib.colorRed,
                         physicsObj.GetBounds(),
                         path.endPos,
@@ -7334,7 +7334,7 @@ object AI {
             DeconstructScriptObject()
             scriptObject.Free()
             if (worldMuzzleFlashHandle != -1) {
-                Game_local.gameRenderWorld.FreeLightDef(worldMuzzleFlashHandle)
+                Game_local.gameRenderWorld!!.FreeLightDef(worldMuzzleFlashHandle)
                 worldMuzzleFlashHandle = -1
             }
             super._deconstructor()
@@ -7539,17 +7539,17 @@ object AI {
                         val pos2 = org + leftDir * cone_dist
                         val pos3 = org + rightDir * node.min_dist
                         val pos4 = org + rightDir * cone_dist
-                        Game_local.gameRenderWorld.DebugLine(
+                        Game_local.gameRenderWorld!!.DebugLine(
                             color,
                             node.GetPhysics().GetOrigin(),
                             pos1.plus(pos3).times(0.5f),
                             idGameLocal.msec
                         )
-                        Game_local.gameRenderWorld.DebugLine(color, pos1, pos2, idGameLocal.msec)
-                        Game_local.gameRenderWorld.DebugLine(color, pos1, pos3, idGameLocal.msec)
-                        Game_local.gameRenderWorld.DebugLine(color, pos3, pos4, idGameLocal.msec)
-                        Game_local.gameRenderWorld.DebugLine(color, pos2, pos4, idGameLocal.msec)
-                        Game_local.gameRenderWorld.DebugBounds(color, bounds, org, idGameLocal.msec)
+                        Game_local.gameRenderWorld!!.DebugLine(color, pos1, pos2, idGameLocal.msec)
+                        Game_local.gameRenderWorld!!.DebugLine(color, pos1, pos3, idGameLocal.msec)
+                        Game_local.gameRenderWorld!!.DebugLine(color, pos3, pos4, idGameLocal.msec)
+                        Game_local.gameRenderWorld!!.DebugLine(color, pos2, pos4, idGameLocal.msec)
+                        Game_local.gameRenderWorld!!.DebugBounds(color, bounds, org, idGameLocal.msec)
                     }
                     ent = ent.spawnNode.Next()
                 }

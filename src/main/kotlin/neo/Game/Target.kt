@@ -255,7 +255,7 @@ object Target {
         }
 
         private fun Event_Activate(activator: idEventArg<idEntity>) {
-            val nextMap = arrayOf("")
+            val nextMap = arrayOfNulls<String>(1)
             if (BuildDefines.ID_DEMO_BUILD) {
                 if (spawnArgs.GetBool("endOfGame")) {
                     CVarSystem.cvarSystem.SetCVarBool("g_nightmare", true)
@@ -278,7 +278,7 @@ object Target {
             } else {
                 Game_local.gameLocal.sessionCommand.set("map ")
             }
-            Game_local.gameLocal.sessionCommand.plusAssign(nextMap[0])
+            Game_local.gameLocal.sessionCommand.plusAssign(nextMap[0]!!)
         }
 
         override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {
@@ -1038,12 +1038,12 @@ object Target {
                 delay = 0.0f
                 // start any sound fading now
                 if (fadeTime != 0f) {
-                    Game_local.gameSoundWorld.FadeSoundClasses(0, -40.0f, fadeTime)
+                    Game_local.gameSoundWorld!!.FadeSoundClasses(0, -40.0f, fadeTime)
                     soundFaded = true
                 }
                 return
             } else if (fadeTime != 0f && !soundFaded) {
-                Game_local.gameSoundWorld.FadeSoundClasses(0, -40.0f, fadeTime)
+                Game_local.gameSoundWorld!!.FadeSoundClasses(0, -40.0f, fadeTime)
                 soundFaded = true
             }
             if (spawnArgs.GetBool("triggerTargets")) {
@@ -1264,7 +1264,7 @@ object Target {
             Game_local.gameLocal.SetGlobalMaterial(null)
             val fadeTime = spawnArgs.GetFloat("fadeWorldSounds")
             if (fadeTime != 0f) {
-                Game_local.gameSoundWorld.FadeSoundClasses(0, 0.0f, fadeTime / 2.0f)
+                Game_local.gameSoundWorld!!.FadeSoundClasses(0, 0.0f, fadeTime / 2.0f)
             }
         }
 
@@ -2023,7 +2023,7 @@ object Target {
             val fadeClass = spawnArgs.GetInt("fadeClass")
             // start any sound fading now
             if (fadeTime != 0f) {
-                Game_local.gameSoundWorld.FadeSoundClasses(
+                Game_local.gameSoundWorld!!.FadeSoundClasses(
                     fadeClass,
                     if (spawnArgs.GetBool("fadeIn")) fadeDB else  /*0.0f */ -fadeDB,
                     fadeTime
@@ -2039,7 +2039,7 @@ object Target {
             val fadeDB = spawnArgs.GetFloat("fadeDB")
             val fadeClass = spawnArgs.GetInt("fadeClass")
             // restore volume
-            Game_local.gameSoundWorld.FadeSoundClasses(0, fadeDB, fadeTime)
+            Game_local.gameSoundWorld!!.FadeSoundClasses(0, fadeDB, fadeTime)
         }
 
         override fun getEventCallBack(event: idEventDef): eventCallback_t<*>? {

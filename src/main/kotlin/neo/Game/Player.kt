@@ -1589,7 +1589,7 @@ object Player {
             if (!Game_local.gameLocal.isMultiplayer && Game_local.gameLocal.serverInfo.FindKey("devmap") != null) {
                 // fire a trigger with the name "devmap"
                 val ent = Game_local.gameLocal.FindEntity("devmap")
-                ent!!.ActivateTargets(this)
+                ent?.ActivateTargets(this)
             }
             if (hud != null) {
                 // We can spawn with a full soul cube, so we need to make sure the hud knows this
@@ -1849,7 +1849,7 @@ object Player {
                 ent = enemyList.Next()
                 while (ent != null) {
                     Game_local.gameLocal.Printf("enemy (%d)'%s'\n", ent.entityNumber, ent.name)
-                    Game_local.gameRenderWorld.DebugBounds(
+                    Game_local.gameRenderWorld!!.DebugBounds(
                         Lib.colorRed,
                         ent.GetPhysics().GetBounds().Expand(2f),
                         ent.GetPhysics().GetOrigin()
@@ -2261,7 +2261,7 @@ object Player {
         }
 
         override fun Init() {
-            val value = arrayOf("")
+            val value = arrayOfNulls<String>(1)
             var kv: idKeyValue?
             noclip = false
             godmode = false
@@ -2362,8 +2362,8 @@ object Player {
             viewBobAngles.Zero()
             viewBob.Zero()
             value[0] = spawnArgs.GetString("model")
-            if (value.isNotEmpty() && value[0].isNotEmpty()) {
-                SetModel(value[0])
+            if (value.isNotEmpty() && !value[0].isNullOrEmpty()) {
+                SetModel(value[0]!!)
             }
             if (cursor != null) {
                 cursor!!.SetStateInt("talkcursor", 0)
@@ -2375,22 +2375,22 @@ object Player {
                 SetSkin(skin)
                 renderEntity!!.shaderParms[6] = 0f
             } else if (spawnArgs.GetString("spawn_skin", "", value)) {
-                skin.oSet(DeclManager.declManager.FindSkin(value[0])!!)
+                skin.oSet(DeclManager.declManager.FindSkin(value[0]!!)!!)
                 SetSkin(skin)
                 renderEntity!!.shaderParms[6] = 0f
             }
             value[0] = spawnArgs.GetString("bone_hips", "")!!
-            hipJoint = animator.GetJointHandle(value[0])
+            hipJoint = animator.GetJointHandle(value[0]!!)
             if (hipJoint == Model.INVALID_JOINT) {
                 idGameLocal.Error("Joint '%s' not found for 'bone_hips' on '%s'", value[0], name)
             }
             value[0] = spawnArgs.GetString("bone_chest", "")!!
-            chestJoint = animator.GetJointHandle(value[0])
+            chestJoint = animator.GetJointHandle(value[0]!!)
             if (chestJoint == Model.INVALID_JOINT) {
                 idGameLocal.Error("Joint '%s' not found for 'bone_chest' on '%s'", value[0], name)
             }
             value[0] = spawnArgs.GetString("bone_head", "")!!
-            headJoint = animator.GetJointHandle(value[0])
+            headJoint = animator.GetJointHandle(value[0]!!)
             if (headJoint == Model.INVALID_JOINT) {
                 idGameLocal.Error("Joint '%s' not found for 'bone_head' on '%s'", value[0], name)
             }
@@ -4119,8 +4119,8 @@ object Player {
         }
 
         fun GivePowerUp(powerup: Int, time: Int): Boolean {
-            val sound = arrayOf("")
-            val skin = arrayOf("")
+            val sound = arrayOfNulls<String>(1)
+            val skin = arrayOfNulls<String>(1)
             if (powerup >= 0 && powerup < MAX_POWERUPS) {
                 if (Game_local.gameLocal.isServer) {
                     val msg = idBitMsg()
@@ -4138,7 +4138,7 @@ object Player {
                     BERSERK -> {
                         if (spawnArgs.GetString("snd_berserk_third", "", sound)) {
                             StartSoundShader(
-                                DeclManager.declManager.FindSound(sound[0]),
+                                DeclManager.declManager.FindSound(sound[0]!!),
                                 gameSoundChannel_t.SND_CHANNEL_DEMONIC.ordinal,
                                 0,
                                 false
@@ -4153,17 +4153,17 @@ object Player {
                     }
                     INVISIBILITY -> {
                         spawnArgs.GetString("skin_invisibility", "", skin)
-                        powerUpSkin!!.oSet(DeclManager.declManager.FindSkin(skin[0])!!)
+                        powerUpSkin!!.oSet(DeclManager.declManager.FindSkin(skin[0]!!)!!)
                         // remove any decals from the model
                         if (modelDefHandle != -1) {
-                            Game_local.gameRenderWorld.RemoveDecals(modelDefHandle)
+                            Game_local.gameRenderWorld!!.RemoveDecals(modelDefHandle)
                         }
                         if (weapon.GetEntity() != null) {
                             weapon.GetEntity()!!.UpdateSkin()
                         }
                         if (spawnArgs.GetString("snd_invisibility", "", sound)) {
                             StartSoundShader(
-                                DeclManager.declManager.FindSound(sound[0]),
+                                DeclManager.declManager.FindSound(sound[0]!!),
                                 gameSoundChannel_t.SND_CHANNEL_ANY.ordinal,
                                 0,
                                 false
@@ -4176,7 +4176,7 @@ object Player {
                     MEGAHEALTH -> {
                         if (spawnArgs.GetString("snd_megahealth", "", sound)) {
                             StartSoundShader(
-                                DeclManager.declManager.FindSound(sound[0]),
+                                DeclManager.declManager.FindSound(sound[0]!!),
                                 gameSoundChannel_t.SND_CHANNEL_ANY.ordinal,
                                 0,
                                 false
@@ -4788,9 +4788,9 @@ object Player {
                         val pvsAreas = CInt(GetPVSAreas()[0])
                         pvsAreas._val
                     } else {
-                        Game_local.gameRenderWorld.PointInArea(GetPhysics().GetOrigin())
+                        Game_local.gameRenderWorld!!.PointInArea(GetPhysics().GetOrigin())
                     }
-                    newAirless = Game_local.gameRenderWorld.AreasAreConnected(
+                    newAirless = Game_local.gameRenderWorld!!.AreasAreConnected(
                         Game_local.gameLocal.vacuumAreaNum,
                         areaNum,
                         portalConnection_t.PS_BLOCK_AIR
@@ -4896,11 +4896,9 @@ object Player {
                         }
                         if (pdaVideoWave.Length() != 0) {
                             val shader = DeclManager.declManager.FindSound(pdaVideoWave)
-                            StartSoundShader(shader, gameSoundChannel_t.SND_CHANNEL_PDA.ordinal, 0, false)
+                            return StartSoundShader(shader, gameSoundChannel_t.SND_CHANNEL_PDA.ordinal, 0, false)
                         }
                     }
-                    // This is a vanilla bug where pdavideo event never truly returned anything
-                    return true
                 }
             }
             if (token.Icmp("playpdaaudio") == 0) {
@@ -7360,7 +7358,7 @@ object Player {
                     i++
                     continue
                 }
-                pt = Game_local.gameRenderWorld.GuiTrace(ent.GetModelDefHandle(), start, end)
+                pt = Game_local.gameRenderWorld!!.GuiTrace(ent.GetModelDefHandle(), start, end)
                 if (pt.x != -1f) {
                     // we have a hit
                     val focusGUIrenderEntity = ent.GetRenderEntity()

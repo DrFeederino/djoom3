@@ -3390,12 +3390,12 @@ class Common {
                 = 0
         var time_frontend // renderSystem frontend time
                 = 0
-        var time_gameDraw = 0
+        var time_gameDraw = 0L
 
         //
         //
         // com_speeds times
-        var time_gameFrame = 0
+        var time_gameFrame = 0L
         var com_msgID: Long = -1
 
         //

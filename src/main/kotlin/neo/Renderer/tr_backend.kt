@@ -181,7 +181,7 @@ object tr_backend {
         tr_local.backEnd!!.glState.faceCulling = cullType
     }
 
-    fun GL_Cull(cullType: Enum<*>) {
+    fun GL_Cull(cullType: Enum<cullType_t>) {
         GL_Cull(cullType.ordinal)
     }
 

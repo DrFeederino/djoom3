@@ -47,7 +47,7 @@ class DebugGraphy {
                 vec2.set(
                     pos + axis[2] * value2 - axis[1] * i + axis[0] * samples.Num()
                 )
-                Game_local.gameRenderWorld.DebugLine(color, vec1, vec2, idGameLocal.msec, false)
+                Game_local.gameRenderWorld!!.DebugLine(color, vec1, vec2, idGameLocal.msec, false)
                 value1 = value2
                 i++
             }

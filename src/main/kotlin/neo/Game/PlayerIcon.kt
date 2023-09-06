@@ -64,7 +64,7 @@ object PlayerIcon {
 
         fun FreeIcon() {
             if (iconHandle != -1) {
-                Game_local.gameRenderWorld.FreeEntityDef(iconHandle)
+                Game_local.gameRenderWorld!!.FreeEntityDef(iconHandle)
                 iconHandle = -1
             }
             iconType = playerIconType_t.ICON_NONE
@@ -103,7 +103,7 @@ object PlayerIcon {
             renderEnt.customShader = DeclManager.declManager.FindMaterial(mtr)
             renderEnt.referenceShader = null
             renderEnt.bounds.set(renderEnt.hModel!!.Bounds(renderEnt))
-            iconHandle = Game_local.gameRenderWorld.AddEntityDef(renderEnt)
+            iconHandle = Game_local.gameRenderWorld!!.AddEntityDef(renderEnt)
             iconType = type
             return true
         }
@@ -118,7 +118,7 @@ object PlayerIcon {
             assert(iconHandle >= 0)
             renderEnt.origin.set(origin)
             renderEnt.axis.set(axis)
-            Game_local.gameRenderWorld.UpdateEntityDef(iconHandle, renderEnt)
+            Game_local.gameRenderWorld!!.UpdateEntityDef(iconHandle, renderEnt)
         }
     }
 }

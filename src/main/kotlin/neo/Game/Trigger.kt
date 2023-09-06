@@ -86,12 +86,12 @@ object Trigger {
                             ent = ent.spawnNode.Next()
                             continue
                         }
-                        Game_local.gameRenderWorld.DebugBounds(
+                        Game_local.gameRenderWorld!!.DebugBounds(
                             Lib.colorOrange,
                             ent.GetPhysics().GetAbsBounds()
                         )
                         if (viewTextBounds.IntersectsBounds(ent.GetPhysics().GetAbsBounds())) {
-                            Game_local.gameRenderWorld.DrawText(
+                            Game_local.gameRenderWorld!!.DrawText(
                                 ent.name.toString(),
                                 ent.GetPhysics().GetAbsBounds().GetCenter(),
                                 0.1f,
@@ -99,7 +99,7 @@ object Trigger {
                                 axis,
                                 1
                             )
-                            Game_local.gameRenderWorld.DrawText(
+                            Game_local.gameRenderWorld!!.DrawText(
                                 ent.GetEntityDefName(),
                                 ent.GetPhysics().GetAbsBounds().GetCenter().plus(up),
                                 0.1f,
@@ -113,7 +113,7 @@ object Trigger {
                                 null
                             }
                             if (func != null) {
-                                Game_local.gameRenderWorld.DrawText(
+                                Game_local.gameRenderWorld!!.DrawText(
                                     Str.va("call script '%s'", func.Name()),
                                     ent.GetPhysics().GetAbsBounds().GetCenter().minus(up),
                                     0.1f,
@@ -127,20 +127,20 @@ object Trigger {
                         while (i < ent.targets.Num()) {
                             target = ent.targets[i].GetEntity()
                             if (target != null) {
-                                Game_local.gameRenderWorld.DebugArrow(
+                                Game_local.gameRenderWorld!!.DebugArrow(
                                     Lib.colorYellow,
                                     ent.GetPhysics().GetAbsBounds().GetCenter(),
                                     target.GetPhysics().GetOrigin(),
                                     10,
                                     0
                                 )
-                                Game_local.gameRenderWorld.DebugBounds(
+                                Game_local.gameRenderWorld!!.DebugBounds(
                                     Lib.colorGreen,
                                     box,
                                     target.GetPhysics().GetOrigin()
                                 )
                                 if (viewTextBounds.IntersectsBounds(target.GetPhysics().GetAbsBounds())) {
-                                    Game_local.gameRenderWorld.DrawText(
+                                    Game_local.gameRenderWorld!!.DrawText(
                                         target.name.toString(),
                                         target.GetPhysics().GetAbsBounds().GetCenter(),
                                         0.1f,

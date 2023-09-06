@@ -435,7 +435,8 @@ class Class {
          */
             fun GetClass(name: String?): idTypeInfo? {
                 when (name) {
-                    "idWorldspawn" -> {}
+                    "idWorldspawn" -> idWorldspawn
+                    "idThread" -> idThread
                 }
                 return null
             }

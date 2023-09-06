@@ -339,7 +339,7 @@ object PlayerView {
 
         fun CalculateShake() {
 //            idVec3 origin, matrix;
-            val shakeVolume = Game_local.gameSoundWorld.CurrentShakeAmplitudeForPosition(
+            val shakeVolume = Game_local.gameSoundWorld!!.CurrentShakeAmplitudeForPosition(
                 Game_local.gameLocal.time,
                 player!!.firstPersonViewOrigin
             )
@@ -490,7 +490,7 @@ object PlayerView {
             }
 
             // place the sound origin for the player
-            Game_local.gameSoundWorld.PlaceListener(
+            Game_local.gameSoundWorld!!.PlaceListener(
                 view.vieworg,
                 view.viewaxis,
                 player!!.entityNumber + 1,
@@ -509,7 +509,7 @@ object PlayerView {
             hackedView.viewaxis.set(hackedView.viewaxis.times(ShakeAxis()))
             //            hackedView.viewaxis = idMat3.getMat3_identity();//HACKME::10
 //            hackedView.viewaxis = new idMat3(-1.0f, -3.8941437E-7f, -0.0f, 3.8941437E-7f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
-            Game_local.gameRenderWorld.RenderScene(hackedView)
+            Game_local.gameRenderWorld!!.RenderScene(hackedView)
             if (player!!.spectating) {
                 return
             }

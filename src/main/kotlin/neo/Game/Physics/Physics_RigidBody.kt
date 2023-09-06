@@ -1540,7 +1540,7 @@ object Physics_RigidBody {
                 )
             }
             if (SysCvar.rb_showMass.GetBool()) {
-                Game_local.gameRenderWorld.DrawText(
+                Game_local.gameRenderWorld!!.DrawText(
                     Str.va("\n%1.2f", mass),
                     current.i.position,
                     0.08f,
@@ -1551,7 +1551,7 @@ object Physics_RigidBody {
             }
             if (SysCvar.rb_showInertia.GetBool()) {
                 val I = inertiaTensor
-                Game_local.gameRenderWorld.DrawText(
+                Game_local.gameRenderWorld!!.DrawText(
                     Str.va(
                         "\n\n\n( %.1f %.1f %.1f )\n( %.1f %.1f %.1f )\n( %.1f %.1f %.1f )",
                         I[0].x, I[0].y, I[0].z,

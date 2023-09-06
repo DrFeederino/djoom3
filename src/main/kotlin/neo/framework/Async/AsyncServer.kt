@@ -299,7 +299,7 @@ object AsyncServer {
             serverDataChecksum = DeclManager.declManager.GetChecksum()
 
             // get a pseudo random server id, but don't use the id which is reserved for connectionless packets
-            serverId = win_shared.Sys_Milliseconds() and MsgChannel.CONNECTIONLESS_MESSAGE_ID_MASK
+            serverId = win_shared.Sys_Milliseconds().toInt() and MsgChannel.CONNECTIONLESS_MESSAGE_ID_MASK
             active = true
             nextHeartbeatTime = 0
             nextAsyncStatsTime = 0
@@ -424,7 +424,8 @@ object AsyncServer {
 
             // initialize game id and time
             gameInitId =
-                gameInitId xor win_shared.Sys_Milliseconds() // NOTE: make sure the gameInitId is always a positive number because negative numbers have special meaning
+                gameInitId xor win_shared.Sys_Milliseconds()
+                    .toInt() // NOTE: make sure the gameInitId is always a positive number because negative numbers have special meaning
             gameFrame = 0
             gameTime = 0
             gameTimeResidual = 0
@@ -719,8 +720,8 @@ object AsyncServer {
 
             // check for synchronized cvar changes
             if (CVarSystem.cvarSystem.GetModifiedFlags() and CVarSystem.CVAR_NETWORKSYNC != 0) {
-                val newCvars: idDict
-                newCvars = CVarSystem.cvarSystem.MoveCVarsToDict(CVarSystem.CVAR_NETWORKSYNC)
+                val newCvars: idDict = idDict()
+                newCvars.set(CVarSystem.cvarSystem.MoveCVarsToDict(CVarSystem.CVAR_NETWORKSYNC))
                 SendSyncedCvarsBroadcast(newCvars)
                 CVarSystem.cvarSystem.ClearModifiedFlags(CVarSystem.CVAR_NETWORKSYNC)
             }
@@ -728,9 +729,9 @@ object AsyncServer {
             // check for user info changes of the local client
             if (CVarSystem.cvarSystem.GetModifiedFlags() and CVarSystem.CVAR_USERINFO != 0) {
                 if (localClientNum >= 0) {
-                    val newInfo: idDict
+                    val newInfo: idDict = idDict()
                     Game_local.game.ThrottleUserInfo()
-                    newInfo = CVarSystem.cvarSystem.MoveCVarsToDict(CVarSystem.CVAR_USERINFO)
+                    newInfo.set(CVarSystem.cvarSystem.MoveCVarsToDict(CVarSystem.CVAR_USERINFO))
                     SendUserInfoBroadcast(localClientNum, newInfo)
                 }
                 CVarSystem.cvarSystem.ClearModifiedFlags(CVarSystem.CVAR_USERINFO)

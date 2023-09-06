@@ -11,6 +11,7 @@ import neo.Game.Game_local
 import neo.Game.Physics.Physics.impactInfo_s
 import neo.Game.Physics.Physics_Actor.idPhysics_Actor
 import neo.TempDump
+import neo.framework.Common
 import neo.idlib.BitMsg.idBitMsgDelta
 import neo.idlib.containers.CBool
 import neo.idlib.containers.CInt
@@ -19,6 +20,7 @@ import neo.idlib.math.Math_h.idMath
 import neo.idlib.math.Matrix.idMat3
 import neo.idlib.math.Rotation.idRotation
 import neo.idlib.math.Vector
+import neo.idlib.math.Vector.getVec3_zero
 import neo.idlib.math.Vector.idVec3
 
 /**
@@ -229,11 +231,11 @@ object Physics_Monster {
             // if bound to a master
             if (masterEntity != null) {
                 self!!.GetMasterPosition(masterOrigin, masterAxis)
-                current.origin.set(masterOrigin.plus(current.localOrigin.times(masterAxis)))
+                current.origin.set(masterOrigin + current.localOrigin * masterAxis)
                 clipModel!!.Link(Game_local.gameLocal.clip, self, 0, current.origin, clipModel!!.GetAxis())
-                current.velocity.set(current.origin.minus(oldOrigin).div(timeStep))
+                current.velocity.set((current.origin - oldOrigin) / timeStep)
                 masterDeltaYaw = masterYaw
-                masterYaw = masterAxis.get(0).ToYaw()
+                masterYaw = masterAxis[0].ToYaw()
                 masterDeltaYaw = masterYaw - masterDeltaYaw
                 return true
             }
@@ -253,10 +255,16 @@ object Physics_Monster {
 
             // if not on the ground or moving upwards
             val upspeed: Float
-            upspeed = if (gravityNormal != Vector.getVec3_zero()) {
+            upspeed = if (gravityNormal != getVec3_zero()) {
                 -current.velocity.times(gravityNormal)
             } else {
                 current.velocity.z
+            }
+            // TODO: a hack to make sure things at least somewhat work
+            Common.common.Printf("Current upspeed is %f\n", upspeed)
+            if (upspeed < -10.0f) {
+                current.velocity.set(getVec3_zero())
+                gravityNormal.set(getVec3_zero())
             }
             if (fly || !forceDeltaMove && (!current.onGround || upspeed > 1.0f)) {
                 if (upspeed < 0.0f) {
@@ -552,7 +560,7 @@ object Physics_Monster {
         private fun CheckGround(state: monsterPState_s) {
             val groundTrace = trace_s()
             val down = idVec3()
-            if (gravityNormal == Vector.getVec3_zero()) {
+            if (gravityNormal == getVec3_zero()) {
                 state.onGround = false
                 groundEntityPtr.oSet(null)
                 return
@@ -657,7 +665,7 @@ object Physics_Monster {
             result1 = SlideMove(noStepPos, noStepVel, delta)
             if (result1 == monsterMoveResult_t.MM_OK) {
                 velocity.set(noStepVel)
-                if (gravityNormal == Vector.getVec3_zero()) {
+                if (gravityNormal == getVec3_zero()) {
                     start.set(noStepPos)
                     return monsterMoveResult_t.MM_OK
                 }
@@ -697,7 +705,7 @@ object Physics_Monster {
                 velocity.set(noStepVel)
                 return monsterMoveResult_t.MM_BLOCKED
             }
-            if (gravityNormal == Vector.getVec3_zero()) {
+            if (gravityNormal == getVec3_zero()) {
                 return result1
             }
 

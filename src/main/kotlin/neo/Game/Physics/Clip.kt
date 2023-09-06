@@ -237,7 +237,7 @@ object Clip {
             collisionModelHandle = 0
             this.renderModelHandle = renderModelHandle
             if (renderModelHandle != -1) {
-                val renderEntity = Game_local.gameRenderWorld.GetRenderEntity(renderModelHandle)
+                val renderEntity = Game_local.gameRenderWorld!!.GetRenderEntity(renderModelHandle)
                 if (renderEntity != null) {
                     bounds.set(renderEntity.bounds)
                 }
@@ -350,7 +350,7 @@ object Clip {
             axis.set(newAxis)
             if (renderModelHandle != -1) {
                 this.renderModelHandle = renderModelHandle
-                val renderEntity = Game_local.gameRenderWorld.GetRenderEntity(renderModelHandle)
+                val renderEntity = Game_local.gameRenderWorld!!.GetRenderEntity(renderModelHandle)
                 if (renderEntity != null) {
                     bounds.set(renderEntity.bounds)
                 }
@@ -1646,7 +1646,7 @@ object Clip {
                     continue
                 }
                 if (clipModel.renderModelHandle != -1) {
-                    Game_local.gameRenderWorld.DebugBounds(Lib.colorCyan, clipModel.GetAbsBounds())
+                    Game_local.gameRenderWorld!!.DebugBounds(Lib.colorCyan, clipModel.GetAbsBounds())
                 } else {
                     CollisionModel_local.collisionModelManager.DrawModel(
                         clipModel.Handle(),
@@ -1669,19 +1669,19 @@ object Clip {
             }
             axis = contact.normal.ToMat3()
             if (winding.GetNumPoints() == 1) {
-                Game_local.gameRenderWorld.DebugLine(
+                Game_local.gameRenderWorld!!.DebugLine(
                     Lib.colorCyan,
                     winding[0].ToVec3(),
                     winding[0].ToVec3() + axis[0] * 2.0f,
                     lifetime
                 )
-                Game_local.gameRenderWorld.DebugLine(
+                Game_local.gameRenderWorld!!.DebugLine(
                     Lib.colorWhite,
                     winding[0].ToVec3() -  /*- 1.0f * */axis[1],
                     winding[0].ToVec3() +  /*+ 1.0f */axis[1],
                     lifetime
                 )
-                Game_local.gameRenderWorld.DebugLine(
+                Game_local.gameRenderWorld!!.DebugLine(
                     Lib.colorWhite,
                     winding[0].ToVec3() -  /*- 1.0f * */axis[2],
                     winding[0].ToVec3() + /*+ 1.0f */axis[2],
@@ -1690,7 +1690,7 @@ object Clip {
             } else {
                 i = 0
                 while (i < winding.GetNumPoints()) {
-                    Game_local.gameRenderWorld.DebugLine(
+                    Game_local.gameRenderWorld!!.DebugLine(
                         Lib.colorCyan,
                         winding[i].ToVec3(),
                         winding[(i + 1) % winding.GetNumPoints()].ToVec3(),
@@ -1701,7 +1701,7 @@ object Clip {
             }
             axis[0] = axis[0].unaryMinus()
             axis[2] = axis[2].unaryMinus()
-            Game_local.gameRenderWorld.DrawText(
+            Game_local.gameRenderWorld!!.DrawText(
                 contact.material!!.GetName(),
                 winding.GetCenter().minus(axis[2].times(4.0f)),
                 0.1f,
@@ -1897,7 +1897,7 @@ object Clip {
                 val modelTrace = modelTrace_s()
 
                 // test with exact render model and modify trace_t structure accordingly
-                if (Game_local.gameRenderWorld.ModelTrace(modelTrace, touch.renderModelHandle, start, end, radius)) {
+                if (Game_local.gameRenderWorld!!.ModelTrace(modelTrace, touch.renderModelHandle, start, end, radius)) {
                     trace.fraction = modelTrace.fraction
                     trace.endAxis.set(axis)
                     trace.endpos.set(modelTrace.point)

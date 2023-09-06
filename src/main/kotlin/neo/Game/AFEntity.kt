@@ -160,9 +160,9 @@ object AFEntity {
 
                 // add to refresh list
                 if (modelDefHandles[i] == -1) {
-                    modelDefHandles[i] = Game_local.gameRenderWorld.AddEntityDef(renderEntity!!)
+                    modelDefHandles[i] = Game_local.gameRenderWorld!!.AddEntityDef(renderEntity!!)
                 } else {
-                    Game_local.gameRenderWorld.UpdateEntityDef(modelDefHandles[i], renderEntity!!)
+                    Game_local.gameRenderWorld!!.UpdateEntityDef(modelDefHandles[i], renderEntity!!)
                 }
                 i++
             }
@@ -652,12 +652,12 @@ object AFEntity {
         }
 
         open fun LoadAF(): Boolean {
-            val fileName = arrayOf("")
+            val fileName = arrayOfNulls<String>(1)
             if (!spawnArgs.GetString("articulatedFigure", "*unknown*", fileName)) {
                 return false
             }
             af.SetAnimator(GetAnimator())
-            if (!af.Load(this, fileName[0])) {
+            if (!af.Load(this, fileName[0]!!)) {
                 idGameLocal.Error(
                     "idAFEntity_Base::LoadAF: Couldn't load af file '%s' on entity '%s'",
                     fileName[0],
@@ -799,7 +799,9 @@ object AFEntity {
             combatModelContents = 0
             nextSoundTime = 0
             spawnOrigin = idVec3()
+            spawnOrigin.Zero()
             spawnAxis = idMat3.getMat3_identity()
+            spawnAxis.Identity()
         }
     }
 
@@ -868,9 +870,9 @@ object AFEntity {
                 skeleton.hModel = skeletonModel
                 // add to refresh list
                 if (skeletonModelDefHandle == -1) {
-                    skeletonModelDefHandle = Game_local.gameRenderWorld.AddEntityDef(skeleton)
+                    skeletonModelDefHandle = Game_local.gameRenderWorld!!.AddEntityDef(skeleton)
                 } else {
-                    Game_local.gameRenderWorld.UpdateEntityDef(skeletonModelDefHandle, skeleton)
+                    Game_local.gameRenderWorld!!.UpdateEntityDef(skeletonModelDefHandle, skeleton)
                 }
             }
             idEntity_Present()
@@ -1028,7 +1030,7 @@ object AFEntity {
 
         override fun _deconstructor() {
             if (skeletonModelDefHandle != -1) {
-                Game_local.gameRenderWorld.FreeEntityDef(skeletonModelDefHandle)
+                Game_local.gameRenderWorld!!.FreeEntityDef(skeletonModelDefHandle)
                 skeletonModelDefHandle = -1
             }
             super._deconstructor()
@@ -1227,7 +1229,7 @@ object AFEntity {
                 headEnt.SetCombatModel()
                 head.oSet(headEnt)
                 animator.GetJointTransform(joint, Game_local.gameLocal.time, origin, axis)
-                origin.set(renderEntity!!.origin.plus(origin.times(renderEntity!!.axis)))
+                origin.set(renderEntity!!.origin + origin * renderEntity!!.axis)
                 headEnt.SetOrigin(origin)
                 headEnt.SetAxis(renderEntity!!.axis)
                 headEnt.BindToJoint(this, joint, true)
@@ -2124,12 +2126,12 @@ object AFEntity {
                 steamDir.z = steamUpForce
                 force.SetForce(steamDir)
                 force.Evaluate(Game_local.gameLocal.time)
-                //gameRenderWorld.DebugArrow( colorWhite, af.GetPhysics().GetOrigin( steamBody ), af.GetPhysics().GetOrigin( steamBody ) - 10 * steamDir, 4 );
+                //gameRenderWorld!!.DebugArrow( colorWhite, af.GetPhysics().GetOrigin( steamBody ), af.GetPhysics().GetOrigin( steamBody ) - 10 * steamDir, 4 );
             }
             if (steamModelDefHandle >= 0) {
                 steamRenderEntity.origin.set(af.GetPhysics().GetOrigin(steamBody))
                 steamRenderEntity.axis.set(af.GetPhysics().GetAxis(steamBody))
-                Game_local.gameRenderWorld.UpdateEntityDef(steamModelDefHandle, steamRenderEntity)
+                Game_local.gameRenderWorld!!.UpdateEntityDef(steamModelDefHandle, steamRenderEntity)
             }
             super.Think()
         }
@@ -2164,7 +2166,7 @@ object AFEntity {
                 }
                 steamRenderEntity.origin.set(af.GetPhysics().GetOrigin(steamBody))
                 steamRenderEntity.axis.set(af.GetPhysics().GetAxis(steamBody))
-                steamModelDefHandle = Game_local.gameRenderWorld.AddEntityDef(steamRenderEntity)
+                steamModelDefHandle = Game_local.gameRenderWorld!!.AddEntityDef(steamRenderEntity)
             }
         }
 

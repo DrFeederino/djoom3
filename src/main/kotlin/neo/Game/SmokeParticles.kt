@@ -109,7 +109,7 @@ object SmokeParticles {
             renderEntity.bounds.AddPoint(idVec3(100000, 100000, 100000))
             renderEntity.callback = ModelCallback.Companion.getInstance()
             // add to renderer list
-            renderEntityHandle = Game_local.gameRenderWorld.AddEntityDef(renderEntity)
+            renderEntityHandle = Game_local.gameRenderWorld!!.AddEntityDef(renderEntity)
             currentParticleTime = -1
             initialized = true
         }
@@ -117,7 +117,7 @@ object SmokeParticles {
         fun Shutdown() {
             // make sure the render entity is freed before the model is freed
             if (renderEntityHandle != -1) {
-                Game_local.gameRenderWorld.FreeEntityDef(renderEntityHandle)
+                Game_local.gameRenderWorld!!.FreeEntityDef(renderEntityHandle)
                 renderEntityHandle = -1
             }
             if (renderEntity.hModel != null) {

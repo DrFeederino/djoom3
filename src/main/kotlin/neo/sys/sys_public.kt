@@ -1,12 +1,22 @@
 package neo.sys
 
 import neo.TempDump
+import neo.TempDump.NOT
 import neo.TempDump.SERiAL
 import neo.TempDump.TODO_Exception
+import neo.framework.Common.Companion.common
 import neo.idlib.containers.CInt
 import neo.idlib.containers.idStrList
 import neo.sys.sys_local.idSysLocal
+import neo.sys.win_net.Companion.MAX_UDP_MSG_SIZE
+import neo.sys.win_net.Companion.Net_GetUDPPacket
+import neo.sys.win_net.Companion.Net_SendUDPPacket
+import neo.sys.win_net.Companion.net_forceDrop
+import neo.sys.win_net.Companion.net_forceLatency
 import neo.sys.win_net.idUDPLag
+import neo.sys.win_shared.Sys_Milliseconds
+import org.lwjgl.system.libc.LibCString.memcpy
+import java.net.DatagramSocket
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.*
@@ -40,6 +50,7 @@ object sys_public {
     const val CRITICAL_SECTION_ONE = 1
     const val CRITICAL_SECTION_THREE = 3
     const val CRITICAL_SECTION_TWO = 2
+    const val RAND_MAX = 32767
 
     //
     // enum {
@@ -190,16 +201,15 @@ object sys_public {
     }
 
     class netadr_t {
-        val ip: CharArray = CharArray(4)
+        var ip: CharArray = CharArray(4)
         var port: Int = 0
         var type: netadrtype_t = netadrtype_t.NA_BAD
         fun oSet(address: netadr_t) {
             type = address.type
-            ip[0] = address.ip[0]
-            ip[1] = address.ip[1]
-            ip[2] = address.ip[2]
-            ip[3] = address.ip[3]
-            port = port
+            for (i in 0 until ip.size) {
+                ip[i] = address.ip[i]
+            }
+            port = address.port
         }
 
         override fun equals(o: Any?): Boolean {
@@ -225,25 +235,19 @@ object sys_public {
         var packetsWritten = 0
         private var bound_to // interface and port
                 : netadr_t = netadr_t()
-        private var netSocket // OS specific socket
-                = 0
+        private var netSocket: DatagramSocket? = null // OS specific socket
 
         // virtual		~idPort();
         // if the InitForPort fails, the idPort.port field will remain 0
         fun InitForPort(portNumber: Int): Boolean {
-//            int len = sizeof(struct     sockaddr_in );
-            netSocket = win_net.NET_IPSocket(win_net.net_ip.GetString()!!, portNumber, bound_to)
-            if (netSocket <= 0) {
-                netSocket = 0
+            netSocket = win_net.IPSocket(win_net.net_ip.GetString()!!, portNumber, bound_to)
+            if (netSocket == null) {
+                netSocket = null
                 bound_to = netadr_t() // memset( &bound_to, 0, sizeof( bound_to ) );
                 return false
             }
-            if (false) {
-                if (win_net.net_socksEnabled.GetBool()) {
-                    win_net.NET_OpenSocks(portNumber)
-                }
-            }
             udpPorts[bound_to.port] = idUDPLag()
+
             return true
         }
 
@@ -256,59 +260,59 @@ object sys_public {
         }
 
         fun Close() {
-            if (netSocket != 0) {
+            if (netSocket != null) {
                 if (udpPorts[bound_to.port] != null) {
                     //udpPorts[bound_to.port] = null // delete udpPorts[bound_to.port ];
                 }
-                //                closesocket(netSocket); //TODO:
-                netSocket = 0
+                closesocket(netSocket); //TODO:
+                netSocket = null
                 bound_to = netadr_t() // memset(bound_to, 0, sizeof(bound_to));
             }
         }
 
-        fun GetPacket(from: netadr_t, data: Any, size: CInt, maxSize: Int): Boolean {
-            throw TODO_Exception()
+        private fun closesocket(netSocket: DatagramSocket?) {
+            netSocket?.close()
+        }
+
+        fun GetPacket(from: netadr_t, data: ByteBuffer, size: CInt, maxSize: Int): Boolean {
             //            udpMsg_s msg;
-//            boolean ret;
-//
-//            while (true) {
-//
-//                ret = Net_GetUDPPacket(netSocket, from[0], (char[]) data, size, maxSize);
-//                if (!ret) {
-//                    break;
-//                }
-//
-//                if (net_forceDrop.GetInteger() > 0) {
-//                    if (rand() < net_forceDrop.GetInteger() * RAND_MAX / 100) {
-//                        continue;
-//                    }
-//                }
-//
-//                packetsRead++;
-//                bytesRead += size[0];
-//
-//                if (net_forceLatency.GetInteger() > 0) {
-//
-//                    assert (size[0] <= MAX_UDP_MSG_SIZE);
-//                    msg = udpPorts[ bound_to.port].udpMsgAllocator.Alloc();
-//                    memcpy(msg.data, data, size[0]);
-//                    msg.size = size[0];
-//                    msg.address = from;
-//                    msg.time = Sys_Milliseconds();
-//                    msg.next = null;
-//                    if (udpPorts[ bound_to.port].recieveLast) {
-//                        udpPorts[ bound_to.port].recieveLast.next = msg;
-//                    } else {
-//                        udpPorts[ bound_to.port].recieveFirst = msg;
-//                    }
-//                    udpPorts[ bound_to.port].recieveLast = msg;
-//                } else {
-//                    break;
-//                }
-//            }
-//
-//            if (net_forceLatency.GetInteger() > 0 || (udpPorts[bound_to.port] != null && udpPorts[bound_to.port].recieveFirst != null)) {
-//
+            var ret: Boolean
+
+            while (true) {
+
+                ret = Net_GetUDPPacket(netSocket!!, from, data.array(), size, maxSize);
+                if (!ret) {
+                    break;
+                }
+
+                if (net_forceDrop.GetInteger() > 0) {
+                    if (Random().nextInt() < net_forceDrop.GetInteger() * RAND_MAX / 100) {
+                        continue;
+                    }
+                }
+
+                packetsRead++;
+                bytesRead += size._val;
+
+                if (net_forceLatency.GetInteger() > 0) {
+                    val msg: win_net.udpMsg_s = udpPorts[bound_to.port].Alloc()
+                    msg.size = size._val
+                    msg.address = from
+                    msg.time = Sys_Milliseconds();
+                    msg.next = null;
+                    if (udpPorts[bound_to.port].recieveLast != null) {
+                        udpPorts[bound_to.port].recieveLast?.next = msg;
+                    } else {
+                        udpPorts[bound_to.port].recieveFirst = msg;
+                    }
+                    udpPorts[bound_to.port].recieveLast = msg;
+                } else {
+                    break;
+                }
+            }
+
+            if (net_forceLatency.GetInteger() > 0 || (udpPorts[bound_to.port] != null && udpPorts[bound_to.port].recieveFirst != null)) {
+
 //                msg = udpPorts[ bound_to.port].recieveFirst;
 //                if (msg != null && msg.time <= Sys_Milliseconds() - net_forceLatency.GetInteger()) {
 //                    memcpy(data, msg.data, msg.size);
@@ -321,64 +325,61 @@ object sys_public {
 //                    udpPorts[ bound_to.port].udpMsgAllocator.Free(msg);
 //                    return true;
 //                }
-//                return false;
-//
-//            } else {
-//                return ret;
-//            }
+                return false;
+
+            } else {
+                return ret;
+            }
         }
 
-        fun GetPacketBlocking(from: netadr_t, data: Any, size: CInt, maxSize: Int, timeout: Int): Boolean {
-            win_net.Net_WaitForUDPPacket(netSocket, timeout)
+        fun GetPacketBlocking(from: netadr_t, data: ByteBuffer, size: CInt, maxSize: Int, timeout: Int): Boolean {
+            //win_net.Net_WaitForUDPPacket(netSocket!!, timeout)
             return GetPacket(from, data, size, maxSize)
         }
 
-        fun SendPacket(to: netadr_t, data: Any, size: Int) {
-            throw TODO_Exception()
-            //            udpMsg_s msg;
-//
-//            if (to.type == NA_BAD) {
-//                common.Warning("idPort::SendPacket: bad address type NA_BAD - ignored");
-//                return;
-//            }
-//
-//            packetsWritten++;
-//            bytesWritten += size;
-//
-//            if (net_forceDrop.GetInteger() > 0) {
-//                if (rand() < net_forceDrop.GetInteger() * RAND_MAX / 100) {
-//                    return;
-//                }
-//            }
-//
-//            if (net_forceLatency.GetInteger() > 0 || (udpPorts[bound_to.port] != null && udpPorts[bound_to.port].sendFirst != null)) {
-//
-//                assert (size <= MAX_UDP_MSG_SIZE);
-//                msg = udpPorts[ bound_to.port].udpMsgAllocator.Alloc();
-//                memcpy(msg.data, data, size);
-//                msg.size = size;
-//                msg.address = to;
-//                msg.time = Sys_Milliseconds();
-//                msg.next = null;
-//                if (udpPorts[ bound_to.port].sendLast) {
-//                    udpPorts[ bound_to.port].sendLast.next = msg;
-//                } else {
-//                    udpPorts[ bound_to.port].sendFirst = msg;
-//                }
-//                udpPorts[ bound_to.port].sendLast = msg;
-//
-//                for (msg = udpPorts[bound_to.port].sendFirst; msg != null && msg.time <= Sys_Milliseconds() - net_forceLatency.GetInteger(); msg = udpPorts[ bound_to.port].sendFirst) {
-//                    Net_SendUDPPacket(netSocket, msg.size, msg.data, msg.address);
-//                    udpPorts[ bound_to.port].sendFirst = udpPorts[ bound_to.port].sendFirst.next;
-//                    if (NOT(udpPorts[bound_to.port].sendFirst)) {
-//                        udpPorts[ bound_to.port].sendLast = null;
-//                    }
-//                    udpPorts[ bound_to.port].udpMsgAllocator.Free(msg);
-//                }
-//
-//            } else {
-//                Net_SendUDPPacket(netSocket, size, data, to);
-//            }
+        fun SendPacket(to: netadr_t, data: ByteBuffer, size: Int) {
+            if (to.type == netadrtype_t.NA_BAD) {
+                common.Warning("idPort::SendPacket: bad address type NA_BAD - ignored");
+                return
+            }
+
+
+            packetsWritten++;
+            bytesWritten += size;
+
+            if (net_forceDrop.GetInteger() > 0) {
+                if (Random().nextInt() < net_forceDrop.GetInteger() * RAND_MAX / 100) {
+                    return;
+                }
+            }
+
+            if (net_forceLatency.GetInteger() > 0 || (udpPorts[bound_to.port] != null && udpPorts[bound_to.port].sendFirst != null)) {
+                assert(size <= MAX_UDP_MSG_SIZE)
+                var msg: win_net.udpMsg_s? = udpPorts[bound_to.port].Alloc()
+                System.arraycopy(msg!!.data, 0, data, 0, size)
+                msg.size = size
+                msg.address = to
+                msg.time = Sys_Milliseconds()
+                msg.next = null
+                if (udpPorts[bound_to.port].sendLast != null) {
+                    udpPorts[bound_to.port].sendLast?.next = msg;
+                } else {
+                    udpPorts[bound_to.port].sendFirst = msg;
+                }
+                udpPorts[bound_to.port].sendLast = msg;
+
+                msg = udpPorts[bound_to.port].sendFirst
+                while (msg != null && msg.time <= Sys_Milliseconds() - net_forceLatency.GetInteger()) {
+                    Net_SendUDPPacket(netSocket, msg.size, ByteBuffer.wrap(msg.data), msg.address!!);
+                    udpPorts[bound_to.port].sendFirst = udpPorts[bound_to.port].sendFirst!!.next;
+                    if (udpPorts[bound_to.port].sendFirst == null) {
+                        udpPorts[bound_to.port].sendLast = null;
+                    }
+                    msg = udpPorts[bound_to.port].sendFirst
+                }
+            } else {
+                Net_SendUDPPacket(netSocket, size, data, to);
+            }
         }
     }
 

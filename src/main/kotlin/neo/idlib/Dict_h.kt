@@ -478,7 +478,7 @@ class Dict_h {
         }
 
         @Throws(idException::class)
-        fun GetString(key: String?, defaultString: String, out: Array<String>): Boolean {
+        fun GetString(key: String?, defaultString: String?, out: Array<String?>): Boolean {
             val kv = FindKey(key)
             if (kv != null) {
                 out[0] = kv.GetValue().toString()
@@ -501,28 +501,28 @@ class Dict_h {
 
         @Throws(idException::class)
         fun GetFloat(key: String?, defaultString: String, out: CFloat): Boolean {
-            val s = Array(1) { "" }
+            val s = arrayOfNulls<String>(1)
             val found: Boolean
             found = GetString(key, defaultString, s)
-            out._val = (TempDump.atof(s[0]))
+            out._val = (TempDump.atof(s[0]!!))
             return found
         }
 
         @Throws(idException::class)
         fun GetInt(key: String?, defaultString: String, out: CInt): Boolean {
-            val s = Array(1) { "" }
+            val s = arrayOfNulls<String>(1)
             val found: Boolean
             found = GetString(key, defaultString, s)
-            out._val = (TempDump.atoi(s[0]))
+            out._val = (TempDump.atoi(s[0]!!))
             return found
         }
 
         @Throws(idException::class)
         fun GetBool(key: String?, defaultString: String, out: CBool): Boolean {
-            val s = Array(1) { "" }
+            val s = arrayOfNulls<String>(1)
             val found: Boolean
             found = GetString(key, defaultString, s)
-            out._val = (TempDump.atob(s[0]))
+            out._val = (TempDump.atob(s[0]!!))
             return found
         }
 
@@ -530,13 +530,13 @@ class Dict_h {
         fun GetVector(key: String?, defaultString: String?, out: idVec3): Boolean {
             var defaultString = defaultString
             val found: Boolean
-            val s = Array(1) { "" }
+            val s = arrayOfNulls<String>(1)
             if (null == defaultString) {
                 defaultString = "0 0 0"
             }
             found = GetString(key, defaultString, s)
             out.Zero()
-            val sscanf: Array<String> = s[0].split(" ").toTypedArray()
+            val sscanf: Array<String> = s[0]!!.split(" ").toTypedArray()
             for (i in sscanf.indices) {
                 out[i] = TempDump.atof(sscanf[i])
             }
@@ -547,13 +547,13 @@ class Dict_h {
         fun GetVec2(key: String?, defaultString: String?, out: idVec2): Boolean {
             var defaultString = defaultString
             val found: Boolean
-            val s = Array(1) { "" }
+            val s = arrayOfNulls<String>(1)
             if (null == defaultString) {
                 defaultString = "0 0"
             }
             found = GetString(key, defaultString, s)
             out.Zero()
-            val sscanf: Array<String> = s[0].split(" ").toTypedArray()
+            val sscanf: Array<String> = s[0]!!.split(" ").toTypedArray()
             for (i in sscanf.indices) {
                 out[i] = TempDump.atof(sscanf[i])
             }
@@ -564,13 +564,13 @@ class Dict_h {
         fun GetVec4(key: String?, defaultString: String?, out: idVec4): Boolean {
             var defaultString = defaultString
             val found: Boolean
-            val s = Array(1) { "" }
+            val s = arrayOfNulls<String>(1)
             if (null == defaultString) {
                 defaultString = "0 0 0 0"
             }
             found = GetString(key, defaultString, s)
             out.Zero()
-            val sscanf: Array<String> = s[0].split(" ").toTypedArray()
+            val sscanf: Array<String> = s[0]!!.split(" ").toTypedArray()
             for (i in sscanf.indices) {
                 out[i] = TempDump.atof(sscanf[i])
             }
@@ -581,13 +581,13 @@ class Dict_h {
         fun GetAngles(key: String?, defaultString: String?, out: idAngles): Boolean {
             var defaultString = defaultString
             val found: Boolean
-            val s = Array(1) { "" }
+            val s = arrayOfNulls<String>(1)
             if (null == defaultString) {
                 defaultString = "0 0 0"
             }
             found = GetString(key, defaultString, s)
             out.Zero()
-            val sscanf: Array<String> = s[0].split(" ").toTypedArray()
+            val sscanf: Array<String> = s[0]!!.split(" ").toTypedArray()
             for (i in sscanf.indices) {
                 out[i] = TempDump.atof(sscanf[i])
             }
@@ -598,13 +598,13 @@ class Dict_h {
         fun GetMatrix(key: String?, defaultString: String?, out: idMat3): Boolean {
             var defaultString = defaultString
             val found: Boolean
-            val s = Array(1) { "" }
+            val s = arrayOfNulls<String>(1)
             if (null == defaultString) {
                 defaultString = "1 0 0 0 1 0 0 0 1"
             }
             found = GetString(key, defaultString, s)
             out.Zero()
-            val sscanf: Array<String> = s[0].split(" ").toTypedArray()
+            val sscanf: Array<String> = s[0]!!.split(" ").toTypedArray()
             val halfSize = sqrt(sscanf.size.toDouble()).toInt()
             var i = 0
             var index = 0
@@ -891,7 +891,7 @@ class Dict_h {
                 len = 0
                 while (len < Lib.MAX_STRING_CHARS) {
                     f.ReadChar(c) //, 1);
-                    str[len] = c[0] as Char
+                    str[len] = Char(c[0].toInt())
                     if (str[len].code == 0) {
                         break
                     }

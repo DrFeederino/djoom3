@@ -450,7 +450,7 @@ object AI_pathing {
                 }
                 j = 0
                 while (j < numVerts) {
-                    Game_local.gameRenderWorld.DebugArrow(
+                    Game_local.gameRenderWorld!!.DebugArrow(
                         idDeviceContext.colorWhite,
                         silVerts[j],
                         silVerts[(j + 1) % numVerts],
@@ -555,7 +555,7 @@ object AI_pathing {
                 }
                 j = 0
                 while (j < obstacle.winding.GetNumPoints()) {
-                    Game_local.gameRenderWorld.DebugArrow(
+                    Game_local.gameRenderWorld!!.DebugArrow(
                         idDeviceContext.colorGreen,
                         silVerts[j],
                         silVerts[(j + 1) % obstacle.winding.GetNumPoints()],
@@ -603,7 +603,7 @@ object AI_pathing {
                     start.z = height
                     end.set(node.children[i]!!.pos)
                     end.z = height
-                    Game_local.gameRenderWorld.DebugArrow(
+                    Game_local.gameRenderWorld!!.DebugArrow(
                         if (node.edgeNum == -1) idDeviceContext.colorYellow else if (i != 0) idDeviceContext.colorBlue else idDeviceContext.colorRed,
                         start,
                         end,
@@ -1069,7 +1069,7 @@ object AI_pathing {
             while (i < numPathPoints - 1) {
                 start.set(optimizedPath[i])
                 end.set(optimizedPath[i + 1])
-                Game_local.gameRenderWorld.DebugArrow(Lib.colorCyan, start, end, 1)
+                Game_local.gameRenderWorld!!.DebugArrow(Lib.colorCyan, start, end, 1)
                 i++
             }
         }
@@ -1143,7 +1143,7 @@ object AI_pathing {
                             path.endEvent = AI.SE_ENTER_LEDGE_AREA
                             path.blockingEntity = trace.blockingEntity
                             if (SysCvar.ai_debugMove.GetBool()) {
-                                Game_local.gameRenderWorld.DebugLine(
+                                Game_local.gameRenderWorld!!.DebugLine(
                                     idDeviceContext.colorRed,
                                     start,
                                     aasTrace.endpos
@@ -1159,7 +1159,7 @@ object AI_pathing {
                             path.endEvent = AI.SE_ENTER_OBSTACLE
                             path.blockingEntity = trace.blockingEntity
                             if (SysCvar.ai_debugMove.GetBool()) {
-                                Game_local.gameRenderWorld.DebugLine(
+                                Game_local.gameRenderWorld!!.DebugLine(
                                     idDeviceContext.colorRed,
                                     start,
                                     aasTrace.endpos

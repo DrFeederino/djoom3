@@ -124,7 +124,7 @@ object Pvs {
             val totalVisibleAreas: Int
             Shutdown()
 
-            numAreas = Game_local.gameRenderWorld.NumAreas()
+            numAreas = Game_local.gameRenderWorld!!.NumAreas()
             if (numAreas <= 0) {
                 return
             }
@@ -197,24 +197,24 @@ object Pvs {
 
         // get the area(s) the source is in
         fun GetPVSArea(point: idVec3): Int {        // returns the area number
-            return Game_local.gameRenderWorld.PointInArea(point)
+            return Game_local.gameRenderWorld!!.PointInArea(point)
         }
 
         fun GetPVSAreas(bounds: idBounds, areas: IntArray, maxAreas: Int): Int {    // returns number of areas
-            return Game_local.gameRenderWorld.BoundsInAreas(bounds, areas, maxAreas)
+            return Game_local.gameRenderWorld!!.BoundsInAreas(bounds, areas, maxAreas)
         }
 
         // setup current PVS for the source
         fun SetupCurrentPVS(source: idVec3, type: pvsType_t? /*= PVS_NORMAL*/): pvsHandle_t {
             val sourceArea: Int
-            sourceArea = Game_local.gameRenderWorld.PointInArea(source)
+            sourceArea = Game_local.gameRenderWorld!!.PointInArea(source)
             return SetupCurrentPVS(sourceArea, type)
         }
 
         fun SetupCurrentPVS(source: idBounds, type: pvsType_t? /*= PVS_NORMAL*/): pvsHandle_t {
             val numSourceAreas: Int
             val sourceAreas = IntArray(MAX_BOUNDS_AREAS)
-            numSourceAreas = Game_local.gameRenderWorld.BoundsInAreas(source, sourceAreas, MAX_BOUNDS_AREAS)
+            numSourceAreas = Game_local.gameRenderWorld!!.BoundsInAreas(source, sourceAreas, MAX_BOUNDS_AREAS)
             return SetupCurrentPVS(sourceAreas, numSourceAreas, type)
         }
 
@@ -379,7 +379,7 @@ object Pvs {
             if (handle.i < 0 || handle.i >= MAX_CURRENT_PVS || handle.h != currentPVS[handle.i].handle.h) {
                 idGameLocal.Error("idPVS::InCurrentPVS: invalid handle")
             }
-            targetArea = Game_local.gameRenderWorld.PointInArea(target)
+            targetArea = Game_local.gameRenderWorld!!.PointInArea(target)
             return if (targetArea == -1) {
                 false
             } else currentPVS[handle.i].pvs!![targetArea shr 3].toInt() and (1 shl (targetArea and 7)) != 0
@@ -392,7 +392,7 @@ object Pvs {
             if (handle.i < 0 || handle.i >= MAX_CURRENT_PVS || handle.h != currentPVS[handle.i].handle.h) {
                 idGameLocal.Error("idPVS::InCurrentPVS: invalid handle")
             }
-            numTargetAreas = Game_local.gameRenderWorld.BoundsInAreas(target, targetAreas, MAX_BOUNDS_AREAS)
+            numTargetAreas = Game_local.gameRenderWorld!!.BoundsInAreas(target, targetAreas, MAX_BOUNDS_AREAS)
             i = 0
             while (i < numTargetAreas) {
                 if (currentPVS[handle.i].pvs!![targetAreas[i] shr 3].toInt() and (1 shl (targetAreas[i] and 7)) != 0) {
@@ -444,7 +444,7 @@ object Pvs {
             val offset = idVec3()
             var color: idVec4
             val handle: pvsHandle_t?
-            sourceArea = Game_local.gameRenderWorld.PointInArea(source)
+            sourceArea = Game_local.gameRenderWorld!!.PointInArea(source)
             if (sourceArea == -1) {
                 return
             }
@@ -460,18 +460,18 @@ object Pvs {
                 } else {
                     Lib.colorCyan
                 }
-                n = Game_local.gameRenderWorld.NumPortalsInArea(j)
+                n = Game_local.gameRenderWorld!!.NumPortalsInArea(j)
 
                 // draw all the portals of the area
                 i = 0
                 while (i < n) {
-                    portal = Game_local.gameRenderWorld.GetPortal(j, i)
+                    portal = Game_local.gameRenderWorld!!.GetPortal(j, i)
                     numPoints = portal.w!!.GetNumPoints()
                     portal.w!!.GetPlane(plane)
                     offset.set(plane.Normal().times(4.0f))
                     k = 0
                     while (k < numPoints) {
-                        Game_local.gameRenderWorld.DebugLine(
+                        Game_local.gameRenderWorld!!.DebugLine(
                             color,
                             portal.w!![k].ToVec3().plus(offset),
                             portal.w!![(k + 1) % numPoints].ToVec3().plus(offset)
@@ -498,7 +498,7 @@ object Pvs {
             val offset = idVec3()
             var color: idVec4
             val handle: pvsHandle_t?
-            num = Game_local.gameRenderWorld.BoundsInAreas(source, areas, MAX_BOUNDS_AREAS)
+            num = Game_local.gameRenderWorld!!.BoundsInAreas(source, areas, MAX_BOUNDS_AREAS)
             if (0 == num) {
                 return
             }
@@ -521,18 +521,18 @@ object Pvs {
                 } else {
                     Lib.colorCyan
                 }
-                n = Game_local.gameRenderWorld.NumPortalsInArea(j)
+                n = Game_local.gameRenderWorld!!.NumPortalsInArea(j)
 
                 // draw all the portals of the area
                 i = 0
                 while (i < n) {
-                    portal = Game_local.gameRenderWorld.GetPortal(j, i)
+                    portal = Game_local.gameRenderWorld!!.GetPortal(j, i)
                     numPoints = portal.w!!.GetNumPoints()
                     portal.w!!.GetPlane(plane)
                     offset.set(plane.Normal().times(4.0f))
                     k = 0
                     while (k < numPoints) {
-                        Game_local.gameRenderWorld.DebugLine(
+                        Game_local.gameRenderWorld!!.DebugLine(
                             color,
                             portal.w!![k].ToVec3().plus(offset),
                             portal.w!![(k + 1) % numPoints].ToVec3().plus(offset)
@@ -561,7 +561,7 @@ object Pvs {
             if (handle.i < 0 || handle.i >= MAX_CURRENT_PVS || handle.h != currentPVS[handle.i].handle.h) {
                 idGameLocal.Error("idPVS::DrawCurrentPVS: invalid handle")
             }
-            sourceArea = Game_local.gameRenderWorld.PointInArea(source)
+            sourceArea = Game_local.gameRenderWorld!!.PointInArea(source)
             if (sourceArea == -1) {
                 return
             }
@@ -576,18 +576,18 @@ object Pvs {
                 } else {
                     Lib.colorCyan
                 }
-                n = Game_local.gameRenderWorld.NumPortalsInArea(j)
+                n = Game_local.gameRenderWorld!!.NumPortalsInArea(j)
 
                 // draw all the portals of the area
                 i = 0
                 while (i < n) {
-                    portal = Game_local.gameRenderWorld.GetPortal(j, i)
+                    portal = Game_local.gameRenderWorld!!.GetPortal(j, i)
                     numPoints = portal.w!!.GetNumPoints()
                     portal.w!!.GetPlane(plane)
                     offset.set(plane.Normal().times(4.0f))
                     k = 0
                     while (k < numPoints) {
-                        Game_local.gameRenderWorld.DebugLine(
+                        Game_local.gameRenderWorld!!.DebugLine(
                             color,
                             portal.w!![k].ToVec3().plus(offset),
                             portal.w!![(k + 1) % numPoints].ToVec3().plus(offset)
@@ -632,11 +632,11 @@ object Pvs {
             var i: Int
             val na: Int
             var np: Int
-            na = Game_local.gameRenderWorld.NumAreas()
+            na = Game_local.gameRenderWorld!!.NumAreas()
             np = 0
             i = 0
             while (i < na) {
-                np += Game_local.gameRenderWorld.NumPortalsInArea(i)
+                np += Game_local.gameRenderWorld!!.NumPortalsInArea(i)
                 i++
             }
             return np
@@ -666,10 +666,10 @@ object Pvs {
                 area = pvsAreas!![i]
                 area!!.bounds.Clear()
                 //                area.portals = portalPtrs + cp;
-                n = Game_local.gameRenderWorld.NumPortalsInArea(i)
+                n = Game_local.gameRenderWorld!!.NumPortalsInArea(i)
                 j = 0
                 while (j < n) {
-                    portal = Game_local.gameRenderWorld.GetPortal(i, j)
+                    portal = Game_local.gameRenderWorld!!.GetPortal(i, j)
                     p = pvsPortal_t()
                     pvsPortals!![cp++] = p
                     // the winding goes counter clockwise seen from this area
@@ -1401,10 +1401,10 @@ object Pvs {
             connectedAreas[srcArea] = true
             curArea = srcArea
             while (queueStart < queueEnd) {
-                n = Game_local.gameRenderWorld.NumPortalsInArea(curArea)
+                n = Game_local.gameRenderWorld!!.NumPortalsInArea(curArea)
                 i = 0
                 while (i < n) {
-                    portal = Game_local.gameRenderWorld.GetPortal(curArea, i)
+                    portal = Game_local.gameRenderWorld!!.GetPortal(curArea, i)
                     if (portal.blockingBits and portalConnection_t.PS_BLOCK_VIEW.ordinal != 0) {
                         i++
                         continue

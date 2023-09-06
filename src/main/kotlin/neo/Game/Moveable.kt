@@ -465,9 +465,9 @@ object Moveable {
         }
 
         protected fun Event_SetOwnerFromSpawnArgs() {
-            val owner = arrayOf("")
+            val owner = arrayOfNulls<String>(1)
             if (spawnArgs.GetString("owner", "", owner)) {
-                ProcessEvent(Entity.EV_SetOwner, Game_local.gameLocal.FindEntity(owner[0]))
+                ProcessEvent(Entity.EV_SetOwner, Game_local.gameLocal.FindEntity(owner[0]!!))
             }
         }
 
@@ -736,10 +736,10 @@ object Moveable {
         // ~idExplodingBarrel();
         override fun _deconstructor() {
             if (particleModelDefHandle >= 0) {
-                Game_local.gameRenderWorld.FreeEntityDef(particleModelDefHandle)
+                Game_local.gameRenderWorld!!.FreeEntityDef(particleModelDefHandle)
             }
             if (lightDefHandle >= 0) {
-                Game_local.gameRenderWorld.FreeLightDef(lightDefHandle)
+                Game_local.gameRenderWorld!!.FreeLightDef(lightDefHandle)
             }
             super._deconstructor()
         }
@@ -802,10 +802,10 @@ object Moveable {
                     light.shaderParms[RenderWorld.SHADERPARM_GREEN] = pct
                     light.shaderParms[RenderWorld.SHADERPARM_BLUE] = pct
                     light.shaderParms[RenderWorld.SHADERPARM_ALPHA] = pct
-                    Game_local.gameRenderWorld.UpdateLightDef(lightDefHandle, light)
+                    Game_local.gameRenderWorld!!.UpdateLightDef(lightDefHandle, light)
                 } else {
                     if (Game_local.gameLocal.time - lightTime > 250) {
-                        Game_local.gameRenderWorld.FreeLightDef(lightDefHandle)
+                        Game_local.gameRenderWorld!!.FreeLightDef(lightDefHandle)
                         lightDefHandle = -1
                     }
                     return
@@ -818,7 +818,7 @@ object Moveable {
             if (particleModelDefHandle >= 0) {
                 particleRenderEntity.origin.set(physicsObj.GetAbsBounds().GetCenter())
                 particleRenderEntity.axis.set(idMat3.getMat3_identity())
-                Game_local.gameRenderWorld.UpdateEntityDef(particleModelDefHandle, particleRenderEntity)
+                Game_local.gameRenderWorld!!.UpdateEntityDef(particleModelDefHandle, particleRenderEntity)
             }
         }
 
@@ -950,7 +950,7 @@ object Moveable {
         private fun AddParticles(name: String?, burn: Boolean) {
             if (name != null && !name.isEmpty()) {
                 if (particleModelDefHandle >= 0) {
-                    Game_local.gameRenderWorld.FreeEntityDef(particleModelDefHandle)
+                    Game_local.gameRenderWorld!!.FreeEntityDef(particleModelDefHandle)
                 }
                 //		memset( &particleRenderEntity, 0, sizeof ( particleRenderEntity ) );
                 particleRenderEntity =
@@ -972,7 +972,7 @@ object Moveable {
                     if (null == particleRenderEntity.hModel) {
                         particleRenderEntity.hModel = ModelManager.renderModelManager.FindModel(name)
                     }
-                    particleModelDefHandle = Game_local.gameRenderWorld.AddEntityDef(particleRenderEntity)
+                    particleModelDefHandle = Game_local.gameRenderWorld!!.AddEntityDef(particleRenderEntity)
                     if (burn) {
                         BecomeActive(Entity.TH_THINK)
                     }
@@ -983,7 +983,7 @@ object Moveable {
 
         private fun AddLight(name: String, burn: Boolean) {
             if (lightDefHandle >= 0) {
-                Game_local.gameRenderWorld.FreeLightDef(lightDefHandle)
+                Game_local.gameRenderWorld!!.FreeLightDef(lightDefHandle)
             }
             //	memset( &light, 0, sizeof ( light ) );
             light = renderLight_s()
@@ -999,7 +999,7 @@ object Moveable {
             light.shaderParms[RenderWorld.SHADERPARM_GREEN] = 2.0f
             light.shaderParms[RenderWorld.SHADERPARM_BLUE] = 2.0f
             light.shaderParms[RenderWorld.SHADERPARM_ALPHA] = 2.0f
-            lightDefHandle = Game_local.gameRenderWorld.AddLightDef(light)
+            lightDefHandle = Game_local.gameRenderWorld!!.AddLightDef(light)
             lightTime = Game_local.gameLocal.realClientTime
             BecomeActive(Entity.TH_THINK)
         }

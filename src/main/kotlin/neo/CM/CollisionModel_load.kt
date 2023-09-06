@@ -155,6 +155,7 @@ object CollisionModel_load {
      ================
      */
     fun CM_R_InsideAllChildren(node: cm_node_s, bounds: idBounds): Boolean {
+        assert(node != null);
         if (node.planeType != -1) {
             if (bounds[0, node.planeType] >= node.planeDist) {
                 return false

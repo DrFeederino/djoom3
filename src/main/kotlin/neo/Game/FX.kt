@@ -132,14 +132,14 @@ object FX {
             if (SysCvar.g_skipFX.GetBool()) {
                 return
             }
-            val fx = arrayOf("")
+            val fx = arrayOfNulls<String>(1)
             nextTriggerTime = 0
             fxEffect = null
             if (spawnArgs.GetString("fx", "", fx)) {
                 systemName.set(fx[0])
             }
             if (!spawnArgs.GetBool("triggered")) {
-                Setup(fx[0])
+                Setup(fx[0]!!)
                 if (spawnArgs.GetBool("test") || spawnArgs.GetBool("start") || spawnArgs.GetFloat("restart") != 0f) {
                     PostEventMS(Entity.EV_Activate, 0f, this)
                 }
@@ -192,7 +192,7 @@ object FX {
                 savefile.ReadBool(hasObject)
                 if (hasObject._val) {
                     savefile.ReadRenderLight(actions[i].renderLight)
-                    actions[i].lightDefHandle = Game_local.gameRenderWorld.AddLightDef(actions[i].renderLight)
+                    actions[i].lightDefHandle = Game_local.gameRenderWorld!!.AddLightDef(actions[i].renderLight)
                 } else {
 //			memset( actions.oGet(i).renderLight, 0, sizeof( renderLight_t ) );
                     actions[i].renderLight = renderLight_s()
@@ -202,7 +202,7 @@ object FX {
                 if (hasObject._val) {
                     savefile.ReadRenderEntity(actions[i].renderEntity)
                     actions[i].modelDefHandle =
-                        Game_local.gameRenderWorld.AddEntityDef(actions[i].renderEntity)
+                        Game_local.gameRenderWorld!!.AddEntityDef(actions[i].renderEntity)
                 } else {
 //			memset( &actions[i].renderEntity, 0, sizeof( renderEntity_t ) );
                     actions[i].renderEntity = renderEntity_s()
@@ -371,7 +371,8 @@ object FX {
                                 if (fxaction.noshadows) {
                                     useAction.renderLight.noShadows = true
                                 }
-                                useAction.lightDefHandle = Game_local.gameRenderWorld.AddLightDef(useAction.renderLight)
+                                useAction.lightDefHandle =
+                                    Game_local.gameRenderWorld!!.AddLightDef(useAction.renderLight)
                             }
                             if (fxaction.noshadows) {
                                 j = 0
@@ -396,7 +397,7 @@ object FX {
                                 val laction2 = actions[j]
                                 if (laction2.lightDefHandle != -1) {
                                     laction2.renderLight.referenceSound = refSound.referenceSound
-                                    Game_local.gameRenderWorld.UpdateLightDef(
+                                    Game_local.gameRenderWorld!!.UpdateLightDef(
                                         laction2.lightDefHandle,
                                         laction2.renderLight
                                     )
@@ -476,7 +477,7 @@ object FX {
                             if (useAction.renderEntity.hModel != null) {
                                 useAction.renderEntity.bounds.set(useAction.renderEntity.hModel!!.Bounds(useAction.renderEntity))
                             }
-                            useAction.modelDefHandle = Game_local.gameRenderWorld.AddEntityDef(useAction.renderEntity)
+                            useAction.modelDefHandle = Game_local.gameRenderWorld!!.AddEntityDef(useAction.renderEntity)
                         } else if (fxaction.trackOrigin) {
                             useAction.renderEntity.origin.set(GetPhysics().GetOrigin().plus(fxaction.offset))
                             useAction.renderEntity.axis.set(if (fxaction.explicitAxis) fxaction.axis else GetPhysics().GetAxis())
@@ -616,12 +617,12 @@ object FX {
                 return
             }
             val fxActionDelay: Float
-            val fx = arrayOf("")
+            val fx = arrayOfNulls<String>(1)
             if (Game_local.gameLocal.time < nextTriggerTime) {
                 return
             }
             if (spawnArgs.GetString("fx", "", fx)) {
-                Setup(fx[0])
+                Setup(fx[0]!!)
                 Start(Game_local.gameLocal.time)
                 PostEventMS(FX.EV_Fx_KillFx, Duration())
                 BecomeActive(Entity.TH_THINK)
@@ -678,11 +679,11 @@ object FX {
 
         protected fun CleanUpSingleAction(fxaction: idFXSingleAction, laction: idFXLocalAction) {
             if (laction.lightDefHandle != -1 && fxaction.sibling == -1 && fxaction.type != fx_enum.FX_ATTACHLIGHT) {
-                Game_local.gameRenderWorld.FreeLightDef(laction.lightDefHandle)
+                Game_local.gameRenderWorld!!.FreeLightDef(laction.lightDefHandle)
                 laction.lightDefHandle = -1
             }
             if (laction.modelDefHandle != -1 && fxaction.sibling == -1 && fxaction.type != fx_enum.FX_ATTACHENTITY) {
-                Game_local.gameRenderWorld.FreeEntityDef(laction.modelDefHandle)
+                Game_local.gameRenderWorld!!.FreeEntityDef(laction.modelDefHandle)
                 laction.modelDefHandle = -1
             }
             laction.start = -1
@@ -702,7 +703,7 @@ object FX {
                         if (fxaction.fadeInTime != 0f) fadePct else 1.0f - fadePct
                     laction.renderEntity.shaderParms[RenderWorld.SHADERPARM_BLUE] =
                         if (fxaction.fadeInTime != 0f) fadePct else 1.0f - fadePct
-                    Game_local.gameRenderWorld.UpdateEntityDef(laction.modelDefHandle, laction.renderEntity)
+                    Game_local.gameRenderWorld!!.UpdateEntityDef(laction.modelDefHandle, laction.renderEntity)
                 }
                 if (laction.lightDefHandle != -1) {
                     laction.renderLight.shaderParms[RenderWorld.SHADERPARM_RED] =
@@ -711,7 +712,7 @@ object FX {
                         fxaction.lightColor.y * if (fxaction.fadeInTime != 0f) fadePct else 1.0f - fadePct
                     laction.renderLight.shaderParms[RenderWorld.SHADERPARM_BLUE] =
                         fxaction.lightColor.z * if (fxaction.fadeInTime != 0f) fadePct else 1.0f - fadePct
-                    Game_local.gameRenderWorld.UpdateLightDef(laction.lightDefHandle, laction.renderLight)
+                    Game_local.gameRenderWorld!!.UpdateLightDef(laction.lightDefHandle, laction.renderLight)
                 }
             }
         }

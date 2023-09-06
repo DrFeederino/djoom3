@@ -10,7 +10,7 @@ object BuildDefines {
     const val ID_ALLOW_D3XP = true
 
     // don't define ID_ALLOW_TOOLS when we don't want tool code in the executable.
-    const val ID_ALLOW_TOOLS = true
+    const val ID_ALLOW_TOOLS = false
     var ID_BT_STUB = false
 
     // verify checksums in clientinfo traffic

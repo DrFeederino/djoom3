@@ -38,7 +38,7 @@ class Pluecker {
         }
 
         //public	float			operator[]( final int index ) final;
-        fun get(index: Int): Float {
+        operator fun get(index: Int): Float {
             return p[index]
         }
 

@@ -722,7 +722,7 @@ class GuiModel {
             tri.ambientCache = VertexCache.vertexCache.AllocFrameTemp(tri.verts!!, tri.numVerts * idDrawVert.BYTES)
 
             // if we are out of vertex cache, don't create the surface
-            if (NOT(tri.ambientCache)) {
+            if (null == tri.ambientCache) {
                 return
             }
             val renderEntity: renderEntity_s

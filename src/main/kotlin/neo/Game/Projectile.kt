@@ -426,7 +426,6 @@ object Projectile {
                 idGameLocal.Error("Invalid mass on '%s'\n", GetEntityDefName())
             }
             thrust *= mass
-            thrust_start = (Math_h.SEC2MS(startthrust) + Game_local.gameLocal.time).toInt()
             thrust_end = (Math_h.SEC2MS(endthrust) + Game_local.gameLocal.time).toInt()
             lightStartTime = 0
             lightEndTime = 0
@@ -525,7 +524,7 @@ object Projectile {
 
         override fun FreeLightDef() {
             if (lightDefHandle != -1) {
-                Game_local.gameRenderWorld.FreeLightDef(lightDefHandle)
+                Game_local.gameRenderWorld!!.FreeLightDef(lightDefHandle)
                 lightDefHandle = -1
             }
         }
@@ -579,9 +578,9 @@ object Projectile {
                         renderLight.shaderParms[RenderWorld.SHADERPARM_GREEN] = color.y
                         renderLight.shaderParms[RenderWorld.SHADERPARM_BLUE] = color.z
                     }
-                    Game_local.gameRenderWorld.UpdateLightDef(lightDefHandle, renderLight)
+                    Game_local.gameRenderWorld!!.UpdateLightDef(lightDefHandle, renderLight)
                 } else {
-                    lightDefHandle = Game_local.gameRenderWorld.AddLightDef(renderLight)
+                    lightDefHandle = Game_local.gameRenderWorld!!.AddLightDef(renderLight)
                 }
             }
         }
@@ -1672,7 +1671,7 @@ object Projectile {
         override fun _deconstructor() {
             FreeBeams()
             if (secondModelDefHandle >= 0) {
-                Game_local.gameRenderWorld.FreeEntityDef(secondModelDefHandle)
+                Game_local.gameRenderWorld!!.FreeEntityDef(secondModelDefHandle)
                 secondModelDefHandle = -1
             }
             super._deconstructor()
@@ -1706,7 +1705,7 @@ object Projectile {
                 beamTargets[i].modelDefHandle = savefile.ReadInt()
                 if (beamTargets[i].modelDefHandle >= 0) {
                     beamTargets[i].modelDefHandle =
-                        Game_local.gameRenderWorld.AddEntityDef(beamTargets[i].renderEntity)
+                        Game_local.gameRenderWorld!!.AddEntityDef(beamTargets[i].renderEntity)
                 }
                 i++
             }
@@ -1715,7 +1714,7 @@ object Projectile {
             nextDamageTime = savefile.ReadInt()
             savefile.ReadString(damageFreq)
             if (secondModelDefHandle >= 0) {
-                secondModelDefHandle = Game_local.gameRenderWorld.AddEntityDef(secondModel)
+                secondModelDefHandle = Game_local.gameRenderWorld!!.AddEntityDef(secondModel)
             }
         }
 
@@ -1795,14 +1794,14 @@ object Projectile {
                         player?.playerView?.EnableBFGVision(bfgVision)
                         nextDamageTime = Game_local.gameLocal.time + BFG_DAMAGE_FREQUENCY
                     }
-                    Game_local.gameRenderWorld.UpdateEntityDef(
+                    Game_local.gameRenderWorld!!.UpdateEntityDef(
                         beamTargets[i].modelDefHandle,
                         beamTargets[i].renderEntity
                     )
                 }
                 if (secondModelDefHandle >= 0) {
                     secondModel.origin.set(GetPhysics().GetOrigin())
-                    Game_local.gameRenderWorld.UpdateEntityDef(secondModelDefHandle, secondModel)
+                    Game_local.gameRenderWorld!!.UpdateEntityDef(secondModelDefHandle, secondModel)
                 }
                 val ang = idAngles()
                 ang.pitch = (Game_local.gameLocal.time and 4095) * 360.0f / -4096.0f
@@ -1862,7 +1861,7 @@ object Projectile {
                 secondModel.noShadow = true
                 secondModel.origin.set(GetPhysics().GetOrigin())
                 secondModel.axis.set(GetPhysics().GetAxis())
-                secondModelDefHandle = Game_local.gameRenderWorld.AddEntityDef(secondModel)
+                secondModelDefHandle = Game_local.gameRenderWorld!!.AddEntityDef(secondModel)
             }
             val delta = idVec3(15.0f, 15.0f, 15.0f)
             //physicsObj.SetAngularExtrapolation( extrapolation_t(EXTRAPOLATION_LINEAR|EXTRAPOLATION_NOSTOP), gameLocal.time, 0, physicsObj.GetAxis().ToAngles(), delta, ang_zero );
@@ -1905,7 +1904,7 @@ object Projectile {
                 bt.renderEntity!!.bounds.Clear()
                 bt.renderEntity!!.customSkin = DeclManager.declManager.FindSkin(skin)
                 bt.target.oSet(ent)
-                bt.modelDefHandle = Game_local.gameRenderWorld.AddEntityDef(bt.renderEntity)
+                bt.modelDefHandle = Game_local.gameRenderWorld!!.AddEntityDef(bt.renderEntity)
                 beamTargets.Append(bt)
             }
             if (numListedEntities != 0) {
@@ -1978,7 +1977,7 @@ object Projectile {
                 i++
             }
             if (secondModelDefHandle >= 0) {
-                Game_local.gameRenderWorld.FreeEntityDef(secondModelDefHandle)
+                Game_local.gameRenderWorld!!.FreeEntityDef(secondModelDefHandle)
                 secondModelDefHandle = -1
             }
             if (ignore == null) {
@@ -1997,7 +1996,7 @@ object Projectile {
         private fun FreeBeams() {
             for (i in 0 until beamTargets.Num()) {
                 if (beamTargets[i].modelDefHandle >= 0) {
-                    Game_local.gameRenderWorld.FreeEntityDef(beamTargets[i].modelDefHandle)
+                    Game_local.gameRenderWorld!!.FreeEntityDef(beamTargets[i].modelDefHandle)
                     beamTargets[i].modelDefHandle = -1
                 }
             }

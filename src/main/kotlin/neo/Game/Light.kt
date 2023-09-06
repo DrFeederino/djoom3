@@ -162,7 +162,7 @@ object Light {
             super.Spawn()
             val start_off = CBool(false)
             var needBroken: Boolean
-            val demonic_shader = arrayOf("")
+            val demonic_shader = arrayOfNulls<String>(1)
 
             // do the parsing the same way dmap and the editor do
             GameEdit.gameEdit.ParseSpawnArgsToRenderLight(spawnArgs, renderLight)
@@ -189,7 +189,7 @@ object Light {
 
             // make sure the demonic shader is cached
             if (spawnArgs.GetString("mat_demonic", "", demonic_shader)) {
-                DeclManager.declManager.FindType(declType_t.DECL_MATERIAL, demonic_shader[0])
+                DeclManager.declManager.FindType(declType_t.DECL_MATERIAL, demonic_shader[0]!!)
             }
 
             // game specific functionality, not mirrored in
@@ -378,7 +378,7 @@ object Light {
 
         override fun FreeLightDef() {
             if (lightDefHandle != -1) {
-                Game_local.gameRenderWorld.FreeLightDef(lightDefHandle)
+                Game_local.gameRenderWorld!!.FreeLightDef(lightDefHandle)
                 lightDefHandle = -1
             }
         }
@@ -549,7 +549,7 @@ object Light {
         }
 
         fun BecomeBroken(activator: idEntity?) {
-            val damageDefName = arrayOf("")
+            val damageDefName = arrayOfNulls<String>(1)
             fl.takedamage = false
             if (brokenModel.Length() != 0) {
                 SetModel(brokenModel.toString())
@@ -566,7 +566,7 @@ object Light {
                 if (spawnArgs.GetString("def_damage", "", damageDefName)) {
                     val origin =
                         idVec3(renderEntity!!.origin.plus(renderEntity!!.bounds.GetCenter().times(renderEntity!!.axis)))
-                    Game_local.gameLocal.RadiusDamage(origin, activator, activator, this, this, damageDefName[0])
+                    Game_local.gameLocal.RadiusDamage(origin, activator, activator, this, this, damageDefName[0]!!)
                 }
             }
             ActivateTargets(activator)
@@ -740,9 +740,9 @@ object Light {
         private fun PresentLightDefChange() {
             // let the renderer apply it to the world
             if (lightDefHandle != -1) {
-                Game_local.gameRenderWorld.UpdateLightDef(lightDefHandle, renderLight)
+                Game_local.gameRenderWorld!!.UpdateLightDef(lightDefHandle, renderLight)
             } else {
-                lightDefHandle = Game_local.gameRenderWorld.AddLightDef(renderLight)
+                lightDefHandle = Game_local.gameRenderWorld!!.AddLightDef(renderLight)
             }
         }
 
@@ -753,10 +753,10 @@ object Light {
 
             // add to refresh list
             if (modelDefHandle == -1) {
-                modelDefHandle = Game_local.gameRenderWorld.AddEntityDef(renderEntity!!)
+                modelDefHandle = Game_local.gameRenderWorld!!.AddEntityDef(renderEntity!!)
                 val a = 0
             } else {
-                Game_local.gameRenderWorld.UpdateEntityDef(modelDefHandle, renderEntity!!)
+                Game_local.gameRenderWorld!!.UpdateEntityDef(modelDefHandle, renderEntity!!)
             }
         }
 
@@ -889,7 +889,7 @@ object Light {
 
         override fun _deconstructor() {
             if (lightDefHandle != -1) {
-                Game_local.gameRenderWorld.FreeLightDef(lightDefHandle)
+                Game_local.gameRenderWorld!!.FreeLightDef(lightDefHandle)
             }
             super._deconstructor()
         }

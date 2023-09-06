@@ -4,18 +4,23 @@ import neo.TempDump
 import neo.TempDump.TODO_Exception
 import neo.framework.CVarSystem
 import neo.framework.CVarSystem.idCVar
+import neo.framework.CVarSystem.net
 import neo.framework.Common
+import neo.framework.Common.Companion.common
 import neo.idlib.containers.CInt
 import neo.sys.sys_public.netadr_t
+import java.lang.Exception
 import java.net.*
+import java.nio.ByteBuffer
 import java.util.*
 import java.util.logging.Level
 import java.util.logging.Logger
 
+
 class win_net {
     class net_interface(/*unsigned*/
-        var ip: Long, /*unsigned*/
-        var mask: Long
+                        var ip: Long, /*unsigned*/
+                        var mask: Long
     )
 
     class udpMsg_s {
@@ -27,6 +32,10 @@ class win_net {
     }
 
     class idUDPLag {
+        fun Alloc(): win_net.udpMsg_s {
+            return udpMsg_s()
+        }
+
         var recieveFirst: udpMsg_s?
 
         //						~idUDPLag( void );
@@ -144,20 +153,13 @@ class win_net {
          Net_NetadrToSockadr
          ====================
          */
-        fun Net_NetadrToSockadr(a: netadr_t, s: SocketAddress) {
-            throw TODO_Exception()
-            //	memset( s, 0, sizeof(*s) );
-//
-//	if( a->type == NA_BROADCAST ) {
-//		((struct sockaddr_in *)s)->sin_family = AF_INET;
-//		((struct sockaddr_in *)s)->sin_addr.s_addr = INADDR_BROADCAST;
-//	}
-//	else if( a->type == NA_IP || a->type == NA_LOOPBACK ) {
-//		((struct sockaddr_in *)s)->sin_family = AF_INET;
-//		((struct sockaddr_in *)s)->sin_addr.s_addr = *(int *)&a->ip;
-//	}
-//
-//	((struct sockaddr_in *)s)->sin_port = htons( (short)a->port );
+        fun Net_NetadrToSockadr(a: netadr_t, s: Array<InetSocketAddress?>) {
+            if (a.type == sys_public.netadrtype_t.NA_BROADCAST) {
+                s[0] = InetSocketAddress("255.255.255.255", 0)
+            } else if (a.type == sys_public.netadrtype_t.NA_IP || a.type == sys_public.netadrtype_t.NA_LOOPBACK) {
+                s[0] = InetSocketAddress(String(a.ip), a.port)
+            }
+
         }
 
         /*
@@ -165,21 +167,17 @@ class win_net {
          Net_SockadrToNetadr
          ====================
          */
-        fun Net_SockadrToNetadr(s: SocketAddress, a: netadr_t) {
-            throw TODO_Exception()
-            //	unsigned int ip;
-//	if (s->sa_family == AF_INET) {
-//		ip = ((struct sockaddr_in *)s)->sin_addr.s_addr;
-//		*(unsigned int *)&a->ip = ip;
-//		a->port = htons( ((struct sockaddr_in *)s)->sin_port );
-//		// we store in network order, that loopback test is host order..
-//		ip = ntohl( ip );
-//		if ( ip == INADDR_LOOPBACK ) {
-//			a->type = NA_LOOPBACK;
-//		} else {
-//			a->type = NA_IP;
-//		}
-//	}
+        fun Net_SockadrToNetadr(s: Array<InetSocketAddress?>, a: netadr_t) {
+            var ip: String = ""
+
+            ip = s[0]!!.address.hostAddress
+            a.ip = ip.split(".").map { number -> number.toInt() }.map { number -> Char(number) }.toCharArray()
+            if ("127.0.0.1" == ip) {
+                a.type = sys_public.netadrtype_t.NA_LOOPBACK
+            } else {
+                a.type = sys_public.netadrtype_t.NA_IP
+            }
+
         }
 
         /*
@@ -187,21 +185,18 @@ class win_net {
          Net_ExtractPort
          =============
          */
-        fun Net_ExtractPort(src: String, buf: String, bufsize: Int, port: IntArray): Boolean {
-            throw TODO_Exception()
-            //	char *p;
-//	strncpy( buf, src, bufsize );
-//	p = buf; p += Min( bufsize - 1, (int)strlen( src ) ); *p = '\0';
-//	p = strchr( buf, ':' );
-//	if ( !p ) {
-//		return false;
-//	}
-//	*p = '\0';
-//	*port = strtol( p+1, NULL, 10 );
-//	if ( errno == ERANGE ) {
-//		return false;
-//	}
-//	return true;
+        fun Net_ExtractPort(src: String, port: Array<Int>): Boolean {
+            var p: Int
+            p = src.indexOf(':')
+            if (p == -1) {
+                return false
+            }
+            var portString = src.substring(p + 1).trim()
+            for (i in 0 until portString.length) {
+                port[i] = portString[i].toString().toInt()
+            }
+
+            return true
         }
 
         /*
@@ -209,47 +204,37 @@ class win_net {
          Net_StringToSockaddr
          =============
          */
-        fun Net_StringToSockaddr(s: String, sadr: SocketAddress, doDNSResolve: Boolean): Boolean {
-            throw TODO_Exception()
-            //	struct hostent	*h;
-//	char buf[256];
-//	int port;
-//
-//	memset( sadr, 0, sizeof( *sadr ) );
-//
-//	((struct sockaddr_in *)sadr)->sin_family = AF_INET;
-//	((struct sockaddr_in *)sadr)->sin_port = 0;
-//
-//	if( s[0] >= '0' && s[0] <= '9' ) {
-//		unsigned long ret = inet_addr(s);
-//		if ( ret != INADDR_NONE ) {
-//			*(int *)&((struct sockaddr_in *)sadr)->sin_addr = ret;
-//		} else {
-//			// check for port
-//			if ( !Net_ExtractPort( s, buf, sizeof( buf ), &port ) ) {
-//				return false;
-//			}
-//			ret = inet_addr( buf );
-//			if ( ret == INADDR_NONE ) {
-//				return false;
-//			}
-//			*(int *)&((struct sockaddr_in *)sadr)->sin_addr = ret;
-//			((struct sockaddr_in *)sadr)->sin_port = htons( port );
-//		}
-//	} else if ( doDNSResolve ) {
-//		// try to remove the port first, otherwise the DNS gets confused into multiple timeouts
-//		// failed or not failed, buf is expected to contain the appropriate host to resolve
-//		if ( Net_ExtractPort( s, buf, sizeof( buf ), &port ) ) {
-//			((struct sockaddr_in *)sadr)->sin_port = htons( port );
-//		}
-//		h = gethostbyname( buf );
-//		if ( h == 0 ) {
-//			return false;
-//		}
-//		*(int *)&((struct sockaddr_in *)sadr)->sin_addr = *(int *)h->h_addr_list[0];
-//	}
-//
-//	return true;
+        fun Net_StringToSockaddr(s: String, sadr: Array<InetSocketAddress?>, doDNSResolve: Boolean): Boolean {
+            var portArr = Array<Int>(5) { 0 }
+            var port = 0
+            var hostname = ""
+            var buf = CharArray(256)
+            if (s[0] >= '0' && s[0] <= '9') {
+                if (!"0.0.0.0".equals(s)) {
+                    hostname = s
+                } else {
+                    if (!Net_ExtractPort(s, portArr)) {
+                        return false
+                    }
+                    if (!"0.0.0.0".equals(s)) {
+                        return false
+                    }
+                    hostname = s.substring(0, s.indexOf(':'))
+                    port = portArr.joinToString(separator = "").toInt()
+                    sadr[0] = InetSocketAddress(hostname, port)
+                }
+            } else if (doDNSResolve) {
+                if (Net_ExtractPort(s, portArr)) {
+                    port = portArr.joinToString(separator = "").toInt()
+                }
+                var h = InetSocketAddress(s.substring(0, s.indexOf(':')), port)
+                if (h.isUnresolved) {
+                    return false;
+                }
+                hostname = h.hostName;
+                sadr[0] = h
+            }
+            return true
         }
 
 
@@ -298,8 +283,28 @@ class win_net {
          Net_GetUDPPacket
          ==================
          */
-        fun Net_GetUDPPacket(netSocket: Int, net_from: netadr_t, data: CharArray, size: CInt, maxSize: Int): Boolean {
-            throw TODO_Exception()
+        fun Net_GetUDPPacket(
+            netSocket: DatagramSocket,
+            net_from: netadr_t,
+            data: ByteArray,
+            size: CInt,
+            maxSize: Int
+        ): Boolean {
+            try {
+                val datagramPacket = DatagramPacket(data, maxSize)
+                netSocket.receive(datagramPacket)
+
+                if (datagramPacket.length == maxSize) {
+                    common.Printf("Net_GetUDPPacket: oversize packet from %s\n", String(net_from.ip));
+                    return false;
+                }
+                size._val = datagramPacket.length
+                return true
+            } catch (e: Exception) {
+                common.Printf("Net_GetUDPPacket: exception occured %s\n", e.message!!)
+                return false
+            }
+
             //	int 			ret;
 //	struct sockaddr	from;
 //	int				fromlen;
@@ -359,46 +364,28 @@ class win_net {
          Net_SendUDPPacket
          ==================
          */
-        fun Net_SendUDPPacket(netSocket: Int, length: Int, data: Any, to: netadr_t) {
-            throw TODO_Exception()
-            //	int				ret;
-//	struct sockaddr	addr;
-//
-//	if( !netSocket ) {
-//		return;
-//	}
-//
-//	Net_NetadrToSockadr( &to, &addr );
-//
-//	if( usingSocks && to.type == NA_IP ) {
-//		socksBuf[0] = 0;	// reserved
-//		socksBuf[1] = 0;
-//		socksBuf[2] = 0;	// fragment (not fragmented)
-//		socksBuf[3] = 1;	// address type: IPV4
-//		*(int *)&socksBuf[4] = ((struct sockaddr_in *)&addr)->sin_addr.s_addr;
-//		*(short *)&socksBuf[8] = ((struct sockaddr_in *)&addr)->sin_port;
-//		memcpy( &socksBuf[10], data, length );
-//		ret = sendto( netSocket, socksBuf, length+10, 0, &socksRelayAddr, sizeof(socksRelayAddr) );
-//	} else {
-//		ret = sendto( netSocket, (const char *)data, length, 0, &addr, sizeof(addr) );
-//	}
-//	if( ret == SOCKET_ERROR ) {
-//		int err = WSAGetLastError();
-//
-//		// wouldblock is silent
-//		if( err == WSAEWOULDBLOCK ) {
-//			return;
-//		}
-//
-//		// some PPP links do not allow broadcasts and return an error
-//		if( ( err == WSAEADDRNOTAVAIL ) && ( to.type == NA_BROADCAST ) ) {
-//			return;
-//		}
-//
-//		char	buf[1024];
-//		sprintf( buf, "Net_SendUDPPacket: %s\n", NET_ErrorString() );
-//		OutputDebugString( buf );
-//	}
+        fun Net_SendUDPPacket(netSocket: DatagramSocket?, length: Int, data: ByteBuffer, to: netadr_t) {
+            var addr = arrayOfNulls<InetSocketAddress>(1)
+            if (netSocket == null) {
+                return
+            }
+
+            Net_NetadrToSockadr(to, addr)
+            val packet = DatagramPacket(data.array(), data.limit())
+            var address = ""
+            for (i in 0 until to.ip.size) {
+                address += to.ip[i].code.toString() + "."
+            }
+            address = address.substring(0, address.length - 1)
+            packet.address = InetAddress.getByName(address)
+            packet.port = to.port
+            try {
+                //netSocket.connect(packet.address, packet.port)
+                netSocket.send(packet)
+            } catch (e: SocketException) {
+                common.Printf("Net_SendUDPPacket: %s\n", e.message!!);
+            }
+
         }
 
 
@@ -560,15 +547,12 @@ class win_net {
     =============
     */
         fun Sys_StringToNetAdr(s: String?, a: netadr_t?, doDNSResolve: Boolean): Boolean {
-            throw TODO_Exception()
-            //	struct sockaddr sadr;
-//
-//	if ( !Net_StringToSockaddr( s, &sadr, doDNSResolve ) ) {
-//		return false;
-//	}
-//
-//	Net_SockadrToNetadr( &sadr, a );
-//	return true;
+            var sadr = arrayOfNulls<InetSocketAddress>(1)
+            if (!Net_StringToSockaddr(s!!, sadr, doDNSResolve)) {
+                return false
+            }
+            Net_SockadrToNetadr(sadr, a!!);
+            return true;
         }
 
         /*
@@ -630,71 +614,37 @@ class win_net {
      NET_IPSocket
      ====================
      */
-        fun NET_IPSocket(net_interface: String, port: Int, bound_to: netadr_t): Int {
-            throw TODO_Exception()
-            //	SOCKET				newsocket;
-//	struct sockaddr_in	address;
-//	unsigned long		_true = 1;
-//	int					i = 1;
-//	int					err;
-//
-//	if( net_interface ) {
-//		common->DPrintf( "Opening IP socket: %s:%i\n", net_interface, port );
-//	} else {
-//		common->DPrintf( "Opening IP socket: localhost:%i\n", port );
-//	}
-//
-//	if( ( newsocket = socket( AF_INET, SOCK_DGRAM, IPPROTO_UDP ) ) == INVALID_SOCKET ) {
-//		err = WSAGetLastError();
-//		if( err != WSAEAFNOSUPPORT ) {
-//			common->Printf( "WARNING: UDP_OpenSocket: socket: %s\n", NET_ErrorString() );
-//		}
-//		return 0;
-//	}
-//
-//	// make it non-blocking
-//	if( ioctlsocket( newsocket, FIONBIO, &_true ) == SOCKET_ERROR ) {
-//		common->Printf( "WARNING: UDP_OpenSocket: ioctl FIONBIO: %s\n", NET_ErrorString() );
-//		return 0;
-//	}
-//
-//	// make it broadcast capable
-//	if( setsockopt( newsocket, SOL_SOCKET, SO_BROADCAST, (char *)&i, sizeof(i) ) == SOCKET_ERROR ) {
-//		common->Printf( "WARNING: UDP_OpenSocket: setsockopt SO_BROADCAST: %s\n", NET_ErrorString() );
-//		return 0;
-//	}
-//
-//	if( !net_interface || !net_interface[0] || !idStr::Icmp( net_interface, "localhost" ) ) {
-//		address.sin_addr.s_addr = INADDR_ANY;
-//	}
-//	else {
-//		Net_StringToSockaddr( net_interface, (struct sockaddr *)&address, true );
-//	}
-//
-//	if( port == PORT_ANY ) {
-//		address.sin_port = 0;
-//	}
-//	else {
-//		address.sin_port = htons( (short)port );
-//	}
-//
-//	address.sin_family = AF_INET;
-//
-//	if( bind( newsocket, (const struct sockaddr *)&address, sizeof(address) ) == SOCKET_ERROR ) {
-//		common->Printf( "WARNING: UDP_OpenSocket: bind: %s\n", NET_ErrorString() );
-//		closesocket( newsocket );
-//		return 0;
-//	}
-//
-//	// if the port was PORT_ANY, we need to query again to know the real port we got bound to
-//	// ( this used to be in idPort::InitForPort )
-//	if ( bound_to ) {
-//		int len = sizeof( address );
-//		getsockname( newsocket, (sockaddr *)&address, &len );
-//		Net_SockadrToNetadr( (sockaddr *)&address, bound_to );
-//	}
-//
-//	return newsocket;
+        fun IPSocket(net_interface: String, port: Int, bound_to: netadr_t?): DatagramSocket? {
+            if (net_interface.isNotEmpty()) {
+                common.Printf("Opening IP socket: %s:%d\n", net_interface, port)
+            } else {
+                common.DPrintf("Opening IP socket: localhost:%d\n", port);
+            }
+            var newSocket: DatagramSocket? = null
+            try {
+                var address: InetSocketAddress
+                if (port == -1) {
+                    address = InetSocketAddress(net_interface, 0)
+                } else {
+                    address = InetSocketAddress(net_interface, port)
+                }
+                newSocket = DatagramSocket()
+                newSocket.setOption(StandardSocketOptions.SO_BROADCAST, true)
+                newSocket.soTimeout = 10000
+                if (bound_to != null) {
+                    return newSocket
+                    Net_SockadrToNetadr(arrayOf(newSocket.localSocketAddress as InetSocketAddress), bound_to)
+                }
+                return newSocket
+            } catch (e: UnknownHostException) {
+                common.Printf("WARNING: Socket creation error occurred: %s\n", e.localizedMessage)
+                newSocket?.close()
+                return null
+            } catch (e: SocketException) {
+                common.Printf("ERROR: IPSocket: bind: %s\n", e.message!!)
+                newSocket?.close()
+                return null
+            }
         }
 
         /*

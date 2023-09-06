@@ -2838,7 +2838,7 @@ object FileSystem_h {
                     idLib.common.Error("idFileSystemLocal::GetMapDecl %d: not found\n", idecl)
                     return null
                 }
-                mapDict = mapDef.dict
+                mapDict.set(mapDef.dict)
                 mapDict.Set("path", mapDef.GetName())
                 return mapDict
             }
@@ -2857,7 +2857,7 @@ object FileSystem_h {
                     }
                     // each addon may have a bunch of map decls
                     if (idecl < search.pack!!.addon_info!!.mapDecls.Num()) {
-                        mapDict = search.pack!!.addon_info!!.mapDecls[idecl]
+                        mapDict.set(search.pack!!.addon_info!!.mapDecls[idecl])
                         return mapDict
                     }
                     idecl -= search.pack!!.addon_info!!.mapDecls.Num()

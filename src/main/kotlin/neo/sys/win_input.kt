@@ -11,6 +11,7 @@ import neo.sys.sys_public.sysEventType_t
 import neo.sys.win_local.Win32Vars_t
 import org.lwjgl.glfw.GLFW
 import java.awt.event.InputEvent
+import java.time.Instant
 
 /**
  *
@@ -1351,7 +1352,7 @@ object win_input {
             0 // 7
                 .toChar()
         )
-    private val START_TIME = System.currentTimeMillis()
+    private val START_TIME = Instant.now().toEpochMilli()
     var diFetch = 0
     var keyScanTable = s_scantokey
 
@@ -1782,14 +1783,14 @@ object win_input {
                 GetTickCount(), sysEventType_t.SE_KEY, ch[0], action, 0, null
             )
             else -> if (action == GLFW.GLFW_RELEASE && ch[0] > 31 && ch[0] != '~'.code && ch[0] != '`'.code && ch[0] < 128) win_main.Sys_QueEvent(
-                System.currentTimeMillis(), sysEventType_t.SE_CHAR, ch[0], action, 0, null
-            ) else win_main.Sys_QueEvent(System.currentTimeMillis(), sysEventType_t.SE_KEY, ch[0], action, 0, null)
+                Instant.now().toEpochMilli(), sysEventType_t.SE_CHAR, ch[0], action, 0, null
+            ) else win_main.Sys_QueEvent(Instant.now().toEpochMilli(), sysEventType_t.SE_KEY, ch[0], action, 0, null)
         }
         return ch[0]
     }
 
     private fun GetTickCount(): Long {
-        return System.currentTimeMillis() - START_TIME
+        return Instant.now().toEpochMilli() - START_TIME
     }
 
     fun Sys_EndKeyboardInputEvents() {}

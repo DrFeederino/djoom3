@@ -316,10 +316,10 @@ object SecurityCamera {
 
             // add to refresh list
             if (modelDefHandle == -1) {
-                modelDefHandle = Game_local.gameRenderWorld.AddEntityDef(renderEntity!!)
+                modelDefHandle = Game_local.gameRenderWorld!!.AddEntityDef(renderEntity!!)
                 val a = 0
             } else {
-                Game_local.gameRenderWorld.UpdateEntityDef(modelDefHandle, renderEntity!!)
+                Game_local.gameRenderWorld!!.UpdateEntityDef(modelDefHandle, renderEntity!!)
             }
         }
 
@@ -425,8 +425,8 @@ object SecurityCamera {
                 point.set(dir.plus(right.times(s._val * radius).plus(up.times(c._val * radius))))
                 point.Normalize()
                 point.set(GetPhysics().GetOrigin().plus(point.times(scanDist)))
-                Game_local.gameRenderWorld.DebugLine(color, lastPoint, point)
-                Game_local.gameRenderWorld.DebugLine(color, GetPhysics().GetOrigin(), point)
+                Game_local.gameRenderWorld!!.DebugLine(color, lastPoint, point)
+                Game_local.gameRenderWorld!!.DebugLine(color, GetPhysics().GetOrigin(), point)
                 lastPoint.set(point)
                 halfPoint.set(
                     dir.plus(
@@ -435,10 +435,10 @@ object SecurityCamera {
                 )
                 halfPoint.Normalize()
                 halfPoint.set(GetPhysics().GetOrigin().plus(halfPoint.times(scanDist)))
-                Game_local.gameRenderWorld.DebugLine(color2, point, halfPoint)
-                Game_local.gameRenderWorld.DebugLine(color2, lastHalfPoint, halfPoint)
+                Game_local.gameRenderWorld!!.DebugLine(color2, point, halfPoint)
+                Game_local.gameRenderWorld!!.DebugLine(color2, lastHalfPoint, halfPoint)
                 lastHalfPoint.set(halfPoint)
-                Game_local.gameRenderWorld.DebugLine(color2, halfPoint, center)
+                Game_local.gameRenderWorld!!.DebugLine(color2, halfPoint, center)
                 i++
             }
         }

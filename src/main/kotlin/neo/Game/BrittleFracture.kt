@@ -342,9 +342,9 @@ object BrittleFracture {
 
             // add to refresh list
             if (modelDefHandle == -1) {
-                modelDefHandle = Game_local.gameRenderWorld.AddEntityDef(renderEntity!!)
+                modelDefHandle = Game_local.gameRenderWorld!!.AddEntityDef(renderEntity!!)
             } else {
-                Game_local.gameRenderWorld.UpdateEntityDef(modelDefHandle, renderEntity!!)
+                Game_local.gameRenderWorld!!.UpdateEntityDef(modelDefHandle, renderEntity!!)
             }
             changed = true
         }
@@ -481,7 +481,7 @@ object BrittleFracture {
             }
             if (time >= Game_local.gameLocal.time) {
                 // try to get the sound from the damage def
-                val damageDef: idDeclEntityDef?
+                var damageDef: idDeclEntityDef? = null
                 var sndShader: idSoundShader? = null
                 if (damageDefName != null) {
                     damageDef = Game_local.gameLocal.FindEntityDef(damageDefName, false)

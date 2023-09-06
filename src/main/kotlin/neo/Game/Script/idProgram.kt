@@ -614,7 +614,7 @@ class idProgram {
      Returns a preexisting complex type that matches the name, or returns NULL if not found
      ============
      */
-    fun FindType(name: String): idTypeDef? {
+    fun FindType(name: String?): idTypeDef? {
         var check: idTypeDef
         var i: Int
         i = types.Num() - 1

@@ -1705,9 +1705,9 @@ object Session_local {
                 // clear the userInfo so the player starts out with the defaults
                 mapSpawnData.userInfo[0].Clear()
                 mapSpawnData.persistentPlayerInfo[0].Clear()
-                mapSpawnData.userInfo[0] = CVarSystem.cvarSystem.MoveCVarsToDict(CVarSystem.CVAR_USERINFO)
+                mapSpawnData.userInfo[0].set(CVarSystem.cvarSystem.MoveCVarsToDict(CVarSystem.CVAR_USERINFO))
                 mapSpawnData.serverInfo.Clear()
-                mapSpawnData.serverInfo = CVarSystem.cvarSystem.MoveCVarsToDict(CVarSystem.CVAR_SERVERINFO)
+                mapSpawnData.serverInfo.set(CVarSystem.cvarSystem.MoveCVarsToDict(CVarSystem.CVAR_SERVERINFO))
                 mapSpawnData.serverInfo.Set("si_gameType", "singleplayer")
 
                 // set the devmap key so any play testing items will be given at
@@ -1716,7 +1716,7 @@ object Session_local {
                     mapSpawnData.serverInfo.Set("devmap", "1")
                 }
                 mapSpawnData.syncedCVars.Clear()
-                mapSpawnData.syncedCVars = CVarSystem.cvarSystem.MoveCVarsToDict(CVarSystem.CVAR_NETWORKSYNC)
+                mapSpawnData.syncedCVars.set(CVarSystem.cvarSystem.MoveCVarsToDict(CVarSystem.CVAR_NETWORKSYNC))
                 MoveToNewMap(mapName)
             }
         }
@@ -1938,11 +1938,11 @@ object Session_local {
 
                     // Start loading map
                     mapSpawnData.serverInfo.Clear()
-                    mapSpawnData.serverInfo = CVarSystem.cvarSystem.MoveCVarsToDict(CVarSystem.CVAR_SERVERINFO)
+                    mapSpawnData.serverInfo.set(CVarSystem.cvarSystem.MoveCVarsToDict(CVarSystem.CVAR_SERVERINFO))
                     mapSpawnData.serverInfo.Set("si_gameType", "singleplayer")
                     mapSpawnData.serverInfo.Set("si_map", saveMap.toString())
                     mapSpawnData.syncedCVars.Clear()
-                    mapSpawnData.syncedCVars = CVarSystem.cvarSystem.MoveCVarsToDict(CVarSystem.CVAR_NETWORKSYNC)
+                    mapSpawnData.syncedCVars.set(CVarSystem.cvarSystem.MoveCVarsToDict(CVarSystem.CVAR_NETWORKSYNC))
                     mapSpawnData.mapSpawnUsercmd[0] = UsercmdGen.usercmdGen.TicCmd(latchedTicNumber)
                     // make sure no buttons are pressed
                     mapSpawnData.mapSpawnUsercmd[0].buttons = 0
@@ -2986,7 +2986,7 @@ object Session_local {
             }
 
             // extract the map name from serverinfo
-            val mapString = idStr(mapSpawnData.serverInfo.GetString("si_map"))
+            val mapString = mapSpawnData.serverInfo.GetString("si_map")
             val fullMapName = idStr("maps/")
             fullMapName.Append(mapString)
             fullMapName.StripFileExtension()
@@ -3012,7 +3012,7 @@ object Session_local {
             UserInterface.uiManager.Reload(true)
 
             // set the loading gui that we will wipe to
-            LoadLoadingGui(mapString.toString())
+            LoadLoadingGui(mapString)
 
             // cause prints to force screen updates as a pacifier,
             // and draw the loading gui instead of game draws
@@ -3022,7 +3022,7 @@ object Session_local {
             // work for new maps etc. after the first load. we can also drop the sizes into the default.cfg
             FileSystem_h.fileSystem.ResetReadCount()
             bytesNeededForMapLoad = if (!reloadingSameMap) {
-                GetBytesNeededForMapLoad(mapString.toString())
+                GetBytesNeededForMapLoad(mapString)
             } else {
                 30 * 1024 * 1024
             }
@@ -3032,7 +3032,7 @@ object Session_local {
             ShowLoadingGui()
 
             // note any warning prints that happen during the load process
-            Common.common.ClearWarnings(mapString.toString())
+            Common.common.ClearWarnings(mapString)
 
             // release the mouse cursor
             // before we do this potentially long operation
@@ -3105,9 +3105,9 @@ object Session_local {
             // actually purge/load the media
             if (!reloadingSameMap) {
                 RenderSystem.renderSystem.EndLevelLoad()
-                snd_system.soundSystem.EndLevelLoad(mapString.toString())
+                snd_system.soundSystem.EndLevelLoad(mapString)
                 DeclManager.declManager.EndLevelLoad()
-                SetBytesNeededForMapLoad(mapString.toString(), FileSystem_h.fileSystem.GetReadCount())
+                SetBytesNeededForMapLoad(mapString, FileSystem_h.fileSystem.GetReadCount())
             }
             UserInterface.uiManager.EndLevelLoad()
             if (!idAsyncNetwork.IsActive() && !loadingSaveGame) {

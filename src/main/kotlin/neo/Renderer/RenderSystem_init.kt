@@ -1556,13 +1556,11 @@ object RenderSystem_init {
         while (i < 2) {
 
             // set the parameters we are trying
-            run({
-                val vidWidth: IntArray = intArrayOf(0)
-                val vidHeight: IntArray = intArrayOf(0)
-                R_GetModeInfo(vidWidth, vidHeight, r_mode!!.GetInteger())
-                tr_local.glConfig.vidWidth = 1024 //vidWidth[0];HACKME::0
-                tr_local.glConfig.vidHeight = 768 //vidHeight[0];
-            })
+            val vidWidth: IntArray = intArrayOf(0)
+            val vidHeight: IntArray = intArrayOf(0)
+            R_GetModeInfo(vidWidth, vidHeight, r_mode!!.GetInteger())
+            tr_local.glConfig.vidWidth = vidWidth[0]
+            tr_local.glConfig.vidHeight = vidHeight[0]
             parms.width = tr_local.glConfig.vidWidth
             parms.height = tr_local.glConfig.vidHeight
             parms.fullScreen = r_fullscreen!!.GetBool()

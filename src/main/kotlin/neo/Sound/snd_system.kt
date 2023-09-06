@@ -854,7 +854,7 @@ class snd_system {
                     }
                     if (meter > meterTops[j]) {
                         meterTops[j] = meter
-                        meterTopsTime[j] = time + s_meterTopTime.GetInteger()
+                        meterTopsTime[j] = (time + s_meterTopTime.GetInteger()).toInt()
                     } else if (time > meterTopsTime[j] && meterTops[j] > 0) {
                         meterTops[j]--
                         if (meterTops[j] != 0) {
@@ -924,7 +924,7 @@ class snd_system {
                         }
                         if (meter > meterTops[xx]) {
                             meterTops[xx] = meter
-                            meterTopsTime[xx] = time + 100
+                            meterTopsTime[xx] = (time + 100).toInt()
                         } else if (time > meterTopsTime[xx] && meterTops[xx] > 0) {
                             meterTops[xx]--
                             if (meterTops[xx] != 0) {

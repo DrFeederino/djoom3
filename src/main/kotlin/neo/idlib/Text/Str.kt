@@ -562,12 +562,12 @@ object Str {
         fun Append(text: String) {
             val newLen: Int
             var i: Int
-            newLen = len + text.length
+            newLen = len + text.trim().length
             EnsureAlloced(newLen + 1)
             //	for ( i = 0; i < text.length; i++ ) {
 //		data[ len + i ] = text[ i ];
 //	}
-            data += text
+            data += text.trim()
             len = newLen
             //	data[ len ] = '\0';
         }
@@ -670,11 +670,9 @@ object Str {
             EnsureAlloced(newlen + 1)
             len = newlen
             //	memset( data, ch, len );
-            data = ""
-            //        Arrays.fill(data, ch);
-            for (a in 0 until newlen) {
-                data += ch
-            }
+            val arr = CharArray(newlen)
+            Arrays.fill(arr, ch)
+            data = String(arr)
 
 //	data[ len ] = 0;
         }
@@ -1412,14 +1410,16 @@ object Str {
         }
 
         override fun AllocBuffer(): ByteBuffer {
-            throw UnsupportedOperationException("Not supported yet.") //To change body of generated methods, choose Tools | Templates.
+            return ByteBuffer.wrap(this.data.encodeToByteArray())
         }
 
         override fun Read(buffer: ByteBuffer) {
-            len = buffer.int
-            buffer.int //skip
-            alloced = buffer.int
-            buffer.asCharBuffer()[baseBuffer]
+            len = buffer.limit()
+            data = ""
+            for (i in 0 until buffer.limit()) {
+                data += Char(buffer.array()[i].toInt())
+            }
+            alloced = len
         }
 
         override fun Write(): ByteBuffer {
@@ -1457,7 +1457,7 @@ object Str {
         }
 
         override fun toString(): String {
-            return data
+            return data.trim(Char(0))
         }
 
         class ShowMemoryUsage_f : cmdFunction_t() {

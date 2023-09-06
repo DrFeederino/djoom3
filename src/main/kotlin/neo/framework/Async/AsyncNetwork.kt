@@ -788,7 +788,7 @@ class AsyncNetwork {
                  1.3.1:			    41
         */
         const val ASYNC_PROTOCOL_MINOR = 41
-        const val ASYNC_PROTOCOL_VERSION = (Licensee.ASYNC_PROTOCOL_MAJOR shl 16) + Companion.ASYNC_PROTOCOL_MINOR
+        const val ASYNC_PROTOCOL_VERSION = (Licensee.ASYNC_PROTOCOL_MAJOR shl 16) + ASYNC_PROTOCOL_MINOR
 
         // special game init ids
         const val GAME_INIT_ID_INVALID = -1

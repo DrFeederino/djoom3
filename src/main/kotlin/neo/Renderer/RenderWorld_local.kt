@@ -531,7 +531,7 @@ object RenderWorld_local {
             if (!tr_local.glConfig.isInitialized) {
                 return
             }
-            val start: Int = Sys_Milliseconds()
+            val start = Sys_Milliseconds()
             generateAllInteractionsCalled = false
 
             // watch how much memory we allocate
@@ -547,8 +547,8 @@ object RenderWorld_local {
                 }
                 CreateLightDefInteractions(ldef)
             }
-            val end: Int = Sys_Milliseconds()
-            val msec: Int = end - start
+            val end = Sys_Milliseconds()
+            val msec = end - start
             Common.common.Printf(
                 "idRenderWorld::GenerateAllInteractions, msec = %d, staticAllocCount = %d.\n",
                 msec,
@@ -874,7 +874,7 @@ object RenderWorld_local {
 //                        }
 //                    }
 //                }
-                val endTime: Int = Sys_Milliseconds()
+                val endTime = Sys_Milliseconds()
                 tr_local.tr.pc!!.frontEndMsec += endTime - startTime
 
                 // prepare for any 2D drawing after this

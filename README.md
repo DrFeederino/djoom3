@@ -15,10 +15,22 @@ at Script Compiling.
 </br>
 Next version will feature at least playable menu, hopefully :)
 
+#### 29-08-2023
 Version 0.0.2
 </br>
 -Fixed Script Compilation
 </br>
 -Moved to Java 17 and Kotlin 1.7.0
 </br>
--Fixed nasty Filesystem issues (e.g. )
+-Fixed nasty Filesystem issues (e.g. reading wrong bits due to Kotlin's difference of operator precedence)
+</br>
+-A lot of fixes to make more inline with Java version
+
+#### TBD
+
+Version 0.0.3
+</br>
+-Implement missing functionality: save games, loading games, networking, etc.
+</br>
+-Fix as much as possible :)
+

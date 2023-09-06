@@ -1166,7 +1166,7 @@ object Script_Thread {
                 lifetime: idEventArg<Float>
             ) {
                 val color = idVec3(colorA.value)
-                Game_local.gameRenderWorld.DebugLine(
+                Game_local.gameRenderWorld!!.DebugLine(
                     idVec4(color.x, color.y, color.z, 0.0f), start.value, end.value,
                     SEC2MS(lifetime.value).toInt()
                 )
@@ -1181,7 +1181,7 @@ object Script_Thread {
                 lifetime: idEventArg<Float>
             ) {
                 val color = idVec3(colorA.value)
-                Game_local.gameRenderWorld.DebugArrow(
+                Game_local.gameRenderWorld!!.DebugArrow(
                     idVec4(color.x, color.y, color.z, 0.0f), start.value, end.value, size.value,
                     SEC2MS(lifetime.value).toInt()
                 )
@@ -1197,7 +1197,7 @@ object Script_Thread {
                 lifetime: idEventArg<Float>
             ) {
                 val color = idVec3(colorA.value)
-                Game_local.gameRenderWorld.DebugCircle(
+                Game_local.gameRenderWorld!!.DebugCircle(
                     idVec4(color.x, color.y, color.z, 0.0f), origin.value, dir.value, radius.value, numSteps.value,
                     SEC2MS(lifetime.value).toInt()
                 )
@@ -1211,7 +1211,7 @@ object Script_Thread {
                 lifetime: idEventArg<Float>
             ) {
                 val color = idVec3(colorA.value)
-                Game_local.gameRenderWorld.DebugBounds(
+                Game_local.gameRenderWorld!!.DebugBounds(
                     idVec4(color.x, color.y, color.z, 0.0f), idBounds(mins.value, maxs.value), getVec3Origin(),
                     SEC2MS(lifetime.value).toInt()
                 )
@@ -1227,7 +1227,7 @@ object Script_Thread {
                 lifetime: idEventArg<Float>
             ) {
                 val color = idVec3(colorA.value)
-                Game_local.gameRenderWorld.DrawText(
+                Game_local.gameRenderWorld!!.DrawText(
                     text.value,
                     origin.value,
                     scale.value,
@@ -1285,7 +1285,7 @@ object Script_Thread {
             }
 
             private fun Event_StartMusic(t: idThread, text: idEventArg<String>) {
-                Game_local.gameSoundWorld.PlayShaderDirectly(text.value)
+                Game_local.gameSoundWorld!!.PlayShaderDirectly(text.value)
             }
 
             private fun Event_Warning(t: idThread, text: idEventArg<String>) {
@@ -1602,7 +1602,7 @@ object Script_Thread {
             }
 
             private fun Event_SpawnString(t: idThread, key: idEventArg<String>, defaultvalue: idEventArg<String>) {
-                val result = arrayOf<String>()
+                val result = arrayOfNulls<String>(1)
                 t.spawnArgs!!.GetString(key.value, defaultvalue.value, result)
                 ReturnString(result[0])
             }
@@ -1631,7 +1631,7 @@ object Script_Thread {
             }
 
             private fun Event_GetPersistantString(t: idThread, key: idEventArg<String>) {
-                val result = arrayOf<String>()
+                val result = arrayOfNulls<String>(1)
                 gameLocal.persistentLevelInfo.GetString(key.value, "", result)
                 ReturnString(result[0])
             }

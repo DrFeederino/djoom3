@@ -829,23 +829,23 @@ object Weapon {
             WEAPON_RAISEWEAPON.Unlink()
             WEAPON_LOWERWEAPON.Unlink()
             if (muzzleFlashHandle != -1) {
-                Game_local.gameRenderWorld.FreeLightDef(muzzleFlashHandle)
+                Game_local.gameRenderWorld!!.FreeLightDef(muzzleFlashHandle)
                 muzzleFlashHandle = -1
             }
             if (muzzleFlashHandle != -1) {
-                Game_local.gameRenderWorld.FreeLightDef(muzzleFlashHandle)
+                Game_local.gameRenderWorld!!.FreeLightDef(muzzleFlashHandle)
                 muzzleFlashHandle = -1
             }
             if (worldMuzzleFlashHandle != -1) {
-                Game_local.gameRenderWorld.FreeLightDef(worldMuzzleFlashHandle)
+                Game_local.gameRenderWorld!!.FreeLightDef(worldMuzzleFlashHandle)
                 worldMuzzleFlashHandle = -1
             }
             if (guiLightHandle != -1) {
-                Game_local.gameRenderWorld.FreeLightDef(guiLightHandle)
+                Game_local.gameRenderWorld!!.FreeLightDef(guiLightHandle)
                 guiLightHandle = -1
             }
             if (nozzleGlowHandle != -1) {
-                Game_local.gameRenderWorld.FreeLightDef(nozzleGlowHandle)
+                Game_local.gameRenderWorld!!.FreeLightDef(nozzleGlowHandle)
                 nozzleGlowHandle = -1
             }
 
@@ -964,8 +964,8 @@ object Weapon {
         }
 
         fun GetWeaponDef(objectName: String?, ammoinclip: Int) {
-            val shader = arrayOf<String>("")
-            val objectType = arrayOf<String>("")
+            val shader = arrayOfNulls<String>(1)
+            val objectType = arrayOfNulls<String>(1)
             val vmodel: String?
             val guiName: String?
             val projectileName: String?
@@ -1073,7 +1073,7 @@ object Weapon {
             val flashRadius: Float
             val flashPointLight: Boolean
             weaponDef!!.dict.GetString("mtr_flashShader", "", shader)
-            flashShader = DeclManager.declManager.FindMaterial(shader[0], false)
+            flashShader = DeclManager.declManager.FindMaterial(shader[0]!!, false)
             flashPointLight = weaponDef!!.dict.GetBool("flashPointLight", "1")
             weaponDef!!.dict.GetVector("flashColor", "0 0 0", flashColor)
             flashRadius = weaponDef!!.dict.GetInt("flashRadius").toFloat() // if 0, no light will spawn
@@ -1116,7 +1116,7 @@ object Weapon {
             nozzleGlowColor.set(weaponDef!!.dict.GetVector("nozzleGlowColor", "1 1 1"))
             nozzleGlowRadius = weaponDef!!.dict.GetFloat("nozzleGlowRadius", "10")
             weaponDef!!.dict.GetString("mtr_nozzleGlowShader", "", shader)
-            nozzleGlowShader = DeclManager.declManager.FindMaterial(shader[0], false)
+            nozzleGlowShader = DeclManager.declManager.FindMaterial(shader[0]!!, false)
 
             // get the melee damage def
             meleeDistance = weaponDef!!.dict.GetFloat("melee_distance")
@@ -1181,8 +1181,8 @@ object Weapon {
             WEAPON_LOWERWEAPON.LinkTo(scriptObject, "WEAPON_LOWERWEAPON")
             spawnArgs.set(weaponDef!!.dict)
             shader[0] = spawnArgs.GetString("snd_hum")
-            if (shader[0].isNotEmpty()) {
-                sndHum = DeclManager.declManager.FindSound(shader[0])
+            if (!shader[0].isNullOrEmpty()) {
+                sndHum = DeclManager.declManager.FindSound(shader[0]!!)
                 StartSoundShader(sndHum, gameSoundChannel_t.SND_CHANNEL_BODY.ordinal, 0, false)
             }
             isLinked = true
@@ -1259,7 +1259,7 @@ object Weapon {
         override fun SetModel(modelname: String) {
             assert(modelname != null)
             if (modelDefHandle >= 0) {
-                Game_local.gameRenderWorld.RemoveDecals(modelDefHandle)
+                Game_local.gameRenderWorld!!.RemoveDecals(modelDefHandle)
             }
             renderEntity!!.hModel = animator.SetModel(modelname)
             if (renderEntity!!.hModel != null) {
@@ -1789,11 +1789,11 @@ object Weapon {
             // remove the muzzle flash light when it's done
             if (!lightOn && Game_local.gameLocal.time >= muzzleFlashEnd || IsHidden()) {
                 if (muzzleFlashHandle != -1) {
-                    Game_local.gameRenderWorld.FreeLightDef(muzzleFlashHandle)
+                    Game_local.gameRenderWorld!!.FreeLightDef(muzzleFlashHandle)
                     muzzleFlashHandle = -1
                 }
                 if (worldMuzzleFlashHandle != -1) {
-                    Game_local.gameRenderWorld.FreeLightDef(worldMuzzleFlashHandle)
+                    Game_local.gameRenderWorld!!.FreeLightDef(worldMuzzleFlashHandle)
                     worldMuzzleFlashHandle = -1
                 }
             }
@@ -1801,8 +1801,8 @@ object Weapon {
             // update the muzzle flash light, so it moves with the gun
             if (muzzleFlashHandle != -1) {
                 UpdateFlashPosition()
-                Game_local.gameRenderWorld.UpdateLightDef(muzzleFlashHandle, muzzleFlash)
-                Game_local.gameRenderWorld.UpdateLightDef(worldMuzzleFlashHandle, worldMuzzleFlash)
+                Game_local.gameRenderWorld!!.UpdateLightDef(muzzleFlashHandle, muzzleFlash)
+                Game_local.gameRenderWorld!!.UpdateLightDef(worldMuzzleFlashHandle, worldMuzzleFlash)
 
                 // wake up monsters with the flashlight
                 if (!Game_local.gameLocal.isMultiplayer && lightOn && !owner!!.fl.notarget) {
@@ -1814,9 +1814,9 @@ object Weapon {
             if (guiLight.lightRadius[0] != 0f && guiLightJointView != Model.INVALID_JOINT) {
                 GetGlobalJointTransform(true, guiLightJointView, guiLight.origin, guiLight.axis)
                 if (guiLightHandle != -1) {
-                    Game_local.gameRenderWorld.UpdateLightDef(guiLightHandle, guiLight)
+                    Game_local.gameRenderWorld!!.UpdateLightDef(guiLightHandle, guiLight)
                 } else {
-                    guiLightHandle = Game_local.gameRenderWorld.AddLightDef(guiLight)
+                    guiLightHandle = Game_local.gameRenderWorld!!.AddLightDef(guiLight)
                 }
             }
             if (status != weaponStatus_t.WP_READY && sndHum != null) {
@@ -1881,7 +1881,7 @@ object Weapon {
             localPlane[1].set(localAxis[1])
             localPlane[1][3] = -localOrigin.times(localAxis[1]) + 0.5f
             val mtr: Material.idMaterial? = DeclManager.declManager.FindMaterial("textures/decals/duffysplatgun")
-            Game_local.gameRenderWorld.ProjectOverlay(modelDefHandle, localPlane as Array<idPlane?>, mtr)
+            Game_local.gameRenderWorld!!.ProjectOverlay(modelDefHandle, localPlane as Array<idPlane?>, mtr)
             return true
         }
 
@@ -2003,8 +2003,8 @@ object Weapon {
                 owner
             )
             if (SysCvar.g_debugWeapon.GetBool()) {
-                Game_local.gameRenderWorld.DebugLine(Lib.colorYellow, muzzleFlash.origin, end, 0)
-                Game_local.gameRenderWorld.DebugArrow(Lib.colorGreen, muzzleFlash.origin, tr.endpos, 2, 0)
+                Game_local.gameRenderWorld!!.DebugLine(Lib.colorYellow, muzzleFlash.origin, end, 0)
+                Game_local.gameRenderWorld!!.DebugArrow(Lib.colorGreen, muzzleFlash.origin, tr.endpos, 2, 0)
             }
             if (tr.fraction < 1.0f) {
                 ent = Game_local.gameLocal.GetTraceEntity(tr)
@@ -2027,8 +2027,8 @@ object Weapon {
                 owner
             )
             if (SysCvar.g_debugWeapon.GetBool()) {
-                Game_local.gameRenderWorld.DebugLine(Lib.colorYellow, muzzleFlash.origin, end, 0)
-                Game_local.gameRenderWorld.DebugArrow(Lib.colorGreen, muzzleFlash.origin, tr.endpos, 2, 0)
+                Game_local.gameRenderWorld!!.DebugLine(Lib.colorYellow, muzzleFlash.origin, end, 0)
+                Game_local.gameRenderWorld!!.DebugArrow(Lib.colorGreen, muzzleFlash.origin, tr.endpos, 2, 0)
             }
             if (tr.fraction < 1.0f) {
                 ent = Game_local.gameLocal.GetTraceEntity(tr)
@@ -2101,11 +2101,11 @@ object Weapon {
             // the light will be removed at this time
             muzzleFlashEnd = Game_local.gameLocal.time + flashTime
             if (muzzleFlashHandle != -1) {
-                Game_local.gameRenderWorld.UpdateLightDef(muzzleFlashHandle, muzzleFlash)
-                Game_local.gameRenderWorld.UpdateLightDef(worldMuzzleFlashHandle, worldMuzzleFlash)
+                Game_local.gameRenderWorld!!.UpdateLightDef(muzzleFlashHandle, muzzleFlash)
+                Game_local.gameRenderWorld!!.UpdateLightDef(worldMuzzleFlashHandle, worldMuzzleFlash)
             } else {
-                muzzleFlashHandle = Game_local.gameRenderWorld.AddLightDef(muzzleFlash)
-                worldMuzzleFlashHandle = Game_local.gameRenderWorld.AddLightDef(worldMuzzleFlash)
+                muzzleFlashHandle = Game_local.gameRenderWorld!!.AddLightDef(muzzleFlash)
+                worldMuzzleFlashHandle = Game_local.gameRenderWorld!!.AddLightDef(worldMuzzleFlash)
             }
         }
 
@@ -2178,13 +2178,13 @@ object Weapon {
                 nozzleGlow.shaderParms[RenderWorld.SHADERPARM_TIMEOFFSET] =
                     -Math_h.MS2SEC(Game_local.gameLocal.time.toFloat())
                 GetGlobalJointTransform(true, ventLightJointView, nozzleGlow.origin, nozzleGlow.axis)
-                nozzleGlowHandle = Game_local.gameRenderWorld.AddLightDef(nozzleGlow)
+                nozzleGlowHandle = Game_local.gameRenderWorld!!.AddLightDef(nozzleGlow)
             }
             GetGlobalJointTransform(true, ventLightJointView, nozzleGlow.origin, nozzleGlow.axis)
             nozzleGlow.shaderParms[RenderWorld.SHADERPARM_RED] = nozzleGlowColor.x * s
             nozzleGlow.shaderParms[RenderWorld.SHADERPARM_GREEN] = nozzleGlowColor.y * s
             nozzleGlow.shaderParms[RenderWorld.SHADERPARM_BLUE] = nozzleGlowColor.z * s
-            Game_local.gameRenderWorld.UpdateLightDef(nozzleGlowHandle, nozzleGlow)
+            Game_local.gameRenderWorld!!.UpdateLightDef(nozzleGlowHandle, nozzleGlow)
         }
 
         private fun UpdateFlashPosition() {
@@ -2763,9 +2763,9 @@ object Weapon {
                     null
                 }
                 if (SysCvar.g_debugWeapon.GetBool()) {
-                    Game_local.gameRenderWorld.DebugLine(Lib.colorYellow, start, end, 100)
+                    Game_local.gameRenderWorld!!.DebugLine(Lib.colorYellow, start, end, 100)
                     if (ent != null) {
-                        Game_local.gameRenderWorld.DebugBounds(
+                        Game_local.gameRenderWorld!!.DebugBounds(
                             Lib.colorRed,
                             ent.GetPhysics().GetBounds(),
                             ent.GetPhysics().GetOrigin(),

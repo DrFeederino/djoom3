@@ -689,7 +689,7 @@ object Script_Program {
          Allocates an object and initializes memory.
          ============
          */
-        fun SetType(typeName: String): Boolean {
+        fun SetType(typeName: String?): Boolean {
             val   /*size_t*/size: Int
             val newType: idTypeDef?
 

@@ -21,6 +21,7 @@ import neo.sys.win_input
 import neo.sys.win_main
 import org.lwjgl.glfw.*
 import java.nio.ByteBuffer
+import java.time.Instant
 import java.util.*
 import kotlin.experimental.or
 import kotlin.experimental.xor
@@ -402,7 +403,7 @@ object UsercmdGen {
     }
 
     class idUsercmdGenLocal : idUsercmdGen() {
-        private val buffered: Array<usercmd_t?> = arrayOfNulls(MAX_BUFFERED_USERCMD)
+        private val buffered: Array<usercmd_t> = Array(MAX_BUFFERED_USERCMD) { usercmd_t() }
         private val buttonState: IntArray = IntArray(TempDump.etoi(usercmdButton_t.UB_MAX_BUTTONS))
         private val joystickAxis: IntArray =
             IntArray(TempDump.etoi(joystickAxis_t.MAX_JOYSTICK_AXIS)) // set by joystick events
@@ -499,7 +500,7 @@ object UsercmdGen {
                 // async code to overflow the buffers
                 //common.Printf( "warning: idUsercmdGenLocal::TicCmd ticNumber <= com_ticNumber - MAX_BUFFERED_USERCMD\n" );
             }
-            return buffered[ticNumber and MAX_BUFFERED_USERCMD - 1]!!
+            return buffered[ticNumber and (MAX_BUFFERED_USERCMD - 1)]!!
         }
 
         override fun InhibitUsercmd(subsystem: inhibit_t, inhibit: Boolean) {
@@ -973,7 +974,7 @@ object UsercmdGen {
             private var prevX = 0.0
             private var prevY = 0.0
             override fun invoke(window: Long, xpos: Double, ypos: Double) {
-                val dwTimeStamp = System.nanoTime()
+                val dwTimeStamp = Instant.now().toEpochMilli()
                 val dx = xpos - prevX
                 val dy = ypos - prevY
                 if (dx != 0.0 || dy != 0.0) {
@@ -991,7 +992,7 @@ object UsercmdGen {
 
         inner class MouseScrollCallback : GLFWScrollCallback() {
             override fun invoke(window: Long, xoffset: Double, yoffset: Double) {
-                val dwTimeStamp = System.nanoTime()
+                val dwTimeStamp = Instant.now().toEpochMilli()
 
                 // mouse wheel actions are impulses, without a specific up / down
                 var wheelValue = yoffset.toInt() //(int) polled_didod[n].dwData ) / WHEEL_DELTA;
@@ -1009,7 +1010,7 @@ object UsercmdGen {
 
         inner class MouseButtonCallback : GLFWMouseButtonCallback() {
             override fun invoke(window: Long, button: Int, action: Int, mods: Int) {
-                val dwTimeStamp = System.nanoTime()
+                val dwTimeStamp = Instant.now().toEpochMilli()
                 //
                 // Study each of the buffer elements and process them.
                 //

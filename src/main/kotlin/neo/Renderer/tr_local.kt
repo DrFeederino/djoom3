@@ -91,7 +91,7 @@ object tr_local {
     val GLS_DEPTHFUNC_ALWAYS: Int = 0x00010000
 
     //
-    val GLS_DEFAULT: Int = tr_local.GLS_DEPTHFUNC_ALWAYS
+    val GLS_DEFAULT: Int = GLS_DEPTHFUNC_ALWAYS
     val GLS_DEPTHFUNC_EQUAL: Int = 0x00020000
     val GLS_DEPTHFUNC_LESS: Int = 0x0
 
@@ -116,7 +116,7 @@ object tr_local {
     //
     val GLS_POLYMODE_LINE: Int = 0x00002000
     val GLS_REDMASK: Int = 0x00000200
-    val GLS_COLORMASK: Int = (tr_local.GLS_REDMASK or tr_local.GLS_GREENMASK or tr_local.GLS_BLUEMASK)
+    val GLS_COLORMASK: Int = (GLS_REDMASK or GLS_GREENMASK or GLS_BLUEMASK)
     val GLS_SRCBLEND_ALPHA_SATURATE: Int = 0x00000009
     val GLS_SRCBLEND_BITS: Int = 0x0000000f
     val GLS_SRCBLEND_DST_ALPHA: Int = 0x00000007
@@ -174,7 +174,7 @@ object tr_local {
 
     //
     val FOG_ENTER_SIZE: Int = 64
-    val FOG_ENTER: Float = (tr_local.FOG_ENTER_SIZE + 1.0f) / (tr_local.FOG_ENTER_SIZE * 2)
+    val FOG_ENTER: Float = (FOG_ENTER_SIZE + 1.0f) / (FOG_ENTER_SIZE * 2)
 
     //=======================================================================
     // this is the inital allocation for max number of drawsurfs
@@ -414,7 +414,7 @@ object tr_local {
             }
         }
 
-        public override fun hashCode(): Int {
+        override fun hashCode(): Int {
             var hash: Int = 3
             hash = 47 * hash + x1
             hash = 47 * hash + y1
@@ -423,7 +423,7 @@ object tr_local {
             return hash
         }
 
-        public override fun equals(obj: Any?): Boolean {
+        override fun equals(obj: Any?): Boolean {
             if (obj == null) {
                 return false
             }
@@ -452,7 +452,7 @@ object tr_local {
             return (x1 > x2 || y1 > y2)
         }
 
-        public override fun toString(): String {
+        override fun toString(): String {
             return "idScreenRect{" + "x1=" + x1 + ", y1=" + y1 + ", x2=" + x2 + ", y2=" + y2 + '}'
         }
 
@@ -656,11 +656,11 @@ object tr_local {
             lastInteraction = null
         }
 
-        public override fun FreeRenderLight() {}
-        public override fun UpdateRenderLight(re: renderLight_s?, forceUpdate: Boolean) {}
-        public override fun GetRenderLight(re: renderLight_s?) {}
-        public override fun ForceUpdate() {}
-        public override fun GetIndex(): Int {
+        override fun FreeRenderLight() {}
+        override fun UpdateRenderLight(re: renderLight_s?, forceUpdate: Boolean) {}
+        override fun GetRenderLight(re: renderLight_s?) {}
+        override fun ForceUpdate() {}
+        override fun GetIndex(): Int {
             return index
         }
     }
@@ -752,32 +752,32 @@ object tr_local {
             needsPortalSky = false
         }
 
-        public override fun FreeRenderEntity() {
+        override fun FreeRenderEntity() {
             throw UnsupportedOperationException("Not supported yet.")
         }
 
-        public override fun UpdateRenderEntity(re: renderEntity_s?, forceUpdate: Boolean) {
+        override fun UpdateRenderEntity(re: renderEntity_s?, forceUpdate: Boolean) {
             throw UnsupportedOperationException("Not supported yet.")
         }
 
-        public override fun GetRenderEntity(re: renderEntity_s?) {
+        override fun GetRenderEntity(re: renderEntity_s?) {
             throw UnsupportedOperationException("Not supported yet.")
         }
 
-        public override fun ForceUpdate() {
+        override fun ForceUpdate() {
             throw UnsupportedOperationException("Not supported yet.")
         }
 
-        public override fun GetIndex(): Int {
+        override fun GetIndex(): Int {
             return index
         }
 
         // overlays are extra polygons that deform with animating models for blood and damage marks
-        public override fun ProjectOverlay(localTextureAxis: Array<idPlane?>?, material: idMaterial?) {
+        override fun ProjectOverlay(localTextureAxis: Array<idPlane?>?, material: idMaterial?) {
             throw UnsupportedOperationException("Not supported yet.")
         }
 
-        public override fun RemoveDecals() {
+        override fun RemoveDecals() {
             throw UnsupportedOperationException("Not supported yet.")
         }
 
@@ -978,7 +978,7 @@ object tr_local {
         constructor() {
             renderView = renderView_s()
             worldSpace = viewEntity_s()
-            clipPlanes = arrayOfNulls(tr_local.MAX_CLIP_PLANES)
+            clipPlanes = arrayOfNulls(MAX_CLIP_PLANES)
             viewport = idScreenRect()
             scissor = idScreenRect()
             viewFrustum = idFrustum()
@@ -997,8 +997,8 @@ object tr_local {
             isXraySubview = v.isXraySubview
             isEditor = v.isEditor
             numClipPlanes = v.numClipPlanes
-            clipPlanes = arrayOfNulls(tr_local.MAX_CLIP_PLANES)
-            for (i in 0 until tr_local.MAX_CLIP_PLANES) {
+            clipPlanes = arrayOfNulls(MAX_CLIP_PLANES)
+            for (i in 0 until MAX_CLIP_PLANES) {
                 if (v.clipPlanes[i] != null) clipPlanes[i]!!.set(v.clipPlanes[i]!!)
             }
             viewport = idScreenRect(v.viewport)
@@ -1010,11 +1010,7 @@ object tr_local {
             maxDrawSurfs = v.maxDrawSurfs
             viewLights = v.viewLights
             viewEntitys = v.viewEntitys
-            frustum = v.frustum.toList().stream().map { plane ->
-                {
-                    idPlane(plane)
-                }
-            }.toArray() as Array<idPlane>
+            frustum = v.frustum
             viewFrustum = idFrustum(v.viewFrustum)
             areaNum = v.areaNum
             if (v.connectedAreas != null) {
@@ -1163,7 +1159,7 @@ object tr_local {
         var c_tangentIndexes: Int = 0 // R_DeriveTangents()
         var c_viewLights: Int = 0
         var c_visibleViewEntities: Int = 0
-        var frontEndMsec: Int = 0 // sum of time in all RE_RenderScene's in a frame
+        var frontEndMsec = 0L // sum of time in all RE_RenderScene's in a frame
     }
 
     class tmu_t() {
@@ -1184,7 +1180,7 @@ object tr_local {
         var tmu: Array<tmu_t?>
 
         init {
-            tmu = arrayOfNulls(tr_local.MAX_MULTITEXTURE_UNITS)
+            tmu = arrayOfNulls(MAX_MULTITEXTURE_UNITS)
             for (a in tmu.indices) {
                 tmu[a] = tmu_t()
             }
@@ -1444,7 +1440,7 @@ object tr_local {
             stencilIncr = 0
             stencilDecr = 0
             //            memset(renderCrops, 0, sizeof(renderCrops));
-            renderCrops = arrayOfNulls(tr_local.MAX_RENDER_CROPS)
+            renderCrops = arrayOfNulls(MAX_RENDER_CROPS)
             for (r in renderCrops.indices) {
                 renderCrops[r] = renderCrop_t()
             }
@@ -1473,7 +1469,7 @@ object tr_local {
             if (Icmp((RenderSystem_init.r_renderer!!.GetString())!!, "arb") == 0) {
                 backEndRenderer = backEndName_t.BE_ARB
             } else if (Icmp((RenderSystem_init.r_renderer!!.GetString())!!, "arb2") == 0) {
-                if (tr_local.glConfig.allowARB2Path) {
+                if (glConfig.allowARB2Path) {
                     backEndRenderer = backEndName_t.BE_ARB2
                 }
             }
@@ -1481,7 +1477,7 @@ object tr_local {
             // fallback
             if (backEndRenderer == backEndName_t.BE_ARB2) {
                 // choose the best
-                if (tr_local.glConfig.allowARB2Path) {
+                if (glConfig.allowARB2Path) {
                     backEndRenderer = backEndName_t.BE_ARB2
                 } else {
                     // the others are considered experimental
@@ -1538,7 +1534,7 @@ object tr_local {
             )
         }
 
-        public override fun Init() {
+        override fun Init() {
             Common.common.Printf("------- Initializing renderSystem --------\n")
 
             // clear all our internal state
@@ -1551,7 +1547,7 @@ object tr_local {
             ambientLightVector[3] = 1.0f
 
 //            memset(backEnd, 0, sizeof(backEnd));
-            tr_local.backEnd = backEndState_t()
+            backEnd = backEndState_t()
             RenderSystem_init.R_InitCvars()
             RenderSystem_init.R_InitCommands()
             guiModel = idGuiModel()
@@ -1579,10 +1575,10 @@ object tr_local {
             Common.common.Printf("--------------------------------------\n")
         }
 
-        public override fun Shutdown() {
+        override fun Shutdown() {
             Common.common.Printf("idRenderSystem::Shutdown()\n")
             tr_font.R_DoneFreeType()
-            if (tr_local.glConfig.isInitialized) {
+            if (glConfig.isInitialized) {
                 Image.globalImages.PurgeAllImages()
             }
             ModelManager.renderModelManager.Shutdown()
@@ -1614,9 +1610,9 @@ object tr_local {
             ShutdownOpenGL()
         }
 
-        public override fun InitOpenGL() {
+        override fun InitOpenGL() {
             // if OpenGL isn't started, start it now
-            if (!tr_local.glConfig.isInitialized) {
+            if (!glConfig.isInitialized) {
                 val err: Int
                 RenderSystem_init.R_InitOpenGL()
                 Image.globalImages.ReloadAllImages()
@@ -1627,37 +1623,37 @@ object tr_local {
             }
         }
 
-        public override fun ShutdownOpenGL() {
+        override fun ShutdownOpenGL() {
             // free the context and close the window
             tr_main.R_ShutdownFrameData()
             GLimp_Shutdown()
-            tr_local.glConfig.isInitialized = false
+            glConfig.isInitialized = false
         }
 
-        public override fun IsOpenGLRunning(): Boolean {
-            return tr_local.glConfig.isInitialized
+        override fun IsOpenGLRunning(): Boolean {
+            return glConfig.isInitialized
         }
 
-        public override fun IsFullScreen(): Boolean {
-            return tr_local.glConfig.isFullscreen
+        override fun IsFullScreen(): Boolean {
+            return glConfig.isFullscreen
         }
 
-        public override fun GetScreenWidth(): Int {
-            return tr_local.glConfig.vidWidth
+        override fun GetScreenWidth(): Int {
+            return glConfig.vidWidth
         }
 
-        public override fun GetScreenHeight(): Int {
-            return tr_local.glConfig.vidHeight
+        override fun GetScreenHeight(): Int {
+            return glConfig.vidHeight
         }
 
-        public override fun AllocRenderWorld(): idRenderWorld {
+        override fun AllocRenderWorld(): idRenderWorld {
             val rw: idRenderWorldLocal
             rw = idRenderWorldLocal()
             worlds.Append(rw)
             return rw
         }
 
-        public override fun FreeRenderWorld(rw: idRenderWorld) {
+        override fun FreeRenderWorld(rw: idRenderWorld) {
             if (primaryWorld === rw) {
                 primaryWorld = null
             }
@@ -1665,12 +1661,12 @@ object tr_local {
             //	delete rw;
         }
 
-        public override fun BeginLevelLoad() {
+        override fun BeginLevelLoad() {
             ModelManager.renderModelManager.BeginLevelLoad()
             Image.globalImages.BeginLevelLoad()
         }
 
-        public override fun EndLevelLoad() {
+        override fun EndLevelLoad() {
             ModelManager.renderModelManager.EndLevelLoad()
             Image.globalImages.EndLevelLoad()
             if (RenderSystem_init.r_forceLoadImages!!.GetBool()) {
@@ -1685,7 +1681,7 @@ object tr_local {
          Loads 3 point sizes, 12, 24, and 48
          ============
          */
-        public override fun RegisterFont(fontName: String?, font: fontInfoEx_t): Boolean {
+        override fun RegisterFont(fontName: String?, font: fontInfoEx_t): Boolean {
 //if( BUILD_FREETYPE){
 //            FT_Face face;
 //            int j, k, xOut, yOut, lastStart, imageNumber;
@@ -1940,15 +1936,15 @@ object tr_local {
          just colors
          =============
          */
-        public override fun SetColor(rgba: idVec4) {
+        override fun SetColor(rgba: idVec4) {
             SetColor4(rgba[0], rgba[1], rgba[2], rgba[3])
         }
 
-        public override fun SetColor4(r: Float, g: Float, b: Float, a: Float) {
+        override fun SetColor4(r: Float, g: Float, b: Float, a: Float) {
             guiModel!!.SetColor(r, g, b, a)
         }
 
-        public override fun DrawStretchPic(
+        override fun DrawStretchPic(
             verts: Array<idDrawVert>?,
             indexes: IntArray?,
             vertCount: Int,
@@ -1970,7 +1966,7 @@ object tr_local {
          x/y/w/h are in the 0,0 to 640,480 range
          =============
          */
-        public override fun DrawStretchPic(
+        override fun DrawStretchPic(
             x: Float,
             y: Float,
             w: Float,
@@ -1991,7 +1987,7 @@ object tr_local {
          x/y/w/h are in the 0,0 to 640,480 range
          =============
          */
-        public override fun DrawStretchTri(
+        override fun DrawStretchTri(
             p1: idVec2?,
             p2: idVec2?,
             p3: idVec2?,
@@ -2000,19 +1996,19 @@ object tr_local {
             t3: idVec2?,
             material: idMaterial?
         ) {
-            tr_local.tr.guiModel!!.DrawStretchTri(p1!!, p2!!, p3!!, t1!!, t2!!, t3!!, material)
+            tr.guiModel!!.DrawStretchTri(p1!!, p2!!, p3!!, t1!!, t2!!, t3!!, material)
         }
 
-        public override fun GlobalToNormalizedDeviceCoordinates(global: idVec3?, ndc: idVec3?) {
+        override fun GlobalToNormalizedDeviceCoordinates(global: idVec3?, ndc: idVec3?) {
             tr_main.R_GlobalToNormalizedDeviceCoordinates(global!!, ndc!!)
         }
 
-        public override fun GetGLSettings(width: IntArray, height: IntArray) {
-            width[0] = tr_local.glConfig.vidWidth
-            height[0] = tr_local.glConfig.vidHeight
+        override fun GetGLSettings(width: IntArray, height: IntArray) {
+            width[0] = glConfig.vidWidth
+            height[0] = glConfig.vidHeight
         }
 
-        public override fun PrintMemInfo(mi: MemInfo_t) {
+        override fun PrintMemInfo(mi: MemInfo_t) {
             // sum up image totals
             Image.globalImages.PrintMemInfo(mi)
 
@@ -2029,7 +2025,7 @@ object tr_local {
          small chars are drawn at native screen resolution
          =====================
          */
-        public override fun DrawSmallChar(x: Int, y: Int, ch: Int, material: idMaterial?) {
+        override fun DrawSmallChar(x: Int, y: Int, ch: Int, material: idMaterial?) {
             var ch: Int = ch
             val row: Int
             val col: Int
@@ -2071,7 +2067,7 @@ object tr_local {
          Coordinates are at 640 by 480 virtual resolution
          ==================
          */
-        public override fun DrawSmallStringExt(
+        override fun DrawSmallStringExt(
             x: Int,
             y: Int,
             string: CharArray,
@@ -2108,7 +2104,7 @@ object tr_local {
             SetColor(Lib.colorWhite)
         }
 
-        public override fun DrawBigChar(x: Int, y: Int, ch: Int, material: idMaterial?) {
+        override fun DrawBigChar(x: Int, y: Int, ch: Int, material: idMaterial?) {
             var ch: Int = ch
             val row: Int
             val col: Int
@@ -2150,7 +2146,7 @@ object tr_local {
          Coordinates are at 640 by 480 virtual resolution
          ==================
          */
-        public override fun DrawBigStringExt(
+        override fun DrawBigStringExt(
             x: Int,
             y: Int,
             string: String,
@@ -2187,21 +2183,21 @@ object tr_local {
             SetColor(Lib.colorWhite)
         }
 
-        public override fun WriteDemoPics() {
+        override fun WriteDemoPics() {
             Session.session.writeDemo!!.WriteInt(demoSystem_t.DS_RENDER)
             Session.session.writeDemo!!.WriteInt(demoCommand_t.DC_GUI_MODEL)
             guiModel!!.WriteToDemo(Session.session.writeDemo)
         }
 
-        public override fun DrawDemoPics() {
+        override fun DrawDemoPics() {
             demoGuiModel!!.EmitFullScreen()
         }
 
-        public override fun BeginFrame(windowWidth: Int, windowHeight: Int) {
+        override fun BeginFrame(windowWidth: Int, windowHeight: Int) {
             var windowWidth: Int = windowWidth
             var windowHeight: Int = windowHeight
             var cmd: setBufferCommand_t
-            if (!tr_local.glConfig.isInitialized) {
+            if (!glConfig.isInitialized) {
                 return
             }
 
@@ -2214,8 +2210,8 @@ object tr_local {
                 windowWidth = tiledViewport[0]
                 windowHeight = tiledViewport[1]
             }
-            tr_local.glConfig.vidWidth = windowWidth
-            tr_local.glConfig.vidHeight = windowHeight
+            glConfig.vidWidth = windowWidth
+            glConfig.vidHeight = windowHeight
             renderCrops[0]!!.x = 0
             renderCrops[0]!!.y = 0
             renderCrops[0]!!.width = windowWidth
@@ -2259,10 +2255,10 @@ object tr_local {
             }
         }
 
-        public override fun EndFrame(frontEndMsec: IntArray?, backEndMsec: IntArray?) {
+        override fun EndFrame(frontEndMsec: IntArray?, backEndMsec: IntArray?) {
             var cmd: emptyCommand_t
             DBG_EndFrame++
-            if (!tr_local.glConfig.isInitialized) {
+            if (!glConfig.isInitialized) {
                 return
             }
 
@@ -2272,10 +2268,10 @@ object tr_local {
 
             // save out timing information
             if (frontEndMsec != null) {
-                frontEndMsec[0] = pc!!.frontEndMsec
+                frontEndMsec[0] = pc!!.frontEndMsec.toInt()
             }
             if (backEndMsec != null) {
-                backEndMsec[0] = tr_local.backEnd!!.pc.msec
+                backEndMsec[0] = backEnd!!.pc.msec.toInt()
             }
 
             // print any other statistics and clear all of them
@@ -2320,7 +2316,7 @@ object tr_local {
          If ref == NULL, session->updateScreen will be used
          ==================
          */
-        public override fun TakeScreenshot(width: Int, height: Int, fileName: String, blends: Int, ref: renderView_s?) {
+        override fun TakeScreenshot(width: Int, height: Int, fileName: String, blends: Int, ref: renderView_s?) {
             val buffer: ByteArray
             var i: Int
             var j: Int
@@ -2398,10 +2394,10 @@ object tr_local {
          down, but still valid.
          ================
          */
-        public override fun CropRenderSize(width: Int, height: Int, makePowerOfTwo: Boolean, forceDimensions: Boolean) {
+        override fun CropRenderSize(width: Int, height: Int, makePowerOfTwo: Boolean, forceDimensions: Boolean) {
             var width: Int = width
             var height: Int = height
-            if (!tr_local.glConfig.isInitialized) {
+            if (!glConfig.isInitialized) {
                 return
             }
 
@@ -2447,13 +2443,13 @@ object tr_local {
             val rc: renderCrop_t? = renderCrops[currentRenderCrop]
 
             // we might want to clip these to the crop window instead
-            while (width > tr_local.glConfig.vidWidth) {
+            while (width > glConfig.vidWidth) {
                 width = width shr 1
             }
-            while (height > tr_local.glConfig.vidHeight) {
+            while (height > glConfig.vidHeight) {
                 height = height shr 1
             }
-            if (currentRenderCrop == tr_local.MAX_RENDER_CROPS) {
+            if (currentRenderCrop == MAX_RENDER_CROPS) {
                 Common.common.Error("idRenderSystemLocal::CropRenderSize: currentRenderCrop == MAX_RENDER_CROPS")
             }
             currentRenderCrop++
@@ -2466,8 +2462,8 @@ object tr_local {
             rc.height = height
         }
 
-        public override fun CaptureRenderToImage(imageName: String?) {
-            if (!tr_local.glConfig.isInitialized) {
+        override fun CaptureRenderToImage(imageName: String?) {
+            if (!glConfig.isInitialized) {
                 return
             }
             guiModel!!.EmitFullScreen()
@@ -2502,8 +2498,8 @@ object tr_local {
             guiModel!!.Clear()
         }
 
-        public override fun CaptureRenderToFile(fileName: String?, fixAlpha: Boolean) {
-            if (!tr_local.glConfig.isInitialized) {
+        override fun CaptureRenderToFile(fileName: String?, fixAlpha: Boolean) {
+            if (!glConfig.isInitialized) {
                 return
             }
             val rc: renderCrop_t? = renderCrops[currentRenderCrop]
@@ -2528,8 +2524,8 @@ object tr_local {
             data2 = null // R_StaticFree(data2);
         }
 
-        public override fun UnCrop() {
-            if (!tr_local.glConfig.isInitialized) {
+        override fun UnCrop() {
+            if (!glConfig.isInitialized) {
                 return
             }
             if (currentRenderCrop < 1) {
@@ -2549,10 +2545,10 @@ object tr_local {
             }
         }
 
-        public override fun GetCardCaps(oldCard: BooleanArray, nv10or20: BooleanArray) {
+        override fun GetCardCaps(oldCard: BooleanArray, nv10or20: BooleanArray) {
         }
 
-        public override fun UploadImage(imageName: String?, data: ByteBuffer?, width: Int, height: Int): Boolean {
+        override fun UploadImage(imageName: String?, data: ByteBuffer?, width: Int, height: Int): Boolean {
             val image: idImage? = Image.globalImages.GetImage(imageName)
             if (null == image) {
                 return false

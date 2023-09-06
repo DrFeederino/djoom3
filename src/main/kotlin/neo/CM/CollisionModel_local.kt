@@ -414,34 +414,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
 
         // get the polygon of a model
         override fun GetModelPolygon(model: Int, polygonNum: Int, winding: idFixedWinding): Boolean {
-            var i: Int
-            var edgeNum: Int
-            val poly = cm_polygon_s()
-            if (model < 0 || model > MAX_SUBMODELS || model >= numModels || null == models?.get(
-                    model
-                )
-            ) {
-                Common.common.Printf("idCollisionModelManagerLocal::GetModelPolygon: invalid model handle\n")
-                return false
-            }
-
-            // I have no idea how an *int* can be cast into an instance
-            // Supposedly the func interprets int as bits and tries to "restore" object? but...why?
-            //poly = /* reinterpret_cast<cm_polygon_t **>*/ (polygonNum);
-            winding.Clear()
-            i = 0
-            while (i < poly.numEdges) {
-                edgeNum = poly.edges[i]
-                winding.plusAssign(
-                    models!![model]!!.vertices?.get(
-                        models!![model]!!.edges?.get(abs(edgeNum))!!.vertexNum[Math_h.INTSIGNBITSET(
-                            edgeNum
-                        )]
-                    )!!.p
-                )
-                i++
-            }
-            return true
+            return false
         }
 
         /*
@@ -993,17 +966,19 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             val end = idVec3()
 
             // same as Translation but instead of storing the first collision we store all collisions as contacts
-            getContacts = true
+            this.getContacts = true
             this.contacts = contacts
             this.maxContacts = maxContacts
-            numContacts = 0
-            end.set(start + (dir.SubVec3(0).times(depth)))
+            this.numContacts = 0
+
+            end.set(start + dir.SubVec3(0) * depth)
             Translation(results, start, end, trm, trmAxis, contentMask, model, modelOrigin, modelAxis)
             if (dir.SubVec3(1).LengthSqr() != 0.0f) {
                 // FIXME: rotational contacts
             }
-            getContacts = false
+            this.getContacts = false
             this.maxContacts = 0
+
             return numContacts
         }
 
@@ -1215,7 +1190,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                     CollisionModel_debug.total_rotation.toFloat() / CollisionModel_debug.num_rotation
                 )
             }
-            CollisionModel_debug.testend = emptyArray()
+            CollisionModel_debug.testend = null
             sscanf.close()
         }
 
@@ -2002,7 +1977,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             }
             dir1.set(at - (tw.origin).Cross(tw.axis))
             dir2.set(bt - (tw.origin).Cross(tw.axis))
-            if (dir1.times(dir1) > dir2.times(dir2)) {
+            if (dir1 * dir1 > dir2 * dir2) {
                 dir.set(dir1)
             } else {
                 dir.set(dir2)
@@ -2010,6 +1985,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             if (tw.angle < 0.0f) {
                 dir.set(-dir)
             }
+
             pl1.FromLine(at, bt)
             pl2.FromRay(vc, dir)
             d1 = pl1.PermutedInnerProduct(pl2)
@@ -2028,17 +2004,17 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             }
 
             // collision point on the edge at-bt
-            dir1.set(vd - (vc).Cross(dir))
-            d = dir1.times(vc)
-            d1 = dir1.times(at) - d
-            d2 = dir1.times(bt) - d
+            dir1.set((vd - vc).Cross(dir))
+            d = dir1 * vc
+            d1 = dir1 * at - d
+            d2 = dir1 * bt - d
             if (d1 == d2) {
                 return false
             }
-            collisionPoint.set(at + (bt - (at) * (d1 / (d1 - d2))))
+            collisionPoint.set(at + (bt - at) * (d1 / (d1 - d2)))
 
             // normal is cross product of the rotated edge va-vb and the edge vc-vd
-            collisionNormal.Cross(bt - (at), vd - (vc))
+            collisionNormal.Cross(bt - at, vd - vc)
             return true
         }
 
@@ -2053,17 +2029,17 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             tw: cm_traceWork_s, pl1: idPluecker,
             vc: idVec3, vd: idVec3, minTan: Float, tanHalfAngle: CFloat
         ): Boolean {
-            val v0: Double
-            val v1: Double
-            val v2: Double
-            val a: Double
-            val b: Double
-            val c: Double
-            val d: Double
-            val sqrtd: Double
-            val q: Double
-            var frac1: Double
-            var frac2: Double
+            val v0: Float
+            val v1: Float
+            val v2: Float
+            val a: Float
+            val b: Float
+            val c: Float
+            val d: Float
+            val sqrtd: Float
+            val q: Float
+            var frac1: Float
+            var frac2: Float
             val ct = idVec3()
             val dt = idVec3()
             val pl2 = idPluecker()
@@ -2162,30 +2138,25 @@ object CollisionModel_local : AbstractCollisionModel_local() {
 
              MrE gives Pluecker a banana.. good monkey
 
-             */tanHalfAngle._val = (tw.maxTan)
+             */
+            tanHalfAngle._val = (tw.maxTan)
 
             // transform rotation axis to z-axis
-            ct.set(vc - (tw.origin) * (tw.matrix))
-            dt.set(vd - (tw.origin) * (tw.matrix))
+            ct.set((vc - tw.origin) * tw.matrix)
+            dt.set((vd - tw.origin) * tw.matrix)
             pl2.FromLine(ct, dt)
-            v0 = (pl2.get(0) * pl1.get(4) + pl2.get(4) * pl1.get(0)).toDouble()
-            v1 =
-                (pl2.get(1) * pl1.get(2) - pl2.get(2) * pl1.get(1) + pl2.get(5) * pl1.get(3) - pl2.get(3) * pl1.get(
-                    5
-                )).toDouble()
-            v2 =
-                (pl2.get(1) * pl1.get(5) + pl2.get(2) * pl1.get(3) + pl2.get(5) * pl1.get(1) + pl2.get(3) * pl1.get(
-                    2
-                )).toDouble()
+            v0 = pl2[0] * pl1[4] + pl2[4] * pl1[0]
+            v1 = pl2[1] * pl1[2] - pl2[2] * pl1[1] + pl2[5] * pl1[3] - pl2[3] * pl1[5]
+            v2 = pl2[1] * pl1[5] + pl2[2] * pl1[3] + pl2[5] * pl1[1] + pl2[3] * pl1[2]
             a = v0 - v2
             b = v1
             c = v0 + v2
-            if (a == 0.0) {
-                if (b == 0.0) {
+            if (a == 0.0f) {
+                if (b == 0.0f) {
                     return false
                 }
                 frac1 = -c / (2.0f * b)
-                frac2 = 1e10 // = tan( idMath::HALF_PI )
+                frac2 = 1.0E10F // = tan( idMath::HALF_PI )
             } else {
                 d = b * b - c * a
                 if (d <= 0.0f) {
@@ -2207,10 +2178,10 @@ object CollisionModel_local : AbstractCollisionModel_local() {
 
             // get smallest tangent for which a collision occurs
             if (frac1 >= minTan && frac1 < tanHalfAngle._val) {
-                tanHalfAngle._val = (frac1.toFloat())
+                tanHalfAngle._val = (frac1)
             }
             if (frac2 >= minTan && frac2 < tanHalfAngle._val) {
-                tanHalfAngle._val = (frac2.toFloat())
+                tanHalfAngle._val = (frac2)
             }
             if (tw.angle < 0.0f) {
                 tanHalfAngle._val = (-tanHalfAngle._val)
@@ -2231,17 +2202,17 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             tw: cm_traceWork_s, pl1: idPluecker,
             vc: idVec3, vd: idVec3, tanHalfAngle: CFloat, dir: CFloat
         ): Boolean {
-            val v0: Double
-            val v1: Double
-            val v2: Double
-            val a: Double
-            val b: Double
-            var c: Double
-            val d: Double
-            val sqrtd: Double
-            val q: Double
-            var frac1: Double
-            var frac2: Double
+            val v0: Float
+            val v1: Float
+            val v2: Float
+            val a: Float
+            val b: Float
+            var c: Float
+            val d: Float
+            val sqrtd: Float
+            val q: Float
+            var frac1: Float
+            var frac2: Float
             val ct = idVec3()
             val dt = idVec3()
             val pl2 = idPluecker()
@@ -2270,32 +2241,26 @@ object CollisionModel_local : AbstractCollisionModel_local() {
              */tanHalfAngle._val = (0.0f)
 
             // transform rotation axis to z-axis
-            ct.set(vc - (tw.origin) * (tw.matrix))
-            dt.set(vd - (tw.origin) * (tw.matrix))
+            ct.set((vc - tw.origin) * tw.matrix)
+            dt.set((vd - tw.origin) * tw.matrix)
             pl2.FromLine(ct, dt)
-            v0 = (pl2.get(0) * pl1.get(4) + pl2.get(4) * pl1.get(0)).toDouble()
-            v1 =
-                (pl2.get(1) * pl1.get(2) - pl2.get(2) * pl1.get(1) + pl2.get(5) * pl1.get(3) - pl2.get(3) * pl1.get(
-                    5
-                )).toDouble()
-            v2 =
-                (pl2.get(1) * pl1.get(5) + pl2.get(2) * pl1.get(3) + pl2.get(5) * pl1.get(1) + pl2.get(3) * pl1.get(
-                    2
-                )).toDouble()
+            v0 = pl2[0] * pl1[4] + pl2[4] * pl1[0]
+            v1 = pl2[1] * pl1[2] - pl2[2] * pl1[1] + pl2[5] * pl1[3] - pl2[3] * pl1[5]
+            v2 = pl2[1] * pl1[5] + pl2[2] * pl1[3] + pl2[5] * pl1[1] + pl2[3] * pl1[2]
 
             // get the direction of motion at the initial position
             c = v0 + v2
             if (tw.angle > 0.0f) {
                 if (c > 0.0f) {
-                    dir._val = (v1.toFloat())
+                    dir._val = v1
                 } else {
-                    dir._val = (-v1.toFloat())
+                    dir._val = -v1
                 }
             } else {
                 if (c > 0.0f) {
-                    dir._val = (-v1.toFloat())
+                    dir._val = -v1
                 } else {
-                    dir._val = (v1.toFloat())
+                    dir._val = v1
                 }
             }
             // negative direction means the edges move towards each other at the initial position
@@ -2305,12 +2270,12 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             a = -v1
             b = -v2
             c = v1
-            if (a == 0.0) {
-                if (b == 0.0) {
+            if (a == 0.0f) {
+                if (b == 0.0f) {
                     return false
                 }
                 frac1 = -c / (2.0f * b)
-                frac2 = 1e10 // = tan( idMath::HALF_PI )
+                frac2 = 1.0E10F // = tan( idMath::HALF_PI )
             } else {
                 d = b * b - c * a
                 if (d <= 0.0f) {
@@ -2333,9 +2298,9 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 return false
             }
             if (frac1 > frac2) {
-                tanHalfAngle._val = (frac1.toFloat())
+                tanHalfAngle._val = frac1
             } else {
-                tanHalfAngle._val = (frac2.toFloat())
+                tanHalfAngle._val = frac2
             }
             if (tw.angle < 0.0f) {
                 tanHalfAngle._val = (-tanHalfAngle._val)
@@ -3230,10 +3195,11 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             tw.quickExit = false
             tw.angle = endAngle - startAngle
             assert(tw.angle > -180.0f && tw.angle < 180.0f)
+            tw.angle = idMath.ClampFloat(-180.0f, 180.0f, tw.angle);
             initialTan = abs(tan((idMath.PI / 360.0f * tw.angle).toDouble()).toFloat())
             tw.maxTan = initialTan
             tw.model = models?.get(model)
-            tw.start.set(start - (modelOrigin))
+            tw.start.set(start - modelOrigin)
             // rotation axis, axis is assumed to be normalized
             tw.axis.set(axis)
             assert(
@@ -5856,6 +5822,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
             pref: cm_polygonRef_s?,
             p: cm_polygon_s
         ) {
+            assert(node != null);
             var currentNode = node
             while (currentNode.planeType != -1) {
                 if (CollisionModel_load.CM_R_InsideAllChildren(currentNode, p.bounds)) {
@@ -6210,16 +6177,13 @@ object CollisionModel_local : AbstractCollisionModel_local() {
                 }
             }
             if (model.numEdges >= model.maxEdges) {
-                val oldEdges: Array<cm_edge_s>
+                var oldEdges: Array<cm_edge_s>?
                 // resize edge array
                 model.maxEdges = (model.maxEdges * 1.5f + 1).toInt()
-                oldEdges = model.edges!!
+                oldEdges = model.edges
                 model.edges = cm_edge_s.generateArray(model.maxEdges)
-                //System.arraycopy(oldEdges, 0, model.edges, 0, model.numEdges);
-                // TODO: check Source code
-                if (model.numEdges >= 0) {
-                    System.arraycopy(oldEdges, 0, model.edges, 0, model.numEdges)
-                }
+                System.arraycopy(oldEdges, 0, model.edges, 0, model.numEdges)
+                oldEdges = null
                 cm_edgeHash!!.ResizeIndex(model.maxEdges)
             }
             // setup edge
@@ -6888,7 +6852,7 @@ object CollisionModel_local : AbstractCollisionModel_local() {
         private fun CollisionModelForMapEntity(mapEnt: idMapEntity): cm_model_s? {    // brush/patch model from .map
             val model: cm_model_s?
             val bounds = idBounds()
-            val name = arrayOf("")
+            val name = arrayOfNulls<String>(1)
             var i: Int
             val brushCount: Int
 
@@ -6899,9 +6863,9 @@ object CollisionModel_local : AbstractCollisionModel_local() {
 
             // get a name for the collision model
             mapEnt.epairs.GetString("model", "", name)
-            if (name[0].isEmpty()) {
+            if (name[0].isNullOrEmpty()) {
                 mapEnt.epairs.GetString("name", "", name)
-                if (name[0].isEmpty()) {
+                if (name[0].isNullOrEmpty()) {
                     if (0 == numModels) {
                         // first model is always the world
                         name[0] = "worldMap"

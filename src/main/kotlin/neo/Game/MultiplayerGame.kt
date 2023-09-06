@@ -758,7 +758,7 @@ object MultiplayerGame {
                             channel = snd.toInt()
                             snd = args.Argv(icmd++)
                         }
-                        Game_local.gameSoundWorld.PlayShaderDirectly(snd, channel)
+                        Game_local.gameSoundWorld!!.PlayShaderDirectly(snd, channel)
                     }
                     continue
                 } else if (0 == idStr.Companion.Icmp(cmd, "mpSkin")) {
@@ -1023,9 +1023,9 @@ object MultiplayerGame {
             val shaderDecl: idSoundShader?
             if (to == -1 || to == Game_local.gameLocal.localClientNum) {
                 if (shader != null) {
-                    Game_local.gameSoundWorld.PlayShaderDirectly(shader)
+                    Game_local.gameSoundWorld!!.PlayShaderDirectly(shader)
                 } else {
-                    Game_local.gameSoundWorld.PlayShaderDirectly(GlobalSoundStrings[TempDump.etoi(evt)])
+                    Game_local.gameSoundWorld!!.PlayShaderDirectly(GlobalSoundStrings[TempDump.etoi(evt)])
                 }
             }
             if (!Game_local.gameLocal.isClient) {
@@ -1397,7 +1397,7 @@ object MultiplayerGame {
                     Game_local.gameLocal.userInfo[clientNum].GetString("ui_name")
                 )
             )
-            Game_local.gameSoundWorld.PlayShaderDirectly(GlobalSoundStrings[TempDump.etoi(snd_evt_t.SND_VOTE)])
+            Game_local.gameSoundWorld!!.PlayShaderDirectly(GlobalSoundStrings[TempDump.etoi(snd_evt_t.SND_VOTE)])
             voted = clientNum == Game_local.gameLocal.localClientNum
             if (Game_local.gameLocal.isClient) {
                 // the the vote value to something so the vote line is displayed
@@ -1448,14 +1448,14 @@ object MultiplayerGame {
             when (status) {
                 vote_result_t.VOTE_FAILED -> {
                     AddChatLine(Common.common.GetLanguageDict().GetString("#str_04278"))
-                    Game_local.gameSoundWorld.PlayShaderDirectly(GlobalSoundStrings[TempDump.etoi(snd_evt_t.SND_VOTE_FAILED)])
+                    Game_local.gameSoundWorld!!.PlayShaderDirectly(GlobalSoundStrings[TempDump.etoi(snd_evt_t.SND_VOTE_FAILED)])
                     if (Game_local.gameLocal.isClient) {
                         vote = vote_flags_t.VOTE_NONE
                     }
                 }
                 vote_result_t.VOTE_PASSED -> {
                     AddChatLine(Common.common.GetLanguageDict().GetString("#str_04277"))
-                    Game_local.gameSoundWorld.PlayShaderDirectly(GlobalSoundStrings[TempDump.etoi(snd_evt_t.SND_VOTE_PASSED)])
+                    Game_local.gameSoundWorld!!.PlayShaderDirectly(GlobalSoundStrings[TempDump.etoi(snd_evt_t.SND_VOTE_PASSED)])
                 }
                 vote_result_t.VOTE_RESET -> if (Game_local.gameLocal.isClient) {
                     vote = vote_flags_t.VOTE_NONE

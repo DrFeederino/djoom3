@@ -20,6 +20,7 @@ import neo.idlib.math.Vector.idVec6
 import neo.sys.win_main
 import java.io.IOException
 import java.io.InputStream
+import java.lang.StringBuilder
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.channels.FileChannel
@@ -27,7 +28,6 @@ import java.util.logging.Level
 import java.util.logging.Logger
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
-import kotlin.math.abs
 
 /**
  *
@@ -362,9 +362,9 @@ object File_h {
         }
 
         fun ReadShort(value: ShortArray): Int {
-            val shortBytes = ByteBuffer.allocate(2)
+            val shortBytes = ByteBuffer.allocate(1)
             val result = Read(shortBytes)
-            value[0] = Lib.LittleShort(shortBytes.short)
+            value[0] = Lib.LittleShort(shortBytes[0].toShort())
             return result
         }
 
@@ -402,9 +402,9 @@ object File_h {
         }
 
         fun ReadChar(value: ShortArray): Int {
-            val charBytes = ByteBuffer.allocate(2)
+            val charBytes = ByteBuffer.allocate(1)
             val result = Read(charBytes)
-            value[0] = charBytes.short
+            value[0] = Lib.LittleShort(charBytes[0].toShort())
             return result
         }
 
@@ -478,15 +478,11 @@ object File_h {
         fun ReadString(string: idStr): Int {
             val len = CInt()
             var result = 0
-            val stringBytes: ByteBuffer?
             ReadInt(len)
             if (len._val > 0) {
-                var capacity = len._val * 2
-                capacity = if (capacity < len._val) Int.MAX_VALUE - 1 else abs(capacity) //just in case
-                stringBytes = ByteBuffer.allocate(capacity) //2 bytes per char
-                //                string.Fill(' ', len[0]);
-                result = Read(stringBytes)
-                string.set(String(stringBytes.array()))
+                string.Fill(' ', len._val)
+                result = Read(string, len._val)
+                string.set(string)
             }
             return result
         }
@@ -507,7 +503,7 @@ object File_h {
         }
 
         fun ReadVec2(vec: idVec2): Int {
-            val buffer = ByteBuffer.allocate(idVec2.SIZE)
+            val buffer = ByteBuffer.allocate(idVec2.BYTES)
             val result = Read(buffer)
             //            LittleRevBytes(vec.ToFloatPtr(), vec.GetDimension());//TODO:is this necessary?
             vec.set(idVec2(buffer.float, buffer.float))
@@ -525,7 +521,7 @@ object File_h {
         }
 
         fun ReadVec3(vec: idVec3): Int {
-            val buffer = ByteBuffer.allocate(idVec3.SIZE)
+            val buffer = ByteBuffer.allocate(idVec3.BYTES)
             val result = Read(buffer)
             //            LittleRevBytes(vec.ToFloatPtr(), vec.GetDimension());
             vec.set(idVec3(buffer.float, buffer.float, buffer.float))
@@ -543,7 +539,7 @@ object File_h {
         }
 
         fun ReadVec4(vec: idVec4): Int {
-            val buffer = ByteBuffer.allocate(idVec4.SIZE)
+            val buffer = ByteBuffer.allocate(idVec4.BYTES)
             val result = Read(buffer)
             //            LittleRevBytes(vec.ToFloatPtr(), vec.GetDimension());
             vec.set(idVec4(buffer.float, buffer.float, buffer.float, buffer.float))
@@ -561,7 +557,7 @@ object File_h {
         }
 
         fun ReadVec6(vec: idVec6): Int {
-            val buffer = ByteBuffer.allocate(idVec6.SIZE)
+            val buffer = ByteBuffer.allocate(idVec6.BYTES)
             val result = Read(buffer)
             //            LittleRevBytes(vec.ToFloatPtr(), vec.GetDimension());
             vec.set(
@@ -996,6 +992,7 @@ object File_h {
                             true
                         } else {
                             FileSystem_h.fileSystem.AddToReadCount(len - remaining)
+                            //println(buffer.convertByteBufferToString())
                             return len - remaining
                         }
                     }
@@ -1009,9 +1006,17 @@ object File_h {
                 Logger.getLogger(File_h::class.java.name).log(Level.SEVERE, null, ex)
             }
             FileSystem_h.fileSystem.AddToReadCount(len)
+            //println(buffer.convertByteBufferToString())
             return len
         }
 
+        fun ByteBuffer.convertByteBufferToString(): String {
+            val str = StringBuilder()
+            for (i in 0 until this.limit()) {
+                str.append(Char(this[i].toInt()))
+            }
+            return str.toString()
+        }
         /*
          =================
          idFile_Permanent::Write

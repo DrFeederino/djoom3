@@ -453,7 +453,7 @@ class Physics_Base {
             if (dir.LengthSqr() > Math_h.Square(0.1f)) {
                 dir.Truncate(10.0f)
                 org.set(GetOrigin(id))
-                Game_local.gameRenderWorld.DebugArrow(Lib.colorRed, org, org + dir, 1)
+                Game_local.gameRenderWorld!!.DebugArrow(Lib.colorRed, org, org + dir, 1)
             }
             dir.set(GetAngularVelocity(id))
             length = dir.Normalize()
@@ -476,12 +476,12 @@ class Physics_Base {
                 a = 20.0f
                 while (a < length) {
                     end.set(org + idRotation(Vector.getVec3Origin(), dir, -a).ToMat3() * vec)
-                    Game_local.gameRenderWorld.DebugLine(Lib.colorBlue, start, end, 1)
+                    Game_local.gameRenderWorld!!.DebugLine(Lib.colorBlue, start, end, 1)
                     start.set(end)
                     a += 20.0f
                 }
                 end.set(org + (idRotation(Vector.getVec3Origin(), dir, -length).ToMat3() * vec))
-                Game_local.gameRenderWorld.DebugArrow(Lib.colorBlue, start, end, 1)
+                Game_local.gameRenderWorld!!.DebugArrow(Lib.colorBlue, start, end, 1)
             }
         }
 

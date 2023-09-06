@@ -400,9 +400,9 @@ object output {
                 areaNum, numSurfaces
             )
         } else {
-            val name = arrayOf("")
+            val name = arrayOfNulls<String>(1)
             entity.epairs.GetString("name", "", name)
-            if (name[0].isNotEmpty()) {
+            if (!name[0].isNullOrEmpty()) {
                 Common.common.Error("Entity %d has surfaces, but no name key", entityNum)
             }
             procFile!!.WriteFloatString(
